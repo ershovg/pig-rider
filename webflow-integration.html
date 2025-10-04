@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webflow Integration Template - Pig Rider</title>
+
+  <!-- ===== STEP 1: Add CDN Libraries in Webflow Project Settings > Custom Code > Head ===== -->
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+
+  <style>
+    /* ===== STEP 2: Add this CSS to Webflow Designer or Embed ===== */
+    .game-canvas-wrapper {
+      width: 100%;
+      max-width: 1920px;
+      margin: 0 auto;
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background: #1a1a1a;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    #game-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .game-loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 24px;
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
+
+    .game-spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: game-spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes game-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== STEP 3: Add this HTML structure in Webflow Designer ===== -->
+  <!-- Use an Embed element and paste this code -->
+
+  <div class="game-canvas-wrapper">
+    <canvas id="game-canvas"></canvas>
+    <div class="game-loading" id="game-loading">
+      <div class="game-spinner"></div>
+      <p>Loading Pig Rider...</p>
+    </div>
+  </div>
+
+  <!-- ===== STEP 4: Upload game.min.js to your hosting (e.g., AWS S3, Cloudflare, etc.) ===== -->
+  <!-- Replace the src below with your hosted game.min.js URL -->
+  <script type="module">
+    // Import your minified game file from external hosting
+    // Example: https://your-cdn.com/pig-rider/game.min.js
+
+    // For testing locally, you can build with: npm run build
+    // Then upload dist/game.min.js to your hosting provider
+
+    import { Game } from 'https://YOUR-CDN-URL-HERE/game.min.js';
+
+    async function initGame() {
+      try {
+        const game = new Game();
+        await game.init();
+
+        // Expose globally if needed
+        window.PigRiderGame = game;
+
+        console.log('✅ Pig Rider loaded successfully');
+      } catch (error) {
+        console.error('❌ Failed to load game:', error);
+
+        const loadingEl = document.getElementById('game-loading');
+        if (loadingEl) {
+          loadingEl.innerHTML = `
+            <h2 style="color: red;">Error Loading Game</h2>
+            <p>${error.message}</p>
+          `;
+        }
+      }
+    }
+
+    // Handle page visibility
+    document.addEventListener('visibilitychange', () => {
+      if (!window.PigRiderGame) return;
+
+      if (document.hidden) {
+        window.PigRiderGame.pause();
+      } else {
+        window.PigRiderGame.resume();
+      }
+    });
+
+    // Start when ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initGame);
+    } else {
+      initGame();
+    }
+  </script>
+
+  <!-- ===== ALTERNATIVE APPROACH (if module imports don't work) ===== -->
+  <!-- Use this instead of the module script above -->
+  <!--
+  <script src="https://YOUR-CDN-URL-HERE/game.min.js"></script>
+  <script>
+    // If you export Game as a global variable in your build
+    window.addEventListener('DOMContentLoaded', async () => {
+      const game = new PigRiderGame();
+      await game.init();
+    });
+  </script>
+  -->
+
+</body>
+</html>
+
+<!--
+
+===== WEBFLOW INTEGRATION CHECKLIST =====
+
+□ 1. Add CDN libraries to Webflow Project Settings:
+     - Go to Project Settings > Custom Code > Head Code
+     - Paste PixiJS and GSAP CDN links
+
+□ 2. Create game container in Designer:
+     - Add a Div Block with class "game-canvas-wrapper"
+     - Inside it, add an Embed element
+     - Paste the canvas + loading HTML
+
+□ 3. Add CSS styling:
+     - Either add to Project Settings > Custom Code > Head
+     - Or create custom classes in Designer
+
+□ 4. Build and host your game:
+     - Run: npm run build
+     - Upload dist/game.min.js to your CDN/hosting
+     - Upload public/assets/ folder to the same hosting
+
+□ 5. Update script src in embed:
+     - Replace YOUR-CDN-URL-HERE with actual URL
+     - Ensure CORS is configured on your hosting
+
+□ 6. Test on Webflow:
+     - Publish site
+     - Test on different devices
+     - Check browser console for errors
+
+===== ASSET HOSTING OPTIONS =====
+
+1. AWS S3 + CloudFront
+2. Cloudflare R2
+3. Netlify/Vercel static hosting
+4. GitHub Pages
+5. Webflow hosting (if they allow custom JS files)
+
+===== IMPORTANT NOTES =====
+
+- All asset paths in game.min.js must point to CDN URLs
+- Enable CORS on your asset hosting
+- Test thoroughly before deploying to production
+- Consider using a CDN for better performance globally
+- Monitor console for any loading errors
+
+-->

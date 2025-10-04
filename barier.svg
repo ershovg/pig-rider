@@ -1,0 +1,16 @@
+<svg width="101" height="51" viewBox="0 0 101 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect x="13" y="1" width="25" height="13" fill="#FFB772" stroke="black" stroke-linejoin="round"/>
+<rect x="13" y="27" width="25" height="13" fill="#FFB772" stroke="black" stroke-linejoin="round"/>
+<rect x="38" y="1" width="25" height="13" fill="#FF8C4F" stroke="black" stroke-linejoin="round"/>
+<rect x="1" y="14" width="25" height="13" fill="#FF8C4F" stroke="black" stroke-linejoin="round"/>
+<path d="M88 1L100 11.3394V50L88 40V1Z" fill="#FF8C4F" stroke="black" stroke-linejoin="round"/>
+<path d="M88 40L100 50L12.2698 50L1 40L88 40Z" fill="#232222" stroke="black" stroke-linejoin="round"/>
+<rect x="63" y="27" width="25" height="13" fill="#FFB772" stroke="black" stroke-linejoin="round"/>
+<rect x="63" y="1" width="25" height="13" fill="#FFB772" stroke="black" stroke-linejoin="round"/>
+<rect x="38" y="27" width="25" height="13" fill="#FF8C4F" stroke="black" stroke-linejoin="round"/>
+<rect x="26" y="14" width="25" height="13" fill="#FFB772" stroke="black" stroke-linejoin="round"/>
+<rect x="1" y="27" width="13" height="13" fill="#FFB772" stroke="black" stroke-linejoin="round"/>
+<rect x="1" y="1" width="13" height="13" fill="#FFB772" stroke="black" stroke-linejoin="round"/>
+<rect x="51" y="14" width="25" height="13" fill="#FF8C4F" stroke="black" stroke-linejoin="round"/>
+<rect x="76" y="14" width="12" height="13" fill="#FFB772" stroke="black" stroke-linejoin="round"/>
+</svg>

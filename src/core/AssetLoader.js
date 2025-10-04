@@ -1,0 +1,49 @@
+import * as PIXI from 'pixi.js';
+import { ASSET_PATHS } from '../config/constants.js';
+
+export class AssetLoader {
+  constructor() {
+    this.assets = {};
+    this.loaded = false;
+  }
+
+  /**
+   * Load all game assets
+   * @returns {Promise} Resolves when all assets are loaded
+   */
+  async loadAssets() {
+    try {
+      // Load sprites
+      this.assets.player = await PIXI.Assets.load(ASSET_PATHS.PLAYER);
+      this.assets.obstacle = await PIXI.Assets.load(ASSET_PATHS.OBSTACLE);
+      this.assets.coin = await PIXI.Assets.load(ASSET_PATHS.COIN);
+
+      // Audio loading placeholder (will be implemented later)
+      // this.assets.bgMusic = await this.loadAudio(ASSET_PATHS.MUSIC_BG);
+      // this.assets.coinSfx = await this.loadAudio(ASSET_PATHS.SFX_COIN);
+      // this.assets.crashSfx = await this.loadAudio(ASSET_PATHS.SFX_CRASH);
+
+      this.loaded = true;
+      console.log('✅ All assets loaded successfully');
+      return this.assets;
+    } catch (error) {
+      console.error('❌ Error loading assets:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Placeholder for audio loading (to be implemented later)
+   */
+  async loadAudio(path) {
+    // TODO: Implement audio loading with Howler.js or Web Audio API
+    return null;
+  }
+
+  /**
+   * Get loaded asset by key
+   */
+  getAsset(key) {
+    return this.assets[key];
+  }
+}
