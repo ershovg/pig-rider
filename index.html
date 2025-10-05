@@ -7,6 +7,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <title>Pig Rider - Endless Runner</title>
   <style>
+    /* Minimal reset - стили будут добавлены позже */
     * {
       margin: 0;
       padding: 0;
@@ -17,10 +18,6 @@
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      background: #1a1a1a;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       touch-action: none;
       -webkit-touch-callout: none;
@@ -29,61 +26,78 @@
     }
 
     #game-container {
+      position: relative;
       width: 100%;
       height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
     }
 
-    #game-canvas {
-      display: block;
-      max-width: 100%;
-      max-height: 100%;
-    }
-
-    /* Loading screen */
-    #loading {
+    /* PixiJS Canvas - будет создан автоматически */
+    #game-container canvas {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 24px;
-      text-align: center;
-      padding: 20px;
+      top: 0;
+      left: 0;
+      z-index: 1;
     }
 
-    /* Mobile optimization */
-    @media (max-width: 768px) {
-      #loading {
-        font-size: 18px;
-      }
+    /* HTML UI поверх canvas */
+    .screen, .modal, .hud {
+      position: absolute;
+      z-index: 10;
     }
 
-    .spinner {
-      border: 4px solid rgba(255, 255, 255, 0.3);
-      border-top: 4px solid white;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 1s linear infinite;
-      margin: 20px auto;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    /* Utility classes */
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
 <body>
   <div id="game-container">
-    <canvas id="game-canvas"></canvas>
-    <div id="loading">
-      <div class="spinner"></div>
+    <!-- PixiJS Canvas будет создан здесь автоматически -->
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="screen">
       <p>Loading...</p>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen hidden">
+      <h1>Want a pig ride?</h1>
+      <p>Collect 500 coins</p>
+      <button id="play-btn">Play now</button>
+    </div>
+
+    <!-- Game HUD -->
+    <div id="game-hud" class="hud hidden">
+      <img src="/assets/sprites/mellowLogo.svg" id="mellow-logo" alt="Mellow" />
+      <span id="coin-count">0/500</span>
+    </div>
+
+    <!-- Booster Modal -->
+    <div id="booster-modal" class="modal hidden">
+      <div class="modal-content">
+        <h2>Yay! You caught a Mellow booster!</h2>
+        <p>Speed boost activated</p>
+        <button id="booster-continue-btn">Cool, continue</button>
+      </div>
+    </div>
+
+    <!-- Win Screen -->
+    <div id="win-screen" class="screen hidden">
+      <h1>You won!</h1>
+      <p>Ready to play IRL?</p>
+      <p id="win-score">Score: 500</p>
+      <button id="win-demo-btn">Book a demo</button>
+      <button id="win-retry-btn">Try Again</button>
+    </div>
+
+    <!-- Lose Screen -->
+    <div id="lose-screen" class="screen hidden">
+      <h1>Ooops, that hurt...</h1>
+      <p>Beat it IRL!</p>
+      <p id="lose-score">Score: 0</p>
+      <button id="lose-demo-btn">Book a demo</button>
+      <button id="lose-retry-btn">Try Again</button>
     </div>
   </div>
 

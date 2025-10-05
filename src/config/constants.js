@@ -4,8 +4,11 @@ export const CONFIG = {
   CANVAS_WIDTH: 1920,
   CANVAS_HEIGHT: 1080,
 
-  // Game
-  TARGET_EGGS: 500,
+  // Game - Configurable variables (легко менять)
+  TARGET_COINS: 500,        // Целевое количество монет для победы
+  BOOSTER_DURATION: 5,      // Длительность бустера в секундах
+  BOOSTER_SPAWN_RATE: 0.1,  // Частота появления бустера (будет настроена)
+
   GAME_SPEED: 1.0,
   MAX_SPEED: 2.5,
   SPEED_INCREMENT: 0.0005,

@@ -5,9 +5,8 @@ import { AssetLoader } from './core/AssetLoader.js';
 import { Player } from './entities/Player.js';
 import { SpawnSystem } from './systems/SpawnSystem.js';
 import { CollisionSystem } from './systems/CollisionSystem.js';
-import { HUD } from './ui/HUD.js';
-import { StartModal } from './ui/StartModal.js';
-import { EndModal } from './ui/EndModal.js';
+import { UIController } from './ui/UIController.js';
+import { EventBus } from './utils/EventBus.js';
 
 export class Game {
   constructor() {
@@ -19,9 +18,7 @@ export class Game {
     this.spawnSystem = null;
     this.collisionSystem = null;
 
-    this.hud = null;
-    this.startModal = null;
-    this.endModal = null;
+    this.ui = null; // HTML UI Controller
 
     this.gameState = 'loading'; // loading, menu, playing, paused, ended
     this.score = 0;
@@ -35,7 +32,10 @@ export class Game {
    */
   async init() {
     try {
-      // Initialize renderer
+      // Initialize HTML UI Controller
+      this.ui = new UIController();
+
+      // Initialize renderer (PixiJS)
       this.renderer = new Renderer('game-canvas');
       await this.renderer.init();
 
@@ -44,17 +44,17 @@ export class Game {
       await this.assetLoader.loadAssets();
 
       // Hide loading screen
-      document.getElementById('loading').style.display = 'none';
+      this.ui.hideLoading();
 
-      // Initialize game systems
+      // Initialize game systems (PixiJS)
       this.initSystems();
 
-      // Initialize UI
+      // Initialize UI event listeners
       this.initUI();
 
-      // Show start modal
+      // Show start screen
       this.gameState = 'menu';
-      this.startModal.show();
+      this.ui.showStartScreen();
 
       console.log('✅ Game initialized successfully');
     } catch (error) {
@@ -92,21 +92,19 @@ export class Game {
   }
 
   /**
-   * Initialize UI
+   * Initialize UI event listeners
    */
   initUI() {
-    // Create HUD
-    this.hud = new HUD();
-    this.renderer.addToStage(this.hud.getContainer());
-    this.hud.hide();
-
-    // Create start modal
-    this.startModal = new StartModal(() => this.startGame());
-    this.renderer.addToStage(this.startModal.getContainer());
-
-    // Create end modal
-    this.endModal = new EndModal(() => this.restartGame());
-    this.renderer.addToStage(this.endModal.getContainer());
+    // Setup HTML UI button listeners
+    this.ui.setupEventListeners({
+      onPlayClick: () => this.startGame(),
+      onBoosterContinue: () => this.resumeGame(),
+      onRetry: () => this.restartGame(),
+      onBookDemo: () => {
+        // TODO: Navigate to demo booking page
+        console.log('Book demo clicked');
+      }
+    });
   }
 
   /**
@@ -119,8 +117,11 @@ export class Game {
 
     this.player.reset();
     this.spawnSystem.reset();
-    this.hud.reset();
-    this.hud.show();
+
+    // Hide start screen, show HUD
+    this.ui.hideStartScreen();
+    this.ui.showHUD();
+    this.ui.updateCoinCount(0, CONFIG.TARGET_COINS);
 
     this.gameLoop.start();
 
@@ -128,10 +129,18 @@ export class Game {
   }
 
   /**
+   * Resume game (after booster modal)
+   */
+  resumeGame() {
+    this.ui.hideBoosterModal();
+    this.gameState = 'playing';
+    this.gameLoop.resume();
+  }
+
+  /**
    * Restart game
    */
   restartGame() {
-    this.endModal.hide();
     this.startGame();
   }
 
@@ -141,8 +150,14 @@ export class Game {
   endGame(isWin) {
     this.gameState = 'ended';
     this.gameLoop.stop();
-    this.hud.hide();
-    this.endModal.showResults(isWin, this.score);
+
+    // Hide HUD, show end screen
+    this.ui.hideHUD();
+    if (isWin) {
+      this.ui.showWinScreen(this.score);
+    } else {
+      this.ui.showLoseScreen(this.score);
+    }
 
     console.log(`🏁 Game ended - ${isWin ? 'WIN' : 'LOSE'} - Score: ${this.score}`);
   }
@@ -158,7 +173,6 @@ export class Game {
       this.gameSpeed + CONFIG.SPEED_INCREMENT,
       CONFIG.MAX_SPEED
     );
-    this.hud.updateSpeed(this.gameSpeed);
 
     // Update player
     this.player.update(deltaTime);
@@ -186,10 +200,10 @@ export class Game {
       const value = coin.collect();
       if (value) {
         this.score += value;
-        this.hud.updateScore(this.score);
+        this.ui.updateCoinCount(this.score, CONFIG.TARGET_COINS);
 
         // Check win condition
-        if (this.score >= CONFIG.TARGET_EGGS) {
+        if (this.score >= CONFIG.TARGET_COINS) {
           this.endGame(true);
           return;
         }
@@ -237,21 +251,15 @@ export class Game {
       this.player.destroy();
     }
 
-    if (this.hud) {
-      this.hud.destroy();
-    }
-
-    if (this.startModal) {
-      this.startModal.destroy();
-    }
-
-    if (this.endModal) {
-      this.endModal.destroy();
+    if (this.ui) {
+      this.ui.destroy();
     }
 
     if (this.renderer) {
       this.renderer.destroy();
     }
+
+    EventBus.clear();
 
     console.log('🗑️ Game destroyed');
   }

@@ -2,43 +2,314 @@
 
 ## 📋 Project Overview
 
-You are tasked with creating a high-performance web-based endless runner game called "Pig Rider". This is a Subway Surfers-style game with vertical lane mechanics, rendered using PixiJS with optional Three.js integration for 3D elements.
+You are tasked with creating a high-performance web-based endless runner game called "Pig Rider". This is a Subway Surfers-style game with vertical lane mechanics, using a hybrid architecture: **PixiJS (WebGL) for gameplay rendering**, **HTML/CSS for UI**.
 
 **Performance Target**: 60 FPS on mid-range devices, 120 FPS on high-end devices
-**Platform**: Web (desktop + mobile responsive)
-**Technology Stack**: Vanilla JavaScript (ES6+), HTML5, CSS3, PixiJS 7.x, Three.js (optional)
+**Platform**: Web (desktop + mobile responsive), интеграция в Webflow
+**Technology Stack**: Vanilla JavaScript (ES6+), HTML5, CSS3, PixiJS 7.x (WebGL), GSAP 3.x, Three.js (optional)
 
 ---
 
-## 🎯 Game Mechanics (Based on Screenshots)
+## 🎨 UI Architecture - Hybrid Approach
 
-### Core Gameplay
-1. **Player Character**: An orange pig with a rider, flying continuously from left to right
-2. **Vertical Control**: Player can move UP and DOWN across 3 horizontal lanes
-3. **Endless Runner**: Auto-scrolling environment with procedurally generated obstacles
-4. **Collection System**: Collect eggs (currency) - target shown as "79/200" in UI
-5. **Obstacles**: Brick walls that must be avoided
-6. **Power-ups**: "Mellow booster" that increases speed temporarily
-7. **Special Enemies**: Small enemy characters (orange bat-like creatures)
+### PixiJS (WebGL) + HTML/CSS Decision
 
-### Win/Lose Conditions
-- **Win**: Collect 500 eggs (as shown in start screen: "Collect 500 🥚")
-- **Lose**: Collision with obstacles or enemies
-- **Progression**: Game difficulty increases over time (speed, obstacle density)
+**ВАЖНО:** Игра использует **профессиональную гибридную архитектуру** для максимальной производительности и гибкости дизайна:
 
-### UI States (from screenshots)
-1. **Start Screen**: "Want a pig ride?" with "Play now" button
-2. **Game Screen**: HUD showing egg count (79/200), score indicator
-3. **Power-up Modal**: "Yay! You caught a Mellow booster that speeds you up!" with "Cool, continue" button
-4. **Victory Screen**: "You won! Ready to play IRL?" with "Book a demo" and "Try Again" buttons
-5. **Game Over Screen**: "Ooops, That's hurt... Beat it IRL!" with same CTAs
+#### 🚀 PixiJS (WebGL) - Игровой рендеринг
+**Используется для:**
+- ✅ Свинка с девушкой (персонаж + анимации)
+- ✅ Препятствия (кирпичные блоки)
+- ✅ Монетки (обычные и со звездой)
+- ✅ Облака (параллакс эффект)
+- ✅ Фоновые элементы (звёзды, декорации)
+- ✅ Физика движения (плавное 60+ FPS)
+- ✅ Система коллизий (AABB)
+- ✅ Спавн системы (процедурная генерация)
+- ✅ Particle эффекты (сбор монет, взрывы)
 
-### Art Style
-- Warm peachy/orange color palette (#FFE4C4, #FF8C42)
-- Clean, minimalist SVG graphics
-- Playful, casual aesthetic
-- Cloud decorations in background
-- Sparkle/star decorative elements
+**Почему PixiJS + WebGL:**
+- 🔥 **Максимальная производительность** - WebGL аппаратное ускорение GPU
+- 🔥 **60-120 FPS** рендеринг сотен объектов одновременно
+- 🔥 **Батчинг** - минимум draw calls, оптимизация под мобильные
+- 🔥 **Sprite система** - готовая работа с текстурами и атласами
+- 🔥 **Фильтры и эффекты** - blur, glow, displacement maps
+- 🔥 **Three.js интеграция** - возможность добавить 3D элементы позже
+
+#### 🌐 HTML/CSS + GSAP - UI интерфейс
+**Используется для:**
+- ✅ Стартовый экран ("Want a pig ride?")
+- ✅ Модалка Mellow Booster
+- ✅ Экран победы ("You won!")
+- ✅ Экран проигрыша ("Ooops, that hurt...")
+- ✅ HUD (счётчик монет: "79/500")
+- ✅ Кнопки ("Play now", "Try Again", "Book a demo")
+- ✅ **Все GSAP анимации UI** (пульсация кнопок, мигание звёзд в UI)
+- ✅ Логотип Mellow (левый верхний угол)
+- ✅ Модальные окна и оверлеи
+
+**Почему HTML/CSS + GSAP:**
+- 🎨 **Лёгкая кастомизация** - твой стиль разработки
+- 🎨 **Простота изменения** цветов, шрифтов, отступов
+- 🎨 **Нативные возможности** - flexbox, grid, transitions
+- 🎨 **GSAP анимации** работают напрямую с DOM (плавные, профессиональные)
+- 🎨 **Адаптивный дизайн** через CSS media queries
+- 🎨 **Меньше кода** для UI элементов
+- 🎨 **Легче поддерживать** и обновлять дизайн
+
+#### 📁 Структура файлов
+
+```
+game/
+├── index.html              # HTML структура UI + Canvas container
+├── src/
+│   ├── main.js            # Точка входа
+│   ├── config.js          # Конфигурация (boosterTimer, targetCoins)
+│   │
+│   ├── game/
+│   │   ├── Game.js        # Главный класс (PixiJS)
+│   │   ├── Player.js      # Свинка (PixiJS Sprite)
+│   │   ├── Obstacle.js    # Препятствия (PixiJS)
+│   │   ├── Coin.js        # Монетки (PixiJS)
+│   │   └── Cloud.js       # Облака (PixiJS Container)
+│   │
+│   ├── core/
+│   │   ├── Renderer.js    # PixiJS Application wrapper
+│   │   ├── AssetLoader.js # Загрузка SVG → PixiJS Textures
+│   │   └── GameLoop.js    # Fixed timestep loop
+│   │
+│   ├── systems/
+│   │   ├── SpawnSystem.js      # Спавн препятствий и монет
+│   │   ├── CollisionSystem.js  # AABB коллизии
+│   │   └── InputSystem.js      # Управление (стрелки)
+│   │
+│   ├── ui/
+│   │   ├── UIController.js  # Управление HTML UI
+│   │   ├── screens.js       # Показ/скрытие экранов
+│   │   └── hud.js           # Обновление счётчика монет
+│   │
+│   ├── animations/
+│   │   ├── gsap-stars.js    # GSAP: мигание звёзд (HTML)
+│   │   ├── gsap-buttons.js  # GSAP: пульсация кнопок
+│   │   └── pixi-effects.js  # PixiJS: particle эффекты
+│   │
+│   └── utils/
+│       └── EventBus.js      # События между PixiJS и HTML UI
+│
+└── public/
+    └── assets/
+        └── sprites/         # SVG ассеты (загружаются в PixiJS)
+            ├── pig.svg
+            ├── barrier-1.svg
+            ├── coin.svg
+            ├── cloud.svg
+            └── ...
+```
+
+#### 🎯 Интеграция PixiJS Canvas + HTML UI
+
+```html
+<!-- index.html -->
+<div id="game-container">
+  <!-- PixiJS автоматически создаст Canvas здесь -->
+
+  <!-- HTML UI поверх PixiJS Canvas -->
+  <div id="start-screen" class="screen">
+    <h1>Want a pig ride?</h1>
+    <button id="play-btn" class="btn-play">Play now</button>
+  </div>
+
+  <div id="game-hud" class="hud hidden">
+    <img src="/assets/sprites/mellowLogo.svg" id="mellow-logo" />
+    <span id="coin-count">0/500</span>
+  </div>
+</div>
+```
+
+```css
+/* CSS позиционирование UI поверх PixiJS Canvas */
+#game-container {
+  position: relative;
+  width: 100%;
+  height: 600px;
+}
+
+#game-container canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1; /* PixiJS Canvas - фон */
+}
+
+.screen, .hud, .modal {
+  position: absolute;
+  z-index: 10; /* HTML UI - поверх canvas */
+}
+```
+
+```javascript
+// JavaScript - PixiJS рендерит геймплей
+import * as PIXI from 'pixi.js';
+
+const app = new PIXI.Application();
+await app.init({
+  width: 800,
+  height: 600,
+  backgroundColor: 0xFFE4C4
+});
+
+// PixiJS Canvas добавляется в контейнер
+document.getElementById('game-container').appendChild(app.canvas);
+
+// HTML UI управляется через DOM + GSAP
+document.getElementById('play-btn').addEventListener('click', startGame);
+gsap.to('#play-btn', {
+  scale: 1.1,
+  duration: 0.8,
+  repeat: -1,
+  yoyo: true
+});
+```
+
+#### 🌐 Интеграция в Webflow
+
+**Как добавить игру в Webflow:**
+
+1. **Собрать игру**: `npm run build` → папка `dist/`
+2. **Захостить**: GitHub Pages / Netlify / Vercel
+3. **В Webflow** добавить **Embed element**:
+
+```html
+<!-- Webflow Embed -->
+<div id="game-container" style="width: 100%; height: 600px;"></div>
+<script type="module" src="https://твой-хостинг.com/game/main.js"></script>
+```
+
+**Canvas создаётся автоматически** через PixiJS - **НЕ нужно вручную добавлять `<canvas>`!**
+
+---
+
+## 🎯 Game Mechanics
+
+### 🎬 Start Screen
+
+**Механика:**
+- Стартовый экран отображается сразу при загрузке страницы
+- При нажатии на кнопку "Play now" начинается игра
+
+**Анимации:**
+- ⭐ Звёзды: Случайное мигание через `autoAlpha` + `scale` (от 0 до 1), используя `random()` в GSAP
+- 🎯 Кнопка: Зацикленная пульсация через `scale` от 1 до 1.1 и обратно (GSAP, плавная анимация)
+
+---
+
+### 🎮 Core Gameplay
+
+**Механика:**
+1. **Персонаж**: Свинка с девушкой летит вперёд (слева направо)
+2. **Управление**: Стрелки вверх/вниз для перемещения по 3 горизонтальным дорожкам (НЕ используем клики мыши)
+3. **Прогрессивная скорость**: Игра постепенно ускоряется (текущая реализация соответствует требованиям)
+4. **Коллекция монет**: Собирать монеты для увеличения счёта (отображается в правом верхнем углу)
+5. **Препятствия**: Кирпичные блоки, которые нужно избегать
+6. **Power-up**: Редкий "Mellow booster" (должен появляться хотя бы 1-2 раза за игру через рандом)
+7. **Враги**: Удалены из текущей механики (летучие мыши не используются)
+
+**Анимации:**
+- ⭐ Звёзды: Мигают (та же анимация, что на стартовом экране)
+- ☁️ Облака: Летят справа налево (параллакс эффект, навстречу свинке)
+- 👧 Девушка со свинкой: Зацикленная Lottie анимация (предоставит Ваня, позже)
+- 🪙 Монетки: Зацикленная Lottie анимация (предоставит Ваня, позже)
+- ⚡ Меллоу бустер: Зацикленная Lottie анимация (предоставит Ваня, позже)
+
+**Анимации реакции (Lottie от Вани):**
+- Собирает монетку
+- Врезается в стену
+- Собирает Меллоу бустер
+
+---
+
+### 💫 Mellow Booster Modal
+
+**Механика:**
+- При сборе Меллоу бустера игра ставится на паузу
+- Появляется модалка с объяснением: "Yay! You caught a Mellow booster!"
+- Для продолжения игры нажать кнопку "Cool, continue"
+
+---
+
+### ⚡ Mellow Booster Active Mode (5 секунд)
+
+**Механика:**
+- Длительность: `let boosterTimer = 5` секунд (настраиваемая переменная для лёгкого изменения)
+- Фон меняется на цвет `#FFB772`
+- Появляется иконка Меллоу бустера в левом верхнем углу (заменяет логотип Mellow)
+- Вся игра ускоряется
+- Кирпичные блоки исчезают
+- Монеты появляются по всем трём дорожкам (как в Subway Surfers)
+
+**Анимации:**
+- ⭐ Звёзды: Мигают (та же анимация)
+- ☁️ Облака: Летят (та же анимация)
+- 👧 Девушка со свинкой: Новая Lottie анимация для режима бустера (от Вани, позже)
+- 🪙 Монетки: Та же Lottie анимация
+
+**Анимации реакции:**
+- Собирает монетку (та же анимация)
+
+---
+
+### 🏆 Victory Screen
+
+**Механика:**
+- Условие победы: Собрать `let targetCoins = 500` монет (настраиваемая переменная)
+- Отображение счёта: `79/500` (простой счётчик без прогресс-бара)
+- Кнопка "Book a demo" → отправляет на запись на демо (URL будет предоставлен позже)
+- Кнопка "Try Again" → игра начинается заново
+
+**Анимации:**
+- 🎉 Свинка с девушкой: Танцуют (Lottie от Вани, позже)
+- ⭐ Звёзды: Мигают
+- 🎯 Кнопка: Зацикленная пульсация через `scale` (как на стартовом экране)
+
+---
+
+### ❌ Game Over Screen
+
+**Механика:**
+- Условие проигрыша: Игрок врезался в кирпичный блок
+- Кнопка "Book a demo" → отправляет на запись на демо (URL будет предоставлен позже)
+- Кнопка "Try Again" → игра начинается заново
+
+**Анимации:**
+- 😢 Свинка с девушкой: Грустная анимация (Lottie от Вани, позже)
+- ⭐ Звёзды: Мигают
+- 🎯 Кнопка: Зацикленная пульсация через `scale` (как на стартовом экране)
+
+---
+
+### 🎨 Art Style & Assets
+
+**Визуальный стиль:**
+- Тёплая персиково-оранжевая цветовая палитра (#FFE4C4, #FF8C42, #FFB772)
+- Все ассеты в формате SVG кода (свинка, звёзды, препятствия, монетки, бустеры)
+- Чистая, минималистичная графика
+- Игривая, казуальная эстетика
+
+**Технические заметки:**
+- SVG ассеты будут предоставлены Гошей (заменят существующие)
+- Lottie анимации будут предоставлены Ваней (интегрируем позже)
+- Пока фокус на анимациях GSAP (звёзды, кнопки, облака)
+
+---
+
+### 📊 Configuration Variables
+
+```javascript
+// Настраиваемые переменные для лёгкой балансировки
+let boosterTimer = 5;        // Длительность бустера в секундах
+let targetCoins = 500;       // Количество монет для победы
+let boosterSpawnRate = 0.1;  // Частота появления бустера (будет настроена)
+```
 
 ---
 
@@ -51,22 +322,25 @@ You are tasked with creating a high-performance web-based endless runner game ca
 {
   "core": {
     "runtime": "Vanilla JavaScript (ES6+ modules)",
-    "rendering": "PixiJS 7.x (WebGL)",
-    "3d_optional": "Three.js r150+",
+    "rendering": "PixiJS 7.x (WebGL 2.0 + WebGPU fallback)",
+    "3d_optional": "Three.js (для будущих 3D элементов)",
     "bundler": "Vite 4.x",
-    "language": "JavaScript (TypeScript optional but recommended)"
+    "language": "JavaScript"
   },
   "libraries": {
-    "animation": "GSAP 3.x (for UI tweens)",
-    "audio": "@pixi/sound",
-    "particles": "@pixi/particle-emitter",
-    "collision": "Custom (spatial hashing)",
+    "animation_ui": "GSAP 3.x (HTML/CSS анимации)",
+    "animation_game": "PixiJS Ticker (игровые анимации)",
+    "lottie": "Lottie Web (анимации персонажей от Вани)",
+    "audio": "Web Audio API / Howler.js (опционально)",
+    "collision": "Custom AABB collision detection",
     "state": "Custom FSM (Finite State Machine)"
   },
   "tools": {
-    "atlas_generation": "TexturePacker or @pixi/pack-loader",
-    "optimization": "terser, imagemin",
-    "testing": "Vitest (optional)"
+    "svg_assets": "Figma export → public/assets/sprites/",
+    "texture_packing": "PixiJS AssetLoader (динамическая загрузка)",
+    "optimization": "terser, imagemin, WebGL batching",
+    "dev_server": "Vite dev server",
+    "hosting": "Netlify / Vercel / GitHub Pages → Webflow Embed"
   }
 }
 ```
@@ -74,79 +348,58 @@ You are tasked with creating a high-performance web-based endless runner game ca
 ### 2. Project Structure
 
 ```
-pig-rider-game/
+game/
+├── index.html              # HTML структура (Canvas + UI)
+│
 ├── public/
-│   ├── index.html
 │   └── assets/
-│       ├── sprites/          # Original SVG files
-│       │   ├── pig.svg
-│       │   ├── rider.svg
-│       │   ├── wall.svg
-│       │   ├── egg.svg
-│       │   ├── booster.svg
-│       │   ├── enemy.svg
-│       │   ├── cloud-*.svg
-│       │   └── ui/
-│       │       ├── button.svg
-│       │       └── modal.svg
-│       ├── atlas/            # Generated texture atlases
-│       │   ├── game.json
-│       │   └── game.png
-│       └── sounds/
-│           ├── collect.mp3
-│           ├── boost.mp3
-│           ├── collision.mp3
-│           └── bgm.mp3
+│       └── sprites/        # SVG ассеты из Figma
+│           ├── pig.svg
+│           ├── barrier-1.svg
+│           ├── barrier-2.svg
+│           ├── barrier-3.svg
+│           ├── coin.svg
+│           ├── coinStar.svg
+│           ├── booster.svg
+│           ├── cloud.svg
+│           ├── star.svg
+│           ├── mellowLogo.svg
+│           └── ... (другие SVG)
 │
 ├── src/
-│   ├── main.js              # Entry point
-│   ├── config.js            # Game configuration
+│   ├── main.js              # Точка входа
+│   ├── config.js            # Настройки игры (boosterTimer, targetCoins)
 │   │
-│   ├── core/
-│   │   ├── Game.js          # Main game loop orchestrator
-│   │   ├── Renderer.js      # PixiJS app wrapper
-│   │   ├── AssetLoader.js   # Resource loading + caching
-│   │   ├── SceneManager.js  # Scene transitions
-│   │   └── StateMachine.js  # FSM for game states
-│   │
-│   ├── scenes/
-│   │   ├── Scene.js         # Base scene class
-│   │   ├── StartScene.js    # "Want a pig ride?"
-│   │   ├── GameScene.js     # Main gameplay
-│   │   └── EndScene.js      # Win/lose screens
-│   │
-│   ├── entities/
-│   │   ├── Entity.js        # Base entity class
-│   │   ├── Player.js        # Pig + rider
-│   │   ├── Obstacle.js      # Walls
-│   │   ├── Collectible.js   # Eggs
-│   │   ├── PowerUp.js       # Boosters
-│   │   ├── Enemy.js         # Flying enemies
-│   │   └── Background.js    # Parallax clouds
+│   ├── game/
+│   │   ├── Game.js          # Главный класс игры (Canvas)
+│   │   ├── Player.js        # Свинка (управление, движение)
+│   │   ├── Obstacle.js      # Препятствия (кирпичи)
+│   │   ├── Coin.js          # Монетки
+│   │   ├── Cloud.js         # Облака (параллакс)
+│   │   └── CollisionSystem.js  # AABB коллизии
 │   │
 │   ├── systems/
-│   │   ├── InputSystem.js       # Keyboard + Touch
-│   │   ├── PhysicsSystem.js     # Movement + gravity
-│   │   ├── CollisionSystem.js   # Spatial hash collision detection
-│   │   ├── SpawnSystem.js       # Procedural generation
-│   │   ├── PoolManager.js       # Object pooling
-│   │   └── ParticleSystem.js    # Effects
+│   │   ├── SpawnSystem.js   # Спавн препятствий и монет
+│   │   ├── InputSystem.js   # Управление (стрелки вверх/вниз)
+│   │   └── ScrollSystem.js  # Автоскролл игры
 │   │
 │   ├── ui/
-│   │   ├── HUD.js           # Score, progress bar
-│   │   ├── Modal.js         # Reusable modal component
-│   │   └── Button.js        # Animated buttons
+│   │   ├── UIController.js  # Управление HTML UI
+│   │   ├── screens.js       # Показ/скрытие экранов
+│   │   └── hud.js           # Обновление счётчика монет
+│   │
+│   ├── animations/
+│   │   ├── gsap-stars.js    # GSAP: мигание звёзд
+│   │   ├── gsap-buttons.js  # GSAP: пульсация кнопок
+│   │   └── gsap-clouds.js   # GSAP: движение облаков (опционально)
 │   │
 │   └── utils/
-│       ├── SpatialHash.js   # Collision optimization
-│       ├── Vector2.js       # 2D math
-│       ├── Easing.js        # Custom easing functions
-│       ├── Random.js        # Seeded RNG for replay
-│       └── EventBus.js      # Decoupled communication
+│       ├── AssetLoader.js   # Загрузка SVG изображений
+│       └── EventBus.js      # События между Canvas и UI
 │
 ├── vite.config.js
 ├── package.json
-└── README.md
+└── GAME_DEV_PROMPT.md
 ```
 
 ---
