@@ -33,7 +33,7 @@ export const CONFIG = {
   OBSTACLE: {
     MIN_DISTANCE: 800,
     MAX_DISTANCE: 1400,
-    SIZE: 120,
+    SIZE: 280, // Ширина барьера в пикселях (высота масштабируется пропорционально)
     POOL_SIZE: 20
   },
 
@@ -59,12 +59,27 @@ export const CONFIG = {
   MAX_DELTA: 100
 };
 
+// Base URL для ассетов (переопределяется через window.GAME_ASSETS_URL)
+const getAssetPath = (path) => {
+  const baseUrl = typeof window !== 'undefined' && window.GAME_ASSETS_URL
+    ? window.GAME_ASSETS_URL
+    : '';
+  return baseUrl + path;
+};
+
 export const ASSET_PATHS = {
-  PLAYER: '/assets/sprites/pig.svg',
-  OBSTACLE: '/assets/sprites/barrier.svg',
-  COIN: '/assets/sprites/coin.svg',
+  // PNG спрайты из Figma (@2x)
+  get PLAYER() { return getAssetPath('/assets/sprites/pig_rider.png'); },
+  get OBSTACLE_BASE() { return getAssetPath('/assets/sprites/barier_base.png'); },
+  get OBSTACLE_LARGE() { return getAssetPath('/assets/sprites/barier_large.png'); },
+  get COIN() { return getAssetPath('/assets/sprites/coin.png'); },
+  get COIN_STAR() { return getAssetPath('/assets/sprites/coin_star.png'); },
+  get BOOSTER() { return getAssetPath('/assets/sprites/booster.png'); },
+  get STAR() { return getAssetPath('/assets/sprites/star.png'); },
+  get CLOUD() { return getAssetPath('/assets/sprites/cloud.png'); },
+
   // Audio placeholders for later
-  MUSIC_BG: '/assets/audio/bg-music.mp3',
-  SFX_COIN: '/assets/audio/coin.mp3',
-  SFX_CRASH: '/assets/audio/crash.mp3'
+  get MUSIC_BG() { return getAssetPath('/assets/audio/bg-music.mp3'); },
+  get SFX_COIN() { return getAssetPath('/assets/audio/coin.mp3'); },
+  get SFX_CRASH() { return getAssetPath('/assets/audio/crash.mp3'); }
 };

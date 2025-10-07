@@ -1,4 +1,5 @@
 import { CONFIG } from './config/constants.js';
+import { ENV } from './config/env.js';
 import { Renderer } from './core/Renderer.js';
 import { GameLoop } from './core/GameLoop.js';
 import { AssetLoader } from './core/AssetLoader.js';
@@ -6,6 +7,8 @@ import { Player } from './entities/Player.js';
 import { SpawnSystem } from './systems/SpawnSystem.js';
 import { CollisionSystem } from './systems/CollisionSystem.js';
 import { UIController } from './ui/UIController.js';
+import { AIBotModal } from './ui/AIBotModal.js';
+import { ElevenLabsService } from './services/ElevenLabsService.js';
 import { EventBus } from './utils/EventBus.js';
 
 export class Game {
@@ -19,6 +22,8 @@ export class Game {
     this.collisionSystem = null;
 
     this.ui = null; // HTML UI Controller
+    this.aiBot = null; // AI Bot Modal
+    this.elevenLabs = null; // ElevenLabs Service
 
     this.gameState = 'loading'; // loading, menu, playing, paused, ended
     this.score = 0;
@@ -35,6 +40,19 @@ export class Game {
       // Initialize HTML UI Controller
       this.ui = new UIController();
 
+      // Initialize ElevenLabs Service (if API key is available)
+      if (ENV.ELEVENLABS_API_KEY) {
+        this.elevenLabs = new ElevenLabsService(ENV.ELEVENLABS_API_KEY);
+        await this.elevenLabs.init();
+
+        // Initialize AI Bot Modal
+        this.aiBot = new AIBotModal(this.elevenLabs);
+        await this.aiBot.init();
+        this.aiBot.onComplete = () => this.startGame();
+      } else {
+        console.warn('⚠️ ElevenLabs API key not found. AI bot will be disabled.');
+      }
+
       // Initialize renderer (PixiJS)
       this.renderer = new Renderer('game-canvas');
       await this.renderer.init();
@@ -46,15 +64,16 @@ export class Game {
       // Hide loading screen
       this.ui.hideLoading();
 
-      // Initialize game systems (PixiJS)
-      this.initSystems();
-
       // Initialize UI event listeners
       this.initUI();
 
-      // Show start screen
+      // Show AI Bot welcome or start screen
       this.gameState = 'menu';
-      this.ui.showStartScreen();
+      if (this.aiBot) {
+        this.aiBot.show();
+      } else {
+        this.ui.showStartScreen();
+      }
 
       console.log('✅ Game initialized successfully');
     } catch (error) {
@@ -72,11 +91,14 @@ export class Game {
     this.player = new Player(playerTexture);
     this.renderer.addToStage(this.player.getSprite());
 
-    // Create spawn system
-    const obstacleTexture = this.assetLoader.getAsset('obstacle');
+    // Create spawn system with multiple obstacle textures for variety
+    const obstacleTextures = [
+      this.assetLoader.getAsset('obstacleBase'),
+      this.assetLoader.getAsset('obstacleLarge')
+    ];
     const coinTexture = this.assetLoader.getAsset('coin');
     this.spawnSystem = new SpawnSystem(
-      obstacleTexture,
+      obstacleTextures,
       coinTexture,
       this.renderer.stage
     );
@@ -111,6 +133,11 @@ export class Game {
    * Start game
    */
   startGame() {
+    // Initialize game systems on first start
+    if (!this.player) {
+      this.initSystems();
+    }
+
     this.gameState = 'playing';
     this.score = 0;
     this.gameSpeed = CONFIG.GAME_SPEED;
@@ -122,6 +149,9 @@ export class Game {
     this.ui.hideStartScreen();
     this.ui.showHUD();
     this.ui.updateCoinCount(0, CONFIG.TARGET_COINS);
+
+    // Start renderer ticker
+    this.renderer.start();
 
     this.gameLoop.start();
 
@@ -249,6 +279,10 @@ export class Game {
 
     if (this.player) {
       this.player.destroy();
+    }
+
+    if (this.aiBot) {
+      this.aiBot.destroy();
     }
 
     if (this.ui) {

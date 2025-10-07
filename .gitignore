@@ -1,6 +1,9 @@
 node_modules/
-dist/
 .DS_Store
 *.log
 .env
 .vscode/
+draft/
+
+# Keep dist for Webflow CDN
+# dist/

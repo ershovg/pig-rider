@@ -5,8 +5,10 @@ export class Obstacle {
   constructor(texture) {
     this.sprite = new PIXI.Sprite(texture);
     this.sprite.anchor.set(0.5);
+
+    // Set width, height scales proportionally
     this.sprite.width = CONFIG.OBSTACLE.SIZE;
-    this.sprite.height = CONFIG.OBSTACLE.SIZE;
+    this.sprite.scale.y = this.sprite.scale.x; // Keep aspect ratio
 
     this.active = false;
     this.lane = 0;

@@ -1,152 +1,169 @@
 /**
  * UIController - управление HTML UI элементами
  * Отвечает за показ/скрытие экранов, обновление счётчиков
+ * Адаптирован под Webflow структуру
  */
 
 export class UIController {
   constructor() {
-    // Screens
-    this.loadingScreen = document.getElementById('loading-screen');
-    this.startScreen = document.getElementById('start-screen');
-    this.winScreen = document.getElementById('win-screen');
-    this.loseScreen = document.getElementById('lose-screen');
+    // Screens (Webflow structure)
+    this.startScreen = document.querySelector('.game-ui.game-start'); // hero state
+    this.runningScreen = document.querySelector('.game-ui.game-running'); // game state
+    this.faildScreen = document.querySelector('.game-ui.faild-screen') // faild state
+    this.winScreen = document.querySelector('.game-ui.win-screen') // win state
+    // this.boostScreen = document.querySelector('.game-ui.game-boost');
 
-    // HUD
-    this.gameHUD = document.getElementById('game-hud');
-    this.coinCount = document.getElementById('coin-count');
-    this.mellowLogo = document.getElementById('mellow-logo');
-
-    // Modals
-    this.boosterModal = document.getElementById('booster-modal');
+    // Game counter (в running screen)
+    this.coinCounter = document.querySelector('[game-counter]');
 
     // Buttons
-    this.playBtn = document.getElementById('play-btn');
-    this.boosterContinueBtn = document.getElementById('booster-continue-btn');
-    this.winDemoBtn = document.getElementById('win-demo-btn');
-    this.winRetryBtn = document.getElementById('win-retry-btn');
-    this.loseDemoBtn = document.getElementById('lose-demo-btn');
-    this.loseRetryBtn = document.getElementById('lose-retry-btn');
+    this.startBtn = document.querySelector('[game-btn-start]');
 
-    // Score displays
-    this.winScore = document.getElementById('win-score');
-    this.loseScore = document.getElementById('lose-score');
+    // TODO: Добавить когда будут готовы
+    // this.pauseBtn = document.querySelector('[game-btn-pause]');
+    // this.resumeBtn = document.querySelector('[game-btn-resume]');
+    // this.retryBtn = document.querySelector('[game-btn-retry]');
 
-    console.log('🎨 UIController initialized');
+    // Canvas
+    this.canvas = document.getElementById('game-canvas');
+
+    console.log('🎨 UIController initialized (Webflow structure)');
   }
 
   /**
-   * Hide loading screen
-   */
-  hideLoading() {
-    this.loadingScreen.classList.add('hidden');
-  }
-
-  /**
-   * Show start screen
+   * Show start screen (Webflow)
    */
   showStartScreen() {
     this.hideAll();
-    this.startScreen.classList.remove('hidden');
+    if (this.startScreen) {
+      this.startScreen.style.opacity = '1';
+    }
+    // Hide canvas on start screen
+    if (this.canvas) {
+      this.canvas.style.display = 'none';
+    }
   }
 
   /**
    * Hide start screen
    */
   hideStartScreen() {
-    this.startScreen.classList.add('hidden');
+    if (this.startScreen) {
+      this.startScreen.style.opacity = '0';
+    }
   }
 
   /**
-   * Show game HUD
+   * Show running screen (game HUD)
    */
-  showHUD() {
-    this.gameHUD.classList.remove('hidden');
+  showRunningScreen() {
+    this.hideAll();
+    if (this.runningScreen) {
+      this.runningScreen.style.opacity = '1';
+    }
+    // Show canvas when game is running
+    if (this.canvas) {
+      this.canvas.style.display = 'block';
+    }
   }
 
   /**
-   * Hide game HUD
+   * Hide running screen
    */
-  hideHUD() {
-    this.gameHUD.classList.add('hidden');
+  hideRunningScreen() {
+    if (this.runningScreen) {
+      this.runningScreen.style.opacity = '0';
+    }
   }
 
   /**
    * Update coin counter
    * @param {number} current - Current coins
-   * @param {number} target - Target coins
+   * @param {number} target - Target coins (optional)
    */
-  updateCoinCount(current, target) {
-    this.coinCount.textContent = `${current}/${target}`;
+  updateCoinCount(current, target = null) {
+    if (this.coinCounter) {
+      // Обновляем только число внутри span, не трогая "/200" в родителе
+      this.coinCounter.textContent = current.toString();
+    }
   }
 
   /**
-   * Show booster modal
+   * Show booster modal (TODO: когда будет готов в Webflow)
    */
   showBoosterModal() {
-    this.boosterModal.classList.remove('hidden');
+    console.warn('⚠️ Booster modal not implemented in Webflow yet');
   }
 
   /**
-   * Hide booster modal
+   * Hide booster modal (TODO: когда будет готов в Webflow)
    */
   hideBoosterModal() {
-    this.boosterModal.classList.add('hidden');
+    console.warn('⚠️ Booster modal not implemented in Webflow yet');
   }
 
   /**
-   * Show win screen
-   * @param {number} score - Final score
+   * Show win screen (TODO: когда будет готов в Webflow)
    */
   showWinScreen(score) {
-    this.hideAll();
-    this.winScore.textContent = `Score: ${score}`;
-    this.winScreen.classList.remove('hidden');
+    console.log(`🏆 WIN! Score: ${score}`);
+    console.warn('⚠️ Win screen not implemented in Webflow yet');
   }
 
   /**
-   * Show lose screen
-   * @param {number} score - Final score
+   * Show lose screen (TODO: когда будет готов в Webflow)
    */
   showLoseScreen(score) {
-    this.hideAll();
-    this.loseScore.textContent = `Score: ${score}`;
-    this.loseScreen.classList.remove('hidden');
+    alert(`Вы проиграли! ${score}`)
+    console.log(`💀 LOSE! Score: ${score}`);
+    console.warn('⚠️ Lose screen not implemented in Webflow yet');
   }
 
   /**
-   * Hide all screens and modals
+   * Hide all screens
    */
   hideAll() {
-    this.loadingScreen.classList.add('hidden');
-    this.startScreen.classList.add('hidden');
-    this.winScreen.classList.add('hidden');
-    this.loseScreen.classList.add('hidden');
-    this.gameHUD.classList.add('hidden');
-    this.boosterModal.classList.add('hidden');
+    if (this.startScreen) this.startScreen.style.opacity = '0';
+    if (this.runningScreen) this.runningScreen.style.opacity = '0';
+    // TODO: Добавить остальные экраны когда будут готовы
   }
 
   /**
-   * Setup button event listeners
+   * Legacy methods for compatibility
+   */
+  hideLoading() {
+    console.log('✅ Loading complete');
+  }
+
+  showHUD() {
+    this.showRunningScreen();
+  }
+
+  hideHUD() {
+    this.hideRunningScreen();
+  }
+
+  /**
+   * Setup button event listeners (Webflow)
    * @param {Object} callbacks - Event callbacks
    */
   setupEventListeners(callbacks) {
-    if (callbacks.onPlayClick) {
-      this.playBtn.addEventListener('click', callbacks.onPlayClick);
+    // Start button
+    if (callbacks.onPlayClick && this.startBtn) {
+      this.startBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        callbacks.onPlayClick();
+      });
     }
 
-    if (callbacks.onBoosterContinue) {
-      this.boosterContinueBtn.addEventListener('click', callbacks.onBoosterContinue);
-    }
+    // TODO: Добавить остальные кнопки когда будут готовы в Webflow
+    // if (callbacks.onPause && this.pauseBtn) {
+    //   this.pauseBtn.addEventListener('click', callbacks.onPause);
+    // }
 
-    if (callbacks.onRetry) {
-      this.winRetryBtn.addEventListener('click', callbacks.onRetry);
-      this.loseRetryBtn.addEventListener('click', callbacks.onRetry);
-    }
-
-    if (callbacks.onBookDemo) {
-      this.winDemoBtn.addEventListener('click', callbacks.onBookDemo);
-      this.loseDemoBtn.addEventListener('click', callbacks.onBookDemo);
-    }
+    // if (callbacks.onRetry && this.retryBtn) {
+    //   this.retryBtn.addEventListener('click', callbacks.onRetry);
+    // }
   }
 
   /**

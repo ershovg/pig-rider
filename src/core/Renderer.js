@@ -17,7 +17,7 @@ export class Renderer {
     await this.app.init({
       width: CONFIG.CANVAS_WIDTH,
       height: CONFIG.CANVAS_HEIGHT,
-      backgroundColor: 0x87CEEB, // Sky blue background (placeholder)
+      backgroundAlpha: 0, // Прозрачный фон для Webflow
       antialias: true,
       resolution: window.devicePixelRatio || 1,
       autoDensity: true,
@@ -26,11 +26,34 @@ export class Renderer {
 
     this.stage = this.app.stage;
 
+    // Stop ticker until game starts (prevents rendering before play button)
+    this.app.ticker.stop();
+
     // Make canvas responsive
     this.setupResponsive();
 
-    console.log('🎨 Renderer initialized');
+    console.log('🎨 Renderer initialized (ticker stopped)');
     return this.app;
+  }
+
+  /**
+   * Start rendering
+   */
+  start() {
+    if (this.app) {
+      this.app.ticker.start();
+      console.log('🎨 Renderer started');
+    }
+  }
+
+  /**
+   * Stop rendering
+   */
+  stop() {
+    if (this.app) {
+      this.app.ticker.stop();
+      console.log('🎨 Renderer stopped');
+    }
   }
 
   /**
@@ -39,12 +62,22 @@ export class Renderer {
   setupResponsive() {
     const resize = () => {
       const parent = this.app.canvas.parentElement;
-      const scaleX = parent.clientWidth / CONFIG.CANVAS_WIDTH;
-      const scaleY = parent.clientHeight / CONFIG.CANVAS_HEIGHT;
-      const scale = Math.min(scaleX, scaleY);
+
+      // Если родитель не имеет размеров, используем window
+      const containerWidth = parent.clientWidth || window.innerWidth;
+      const containerHeight = parent.clientHeight || window.innerHeight;
+
+      const scaleX = containerWidth / CONFIG.CANVAS_WIDTH;
+      const scaleY = containerHeight / CONFIG.CANVAS_HEIGHT;
+
+      // Используем Math.max чтобы заполнить весь контейнер
+      // (часть canvas может обрезаться, но заполнит всё пространство)
+      const scale = Math.max(scaleX, scaleY);
 
       this.app.canvas.style.width = `${CONFIG.CANVAS_WIDTH * scale}px`;
       this.app.canvas.style.height = `${CONFIG.CANVAS_HEIGHT * scale}px`;
+
+      console.log(`📐 Canvas scaled: ${CONFIG.CANVAS_WIDTH * scale}x${CONFIG.CANVAS_HEIGHT * scale}`);
     };
 
     window.addEventListener('resize', resize);

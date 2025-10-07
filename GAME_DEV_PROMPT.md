@@ -61,22 +61,45 @@ You are tasked with creating a high-performance web-based endless runner game ca
 
 ```
 game/
-├── index.html              # HTML структура UI + Canvas container
+├── index.html                    # HTML структура UI (БЕЗ инлайн стилей)
+│
 ├── src/
-│   ├── main.js            # Точка входа
-│   ├── config.js          # Конфигурация (boosterTimer, targetCoins)
+│   ├── main.js                  # Точка входа + import './styles/main.css'
 │   │
-│   ├── game/
-│   │   ├── Game.js        # Главный класс (PixiJS)
-│   │   ├── Player.js      # Свинка (PixiJS Sprite)
-│   │   ├── Obstacle.js    # Препятствия (PixiJS)
-│   │   ├── Coin.js        # Монетки (PixiJS)
-│   │   └── Cloud.js       # Облака (PixiJS Container)
+│   ├── styles/                  # CSS модули (Vite компилирует)
+│   │   ├── main.css            # Импорт всех модулей через @import
+│   │   │
+│   │   ├── base/
+│   │   │   ├── variables.css   # CSS переменные (цвета, размеры)
+│   │   │   ├── reset.css       # CSS reset
+│   │   │   └── typography.css  # font-family: inherit
+│   │   │
+│   │   ├── screens/
+│   │   │   ├── loading.css     # Loading screen
+│   │   │   ├── start.css       # Start screen
+│   │   │   ├── game-hud.css    # Game HUD
+│   │   │   ├── booster.css     # Booster modal
+│   │   │   ├── win.css         # Win screen
+│   │   │   └── lose.css        # Lose screen
+│   │   │
+│   │   └── components/
+│   │       ├── buttons.css     # Кнопки (.btn, .btn--primary)
+│   │       └── modals.css      # Модалки (.modal)
+│   │
+│   ├── config/
+│   │   └── constants.js        # Конфигурация (boosterTimer, targetCoins)
+│   │
+│   ├── Game.js                 # Главный класс игры
 │   │
 │   ├── core/
-│   │   ├── Renderer.js    # PixiJS Application wrapper
-│   │   ├── AssetLoader.js # Загрузка SVG → PixiJS Textures
-│   │   └── GameLoop.js    # Fixed timestep loop
+│   │   ├── Renderer.js         # PixiJS Application wrapper
+│   │   ├── AssetLoader.js      # Загрузка SVG → PixiJS Textures
+│   │   └── GameLoop.js         # Fixed timestep loop
+│   │
+│   ├── entities/
+│   │   ├── Player.js           # Свинка (PixiJS Sprite)
+│   │   ├── Obstacle.js         # Препятствия (PixiJS)
+│   │   └── Coin.js             # Монетки (PixiJS)
 │   │
 │   ├── systems/
 │   │   ├── SpawnSystem.js      # Спавн препятствий и монет
@@ -84,25 +107,25 @@ game/
 │   │   └── InputSystem.js      # Управление (стрелки)
 │   │
 │   ├── ui/
-│   │   ├── UIController.js  # Управление HTML UI
-│   │   ├── screens.js       # Показ/скрытие экранов
-│   │   └── hud.js           # Обновление счётчика монет
-│   │
-│   ├── animations/
-│   │   ├── gsap-stars.js    # GSAP: мигание звёзд (HTML)
-│   │   ├── gsap-buttons.js  # GSAP: пульсация кнопок
-│   │   └── pixi-effects.js  # PixiJS: particle эффекты
+│   │   └── UIController.js     # Управление HTML UI
 │   │
 │   └── utils/
-│       └── EventBus.js      # События между PixiJS и HTML UI
+│       ├── EventBus.js         # События между PixiJS и HTML UI
+│       └── ObjectPool.js       # Object pooling
 │
 └── public/
     └── assets/
-        └── sprites/         # SVG ассеты (загружаются в PixiJS)
+        └── sprites/             # SVG ассеты из Figma
             ├── pig.svg
             ├── barrier-1.svg
+            ├── barrier-2.svg
+            ├── barrier-3.svg
             ├── coin.svg
+            ├── coinStar.svg
+            ├── booster.svg
             ├── cloud.svg
+            ├── star.svg
+            ├── mellowLogo.svg
             └── ...
 ```
 

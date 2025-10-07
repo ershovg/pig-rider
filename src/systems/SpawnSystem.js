@@ -5,13 +5,16 @@ import { Obstacle } from '../entities/Obstacle.js';
 import { Coin } from '../entities/Coin.js';
 
 export class SpawnSystem {
-  constructor(obstacleTexture, coinTexture, stage) {
+  constructor(obstacleTextures, coinTexture, stage) {
     this.stage = stage;
+    this.obstacleTextures = Array.isArray(obstacleTextures) ? obstacleTextures : [obstacleTextures];
 
     // Create object pools
     this.obstaclePool = new ObjectPool(
       () => {
-        const obstacle = new Obstacle(obstacleTexture);
+        // Randomly choose texture for variety
+        const randomTexture = this.obstacleTextures[MathUtils.randomInt(0, this.obstacleTextures.length - 1)];
+        const obstacle = new Obstacle(randomTexture);
         this.stage.addChild(obstacle.getSprite());
         return obstacle;
       },
@@ -86,8 +89,25 @@ export class SpawnSystem {
     if (this.obstacleSpawnTimer >= spawnInterval) {
       this.obstacleSpawnTimer = 0;
 
-      // Choose random lane
-      const lane = MathUtils.randomInt(0, CONFIG.LANES.TOTAL - 1);
+      // Get lanes that currently have obstacles near spawn area
+      const blockedLanes = this.getBlockedLanes();
+
+      // CRITICAL: Never block all lanes - always leave at least 1 free
+      let availableLanes = [];
+      for (let i = 0; i < CONFIG.LANES.TOTAL; i++) {
+        if (!blockedLanes.includes(i)) {
+          availableLanes.push(i);
+        }
+      }
+
+      // If all lanes would be blocked, skip this spawn
+      if (availableLanes.length === 0) {
+        console.warn('⚠️ All lanes blocked - skipping obstacle spawn');
+        return;
+      }
+
+      // Choose random lane from available lanes
+      const lane = availableLanes[MathUtils.randomInt(0, availableLanes.length - 1)];
 
       // Calculate spawn position
       const minDist = CONFIG.OBSTACLE.MIN_DISTANCE;
@@ -105,6 +125,32 @@ export class SpawnSystem {
 
       this.lastObstacleX[lane] = spawnX;
     }
+  }
+
+  /**
+   * Get lanes that currently have obstacles in the near spawn area
+   * This prevents blocking all lanes simultaneously
+   */
+  getBlockedLanes() {
+    const blocked = [];
+    const safeDistance = 1500; // Distance threshold to consider a lane "blocked"
+
+    const activeObstacles = this.obstaclePool.getActive();
+    for (const obstacle of activeObstacles) {
+      if (!obstacle.isActive()) continue;
+
+      const obstacleX = obstacle.getSprite().x;
+
+      // If obstacle is in the spawn/near area, mark its lane as blocked
+      if (obstacleX > CONFIG.CANVAS_WIDTH - safeDistance) {
+        const lane = obstacle.lane;
+        if (!blocked.includes(lane)) {
+          blocked.push(lane);
+        }
+      }
+    }
+
+    return blocked;
   }
 
   /**

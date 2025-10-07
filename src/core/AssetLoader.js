@@ -13,10 +13,20 @@ export class AssetLoader {
    */
   async loadAssets() {
     try {
-      // Load sprites
+      console.log('📦 Loading assets...');
+
+      // Load PNG sprites from Figma
       this.assets.player = await PIXI.Assets.load(ASSET_PATHS.PLAYER);
-      this.assets.obstacle = await PIXI.Assets.load(ASSET_PATHS.OBSTACLE);
+      this.assets.obstacleBase = await PIXI.Assets.load(ASSET_PATHS.OBSTACLE_BASE);
+      this.assets.obstacleLarge = await PIXI.Assets.load(ASSET_PATHS.OBSTACLE_LARGE);
       this.assets.coin = await PIXI.Assets.load(ASSET_PATHS.COIN);
+      this.assets.coinStar = await PIXI.Assets.load(ASSET_PATHS.COIN_STAR);
+      this.assets.booster = await PIXI.Assets.load(ASSET_PATHS.BOOSTER);
+      this.assets.star = await PIXI.Assets.load(ASSET_PATHS.STAR);
+      this.assets.cloud = await PIXI.Assets.load(ASSET_PATHS.CLOUD);
+
+      // Для совместимости со старым кодом
+      this.assets.obstacle = this.assets.obstacleBase;
 
       // Audio loading placeholder (will be implemented later)
       // this.assets.bgMusic = await this.loadAudio(ASSET_PATHS.MUSIC_BG);
