@@ -1,4 +1,5 @@
 import { CONFIG } from './config/constants.js';
+import { ENV } from './config/env.js';
 import { Renderer } from './core/Renderer.js';
 import { GameLoop } from './core/GameLoop.js';
 import { AssetLoader } from './core/AssetLoader.js';
@@ -6,6 +7,8 @@ import { Player } from './entities/Player.js';
 import { SpawnSystem } from './systems/SpawnSystem.js';
 import { CollisionSystem } from './systems/CollisionSystem.js';
 import { UIController } from './ui/UIController.js';
+import { AIBotModal } from './ui/AIBotModal.js';
+import { ElevenLabsService } from './services/ElevenLabsService.js';
 import { EventBus } from './utils/EventBus.js';
 
 export class Game {
@@ -19,6 +22,8 @@ export class Game {
     this.collisionSystem = null;
 
     this.ui = null; // HTML UI Controller
+    this.aiBot = null; // AI Bot Modal
+    this.elevenLabs = null; // ElevenLabs Service
 
     this.gameState = 'loading'; // loading, menu, playing, paused, ended
     this.score = 0;
@@ -34,6 +39,19 @@ export class Game {
     try {
       // Initialize HTML UI Controller
       this.ui = new UIController();
+
+      // Initialize ElevenLabs Service (if API key is available)
+      if (ENV.ELEVENLABS_API_KEY) {
+        this.elevenLabs = new ElevenLabsService(ENV.ELEVENLABS_API_KEY);
+        await this.elevenLabs.init();
+
+        // Initialize AI Bot Modal
+        this.aiBot = new AIBotModal(this.elevenLabs);
+        await this.aiBot.init();
+        this.aiBot.onComplete = () => this.startGame();
+      } else {
+        console.warn('⚠️ ElevenLabs API key not found. AI bot will be disabled.');
+      }
 
       // Initialize renderer (PixiJS)
       this.renderer = new Renderer('game-canvas');
@@ -52,9 +70,13 @@ export class Game {
       // Initialize UI event listeners
       this.initUI();
 
-      // Show start screen
+      // Show AI Bot welcome or start screen
       this.gameState = 'menu';
-      this.ui.showStartScreen();
+      if (this.aiBot) {
+        this.aiBot.show();
+      } else {
+        this.ui.showStartScreen();
+      }
 
       console.log('✅ Game initialized successfully');
     } catch (error) {
@@ -249,6 +271,10 @@ export class Game {
 
     if (this.player) {
       this.player.destroy();
+    }
+
+    if (this.aiBot) {
+      this.aiBot.destroy();
     }
 
     if (this.ui) {

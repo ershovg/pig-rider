@@ -60,9 +60,16 @@ export const CONFIG = {
 };
 
 export const ASSET_PATHS = {
-  PLAYER: '/assets/sprites/pig.svg',
-  OBSTACLE: '/assets/sprites/barrier.svg',
-  COIN: '/assets/sprites/coin.svg',
+  // PNG спрайты из Figma (@2x)
+  PLAYER: '/assets/sprites/pig_rider.png',
+  OBSTACLE_BASE: '/assets/sprites/barier_base.png',
+  OBSTACLE_LARGE: '/assets/sprites/barier_large.png',
+  COIN: '/assets/sprites/coin.png',
+  COIN_STAR: '/assets/sprites/coin_star.png',
+  BOOSTER: '/assets/sprites/booster.png',
+  STAR: '/assets/sprites/star.png',
+  CLOUD: '/assets/sprites/cloud.png',
+
   // Audio placeholders for later
   MUSIC_BG: '/assets/audio/bg-music.mp3',
   SFX_COIN: '/assets/audio/coin.mp3',

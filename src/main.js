@@ -1,4 +1,5 @@
 import { Game } from './Game.js';
+import './styles/main.css'; // Импорт всех CSS модулей
 
 // Entry point for the game
 let game = null;
