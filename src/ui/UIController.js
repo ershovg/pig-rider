@@ -7,13 +7,11 @@
 export class UIController {
   constructor() {
     // Screens (Webflow structure)
-    this.startScreen = document.querySelector('.game-ui.game-start');
-    this.runningScreen = document.querySelector('.game-ui.game-running');
-
-    // TODO: Добавить когда будут готовы в Webflow
-    // this.pauseScreen = document.querySelector('.game-ui.game-pause');
+    this.startScreen = document.querySelector('.game-ui.game-start'); // hero state
+    this.runningScreen = document.querySelector('.game-ui.game-running'); // game state
+    this.faildScreen = document.querySelector('.game-ui.faild-screen') // faild state
+    this.winScreen = document.querySelector('.game-ui.win-screen') // win state
     // this.boostScreen = document.querySelector('.game-ui.game-boost');
-    // this.endScreen = document.querySelector('.game-ui.game-end');
 
     // Game counter (в running screen)
     this.coinCounter = document.querySelector('[game-counter]');
@@ -38,7 +36,11 @@ export class UIController {
   showStartScreen() {
     this.hideAll();
     if (this.startScreen) {
-      this.startScreen.style.display = 'block';
+      this.startScreen.style.opacity = '1';
+    }
+    // Hide canvas on start screen
+    if (this.canvas) {
+      this.canvas.style.display = 'none';
     }
   }
 
@@ -47,7 +49,7 @@ export class UIController {
    */
   hideStartScreen() {
     if (this.startScreen) {
-      this.startScreen.style.display = 'none';
+      this.startScreen.style.opacity = '0';
     }
   }
 
@@ -57,7 +59,11 @@ export class UIController {
   showRunningScreen() {
     this.hideAll();
     if (this.runningScreen) {
-      this.runningScreen.style.display = 'block';
+      this.runningScreen.style.opacity = '1';
+    }
+    // Show canvas when game is running
+    if (this.canvas) {
+      this.canvas.style.display = 'block';
     }
   }
 
@@ -66,7 +72,7 @@ export class UIController {
    */
   hideRunningScreen() {
     if (this.runningScreen) {
-      this.runningScreen.style.display = 'none';
+      this.runningScreen.style.opacity = '0';
     }
   }
 
@@ -77,11 +83,8 @@ export class UIController {
    */
   updateCoinCount(current, target = null) {
     if (this.coinCounter) {
-      if (target !== null) {
-        this.coinCounter.textContent = `${current}/${target}`;
-      } else {
-        this.coinCounter.textContent = current.toString();
-      }
+      // Обновляем только число внутри span, не трогая "/200" в родителе
+      this.coinCounter.textContent = current.toString();
     }
   }
 
@@ -111,6 +114,7 @@ export class UIController {
    * Show lose screen (TODO: когда будет готов в Webflow)
    */
   showLoseScreen(score) {
+    alert(`Вы проиграли! ${score}`)
     console.log(`💀 LOSE! Score: ${score}`);
     console.warn('⚠️ Lose screen not implemented in Webflow yet');
   }
@@ -119,8 +123,8 @@ export class UIController {
    * Hide all screens
    */
   hideAll() {
-    if (this.startScreen) this.startScreen.style.display = 'none';
-    if (this.runningScreen) this.runningScreen.style.display = 'none';
+    if (this.startScreen) this.startScreen.style.opacity = '0';
+    if (this.runningScreen) this.runningScreen.style.opacity = '0';
     // TODO: Добавить остальные экраны когда будут готовы
   }
 

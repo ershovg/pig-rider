@@ -64,9 +64,6 @@ export class Game {
       // Hide loading screen
       this.ui.hideLoading();
 
-      // Initialize game systems (PixiJS)
-      this.initSystems();
-
       // Initialize UI event listeners
       this.initUI();
 
@@ -94,11 +91,14 @@ export class Game {
     this.player = new Player(playerTexture);
     this.renderer.addToStage(this.player.getSprite());
 
-    // Create spawn system
-    const obstacleTexture = this.assetLoader.getAsset('obstacle');
+    // Create spawn system with multiple obstacle textures for variety
+    const obstacleTextures = [
+      this.assetLoader.getAsset('obstacleBase'),
+      this.assetLoader.getAsset('obstacleLarge')
+    ];
     const coinTexture = this.assetLoader.getAsset('coin');
     this.spawnSystem = new SpawnSystem(
-      obstacleTexture,
+      obstacleTextures,
       coinTexture,
       this.renderer.stage
     );
@@ -133,6 +133,11 @@ export class Game {
    * Start game
    */
   startGame() {
+    // Initialize game systems on first start
+    if (!this.player) {
+      this.initSystems();
+    }
+
     this.gameState = 'playing';
     this.score = 0;
     this.gameSpeed = CONFIG.GAME_SPEED;
@@ -144,6 +149,9 @@ export class Game {
     this.ui.hideStartScreen();
     this.ui.showHUD();
     this.ui.updateCoinCount(0, CONFIG.TARGET_COINS);
+
+    // Start renderer ticker
+    this.renderer.start();
 
     this.gameLoop.start();
 

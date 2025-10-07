@@ -8,7 +8,14 @@ export default defineConfig(({ command, mode }) => {
     publicDir: 'public',
     server: {
       port: 3000,
-      open: true
+      open: true,
+      cors: true,  // Разрешаем CORS
+      host: '0.0.0.0',  // Слушаем все интерфейсы
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      }
     }
   };
 
