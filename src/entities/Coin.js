@@ -13,6 +13,9 @@ export class Coin {
     this.collected = false;
     this.lane = 0;
     this.rotationTween = null;
+
+    // Скрываем спрайт при создании
+    this.sprite.visible = false;
   }
 
   /**

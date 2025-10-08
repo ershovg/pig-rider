@@ -5,9 +5,13 @@ export const CONFIG = {
   CANVAS_HEIGHT: 1080,
 
   // Game - Configurable variables (легко менять)
-  TARGET_COINS: 500,        // Целевое количество монет для победы
-  BOOSTER_DURATION: 5,      // Длительность бустера в секундах
-  BOOSTER_SPAWN_RATE: 0.1,  // Частота появления бустера (будет настроена)
+  TARGET_COINS: 200,        // Целевое количество монет для победы
+
+  // Booster settings
+  BOOSTER_DURATION: 6,                // Длительность бустера в секундах (3 переключения × 2 сек)
+  BOOSTER_LANE_SWITCH_INTERVAL: 2,    // Интервал смены линии во время бустера (секунды)
+  BOOSTER_COIN_SPAWN_INTERVAL: 0.08,  // Очень частый спавн монет во время бустера (секунды)
+  BOOSTER_COOLDOWN_DURATION: 5,       // Cooldown после окончания бустера перед новым спавном (секунды)
 
   GAME_SPEED: 1.0,
   MAX_SPEED: 2.5,
@@ -42,7 +46,7 @@ export const CONFIG = {
     MIN_DISTANCE: 400,
     MAX_DISTANCE: 800,
     SIZE: 60,
-    POOL_SIZE: 30,
+    POOL_SIZE: 80, // Увеличен для поддержки множества монет во время бустера
     VALUE: 1
   },
 

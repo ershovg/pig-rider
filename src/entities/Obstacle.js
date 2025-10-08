@@ -12,6 +12,9 @@ export class Obstacle {
 
     this.active = false;
     this.lane = 0;
+
+    // Скрываем спрайт при создании
+    this.sprite.visible = false;
   }
 
   /**
