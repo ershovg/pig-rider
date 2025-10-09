@@ -10,8 +10,12 @@ export class Booster {
   constructor(texture) {
     this.sprite = new PIXI.Sprite(texture);
     this.sprite.anchor.set(0.5);
-    this.sprite.width = CONFIG.COIN.SIZE * 1.2; // Чуть больше монеты
-    this.sprite.height = CONFIG.COIN.SIZE * 1.2;
+
+    // Устанавливаем размер через scale для стабильного рендеринга
+    // Это предотвращает визуальное "дергание" объектов
+    const targetSize = CONFIG.COIN.SIZE * 1.2; // Чуть больше монеты
+    const scale = targetSize / texture.width;
+    this.sprite.scale.set(scale);
 
     this.active = false;
     this.collected = false;
@@ -122,7 +126,8 @@ export class Booster {
     if (!this.active || this.collected) return;
 
     // Двигаем бустер влево
-    this.sprite.x -= gameSpeed * deltaTime * 800;
+    // Math.round() предотвращает "дергание" из-за дробных координат
+    this.sprite.x = Math.round(this.sprite.x - gameSpeed * deltaTime * 800);
 
     // Обновляем Y позицию для плавающей анимации
     if (this.floatTween) {

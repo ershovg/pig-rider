@@ -6,8 +6,12 @@ export class Coin {
   constructor(texture) {
     this.sprite = new PIXI.Sprite(texture);
     this.sprite.anchor.set(0.5);
-    this.sprite.width = CONFIG.COIN.SIZE;
-    this.sprite.height = CONFIG.COIN.SIZE;
+
+    // Устанавливаем размер через scale для стабильного рендеринга
+    // Это предотвращает визуальное "дергание" объектов
+    const targetSize = CONFIG.COIN.SIZE;
+    const scale = targetSize / texture.width;
+    this.sprite.scale.set(scale);
 
     this.active = false;
     this.collected = false;
@@ -105,7 +109,8 @@ export class Coin {
     if (!this.active || this.collected) return;
 
     // Move coin to the left
-    this.sprite.x -= gameSpeed * deltaTime * 800;
+    // Math.round() предотвращает "дергание" из-за дробных координат
+    this.sprite.x = Math.round(this.sprite.x - gameSpeed * deltaTime * 800);
 
     // Deactivate if off screen
     if (this.sprite.x < -CONFIG.COIN.SIZE) {

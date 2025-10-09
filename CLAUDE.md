@@ -2,6 +2,19 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Working Style & Agent Usage
+
+**IMPORTANT**: Follow these rules for agent usage and workflow:
+
+- **Never automatically start dev server or run tests** unless explicitly requested by the user
+- **Never automatically run build commands** after making code changes - wait for user's request
+- **Use agents only when explicitly asked** by the user (e.g., "review this code", "debug this issue")
+- **Don't be overly proactive** with testing - make changes, explain them, and let the user decide when to test
+- When user asks "how to do X", answer first - don't immediately jump into implementation
+- Only run commands that are directly requested or clearly necessary for the current task
+
+This ensures you work **with** the user, not ahead of them.
+
 ## Project Overview
 
 **Pig Rider** is an endless runner game built with PixiJS for Webflow integration. The game features a pig character navigating three lanes, collecting coins while avoiding obstacles. The architecture separates WebGL rendering (PixiJS) from UI (HTML/CSS), making it ideal for Webflow deployment.

@@ -59,7 +59,8 @@ export class Cloud {
     if (!this.active) return;
 
     // Облака двигаются очень медленно (эффект параллакса)
-    this.sprite.x -= gameSpeed * deltaTime * 200 * this.speedMultiplier;
+    // Math.round() предотвращает "дергание" из-за дробных координат
+    this.sprite.x = Math.round(this.sprite.x - gameSpeed * deltaTime * 200 * this.speedMultiplier);
 
     // Деактивируем если за экраном
     if (this.sprite.x < -100) {

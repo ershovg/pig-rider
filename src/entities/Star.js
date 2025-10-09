@@ -79,7 +79,8 @@ export class Star {
     if (!this.active) return;
 
     // Двигаем звездочку влево медленнее чем препятствия (эффект параллакса)
-    this.sprite.x -= gameSpeed * deltaTime * 400; // медленнее чем препятствия
+    // Math.round() предотвращает "дергание" из-за дробных координат
+    this.sprite.x = Math.round(this.sprite.x - gameSpeed * deltaTime * 400);
 
     // Деактивируем если за экраном
     if (this.sprite.x < -50) {

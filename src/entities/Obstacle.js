@@ -6,9 +6,11 @@ export class Obstacle {
     this.sprite = new PIXI.Sprite(texture);
     this.sprite.anchor.set(0.5);
 
-    // Set width, height scales proportionally
-    this.sprite.width = CONFIG.OBSTACLE.SIZE;
-    this.sprite.scale.y = this.sprite.scale.x; // Keep aspect ratio
+    // Устанавливаем размер через scale для стабильного рендеринга
+    // Это предотвращает визуальное "дергание" объектов
+    const targetSize = CONFIG.OBSTACLE.SIZE;
+    const scale = targetSize / texture.width;
+    this.sprite.scale.set(scale); // Uniform scale сохраняет пропорции
 
     this.active = false;
     this.lane = 0;
@@ -43,7 +45,8 @@ export class Obstacle {
     if (!this.active) return;
 
     // Move obstacle to the left
-    this.sprite.x -= gameSpeed * deltaTime * 800; // Base speed multiplier
+    // Math.round() предотвращает "дергание" из-за дробных координат
+    this.sprite.x = Math.round(this.sprite.x - gameSpeed * deltaTime * 800);
 
     // Deactivate if off screen
     if (this.sprite.x < -CONFIG.OBSTACLE.SIZE) {

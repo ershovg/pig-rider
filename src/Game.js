@@ -310,6 +310,10 @@ export class Game {
         this.score += value;
         this.ui.updateCoinCount(this.score, CONFIG.TARGET_COINS);
 
+        // Emit sparkle effect at coin position
+        const coinSprite = coin.getSprite();
+        this.spawnSystem.emitCoinSparkle(coinSprite.x, coinSprite.y);
+
         // Check win condition
         if (this.score >= CONFIG.TARGET_COINS) {
           this.endGame(true);

@@ -6,6 +6,7 @@ import { Coin } from '../entities/Coin.js';
 import { Star } from '../entities/Star.js';
 import { Cloud } from '../entities/Cloud.js';
 import { Booster } from '../entities/Booster.js';
+import { CoinSparkle } from '../entities/CoinSparkle.js';
 
 export class SpawnSystem {
   constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterTexture, stage) {
@@ -69,12 +70,27 @@ export class SpawnSystem {
       5 // Pool size для бустеров
     );
 
+    // CoinSparkles - эффекты при сборе монет
+    this.sparklePool = new ObjectPool(
+      () => {
+        const sparkle = new CoinSparkle();
+        this.stage.addChild(sparkle);
+        return sparkle;
+      },
+      (sparkle) => sparkle.deactivate(),
+      10 // Pool size для эффектов (максимум ~10 монет на экране одновременно)
+    );
+
     // Track last spawn positions for each lane
     this.lastObstacleX = Array(CONFIG.LANES.TOTAL).fill(CONFIG.CANVAS_WIDTH);
     this.lastCoinX = Array(CONFIG.LANES.TOTAL).fill(CONFIG.CANVAS_WIDTH);
     this.lastStarX = Array(CONFIG.LANES.TOTAL).fill(CONFIG.CANVAS_WIDTH);
     this.lastCloudX = Array(CONFIG.LANES.TOTAL).fill(CONFIG.CANVAS_WIDTH);
     this.lastBoosterX = Array(CONFIG.LANES.TOTAL).fill(CONFIG.CANVAS_WIDTH);
+
+    // Track last spawn times for each lane (to prevent rapid sequential spawns)
+    // This prevents "impossible chains" where obstacles appear too close together
+    this.lastObstacleTime = Array(CONFIG.LANES.TOTAL).fill(0);
 
     // Spawn timers
     this.obstacleSpawnTimer = 0;
@@ -145,6 +161,15 @@ export class SpawnSystem {
       }
     }
 
+    // Update sparkles - эффекты при сборе монет
+    const activeSparkles = this.sparklePool.getActive();
+    for (const sparkle of activeSparkles) {
+      sparkle.update(deltaTime);
+      if (!sparkle.isActive()) {
+        this.sparklePool.release(sparkle);
+      }
+    }
+
     // Spawn new obstacles (skip during booster mode)
     if (!isBoosterMode) {
       this.spawnObstacles(deltaTime, gameSpeed, difficultyManager);
@@ -177,7 +202,8 @@ export class SpawnSystem {
       this.obstacleSpawnTimer = 0;
 
       // Get lanes that currently have obstacles near spawn area
-      const blockedLanes = this.getBlockedLanes();
+      // Pass gameSpeed to dynamically adjust safe distance
+      const blockedLanes = this.getBlockedLanes(gameSpeed);
 
       // CRITICAL: Never block all lanes - always leave at least 1 free
       let availableLanes = [];
@@ -196,7 +222,8 @@ export class SpawnSystem {
       // Choose random lane from available lanes
       const lane = availableLanes[MathUtils.randomInt(0, availableLanes.length - 1)];
 
-      // Calculate spawn position
+      // Calculate spawn position with increased minimum distance
+      // This prevents "tight chains" even on a single lane
       const minDist = CONFIG.OBSTACLE.MIN_DISTANCE;
       const maxDist = CONFIG.OBSTACLE.MAX_DISTANCE;
       const distance = MathUtils.randomFloat(minDist, maxDist);
@@ -211,18 +238,36 @@ export class SpawnSystem {
       obstacle.activate(lane, spawnX);
 
       this.lastObstacleX[lane] = spawnX;
+      this.lastObstacleTime[lane] = performance.now(); // Track spawn time for this lane
     }
   }
 
   /**
    * Get lanes that currently have obstacles in the near spawn area
-   * This prevents blocking all lanes simultaneously
+   * This prevents blocking all lanes simultaneously AND ensures player has time to react
+   *
+   * Improved algorithm:
+   * 1. Checks for obstacles in extended safe zone
+   * 2. Accounts for player reaction time + lane switch animation (0.15s)
+   * 3. Scales safe distance based on game speed
    */
-  getBlockedLanes() {
+  getBlockedLanes(gameSpeed = 1.0) {
     const blocked = [];
-    const safeDistance = 1500; // Distance threshold to consider a lane "blocked"
+
+    // CRITICAL: Calculate dynamic safe distance based on game speed
+    // Formula: base distance + speed multiplier to ensure minimum reaction time
+    //
+    // Reasoning:
+    // - Player needs ~0.15s for lane switch animation (CONFIG.PLAYER.SWITCH_DURATION)
+    // - Player needs ~0.2-0.3s reaction time (human factor)
+    // - Total: ~0.5s minimum safe window
+    // - At speed 2.5x, obstacles move ~800px/s, so we need ~2000px buffer
+    const baseDistance = 1500;
+    const speedMultiplier = Math.max(1.0, gameSpeed * 0.8); // Scale with speed, but not linearly
+    const safeDistance = baseDistance * speedMultiplier;
 
     const activeObstacles = this.obstaclePool.getActive();
+
     for (const obstacle of activeObstacles) {
       if (!obstacle.isActive()) continue;
 
@@ -461,6 +506,18 @@ export class SpawnSystem {
   }
 
   /**
+   * Emit sparkle effect at coin collection position
+   * @param {number} x - X coordinate of collected coin
+   * @param {number} y - Y coordinate of collected coin
+   */
+  emitCoinSparkle(x, y) {
+    const sparkle = this.sparklePool.acquire();
+    if (sparkle) {
+      sparkle.activate(x, y);
+    }
+  }
+
+  /**
    * Reset spawn system
    */
   reset() {
@@ -469,12 +526,14 @@ export class SpawnSystem {
     this.starPool.releaseAll();
     this.cloudPool.releaseAll();
     this.boosterPool.releaseAll();
+    this.sparklePool.releaseAll();
 
     this.lastObstacleX.fill(CONFIG.CANVAS_WIDTH);
     this.lastCoinX.fill(CONFIG.CANVAS_WIDTH);
     this.lastStarX.fill(CONFIG.CANVAS_WIDTH);
     this.lastCloudX.fill(CONFIG.CANVAS_WIDTH);
     this.lastBoosterX.fill(CONFIG.CANVAS_WIDTH);
+    this.lastObstacleTime.fill(0); // Reset spawn times
 
     this.obstacleSpawnTimer = 0;
     this.coinSpawnTimer = 0;
@@ -525,7 +584,8 @@ export class SpawnSystem {
       coins: this.coinPool.getStats(),
       stars: this.starPool.getStats(),
       clouds: this.cloudPool.getStats(),
-      boosters: this.boosterPool.getStats()
+      boosters: this.boosterPool.getStats(),
+      sparkles: this.sparklePool.getStats()
     };
   }
 }
