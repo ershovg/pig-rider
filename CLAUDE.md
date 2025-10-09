@@ -87,9 +87,24 @@ src/
 │   └── Cloud.js        # Decorative clouds
 │
 ├── systems/            # Game systems
-│   ├── SpawnSystem.js       # Object pooling + spawning logic
-│   ├── CollisionSystem.js   # AABB collision detection
-│   └── DifficultyManager.js # Progressive difficulty scaling
+│   ├── SpawnSystem.js            # Orchestrator для всех spawner'ов
+│   ├── CollisionSystem.js        # AABB collision detection
+│   ├── DifficultyManager.js      # Progressive difficulty scaling
+│   │
+│   ├── spawners/                 # Специализированные spawner'ы
+│   │   ├── BaseSpawner.js        # Абстрактный базовый класс
+│   │   ├── ObstacleSpawner.js    # Спавн препятствий + lane safety
+│   │   ├── CoinSpawner.js        # Спавн монет + booster режим
+│   │   ├── CloudSpawner.js       # Спавн облаков с анти-кластеризацией
+│   │   ├── StarSpawner.js        # Спавн декоративных звезд
+│   │   ├── BoosterSpawner.js     # Спавн power-up объектов
+│   │   └── SparkleSpawner.js     # Эффекты при сборе монет
+│   │
+│   ├── pools/                    # Управление пулами объектов
+│   │   └── EntityPoolManager.js  # Централизованное управление пулами
+│   │
+│   └── services/                 # Игровые сервисы
+│       └── LaneSafetyService.js  # Логика безопасности полос
 │
 ├── ui/                 # HTML UI management
 │   ├── UIController.js # Controls all HTML screens/modals
@@ -115,21 +130,82 @@ src/
 
 ## Key Systems
 
-### 1. Spawn System
+### 1. Spawn System (Refactored Architecture)
 
-**Location**: `src/systems/SpawnSystem.js`
+**Location**: `src/systems/SpawnSystem.js` + `src/systems/spawners/*`
 
-Uses object pooling for all entities (obstacles, coins, stars, clouds, boosters). Key features:
+**Новая модульная архитектура** (рефакторинг 2024):
 
-- **Lane Safety**: Never blocks all three lanes simultaneously with obstacles
-- **Booster Mode**: During booster activation, clears all obstacles and spawns dense coin trails on a single lane that switches every 2 seconds
-- **Difficulty Integration**: Spawn intervals adjusted by DifficultyManager based on score
-- **Decorative Elements**: Manages non-interactive elements (stars, clouds) separately from gameplay objects
+SpawnSystem теперь работает как **Orchestrator** (Facade Pattern), координируя специализированные spawner'ы. Это решает проблему "god object" старой версии (591 строка → 242 строки).
 
-Important methods:
-- `fillLaneWithCoins(lane)` - Instantly spawns 20 coins in a lane (used for booster mode)
-- `clearAllObstacles()` - Removes all obstacles (used when booster activates)
-- `getBlockedLanes()` - Ensures at least one lane is always passable
+#### Компоненты:
+
+**BaseSpawner** (`spawners/BaseSpawner.js`)
+- Абстрактный базовый класс для всех spawner'ов
+- Template Method Pattern: определяет общий алгоритм спавна
+- Управляет таймерами и обновлением активных объектов
+- Подклассы переопределяют только `spawn()` метод
+
+**EntityPoolManager** (`pools/EntityPoolManager.js`)
+- Централизованное управление всеми пулами объектов
+- Registry Pattern: один класс знает о всех пулах
+- Упрощает отладку и статистику
+
+**LaneSafetyService** (`services/LaneSafetyService.js`)
+- Сервис для обеспечения безопасности полос
+- Гарантирует, что игрок всегда имеет хотя бы один проход
+- Динамический расчет безопасного расстояния на основе скорости игры
+
+**Специализированные Spawner'ы:**
+- `ObstacleSpawner` - препятствия с lane safety логикой
+- `CoinSpawner` - монеты с поддержкой booster режима
+- `CloudSpawner` - облака с анти-кластеризацией
+- `StarSpawner` - декоративные звезды
+- `BoosterSpawner` - power-up объекты
+- `SparkleSpawner` - визуальные эффекты (ручной trigger)
+
+#### Преимущества новой архитектуры:
+
+✅ **Single Responsibility**: каждый spawner отвечает только за свой тип объектов
+✅ **Open/Closed**: добавить новый тип = создать новый spawner без изменения существующих
+✅ **Тестируемость**: каждый spawner тестируется изолированно
+✅ **Читаемость**: ObstacleSpawner - 120 строк вместо части 591-строчного файла
+✅ **Расширяемость**: новый spawner наследует BaseSpawner (80% кода уже готово)
+
+#### Ключевые методы SpawnSystem:
+
+- `update(deltaTime, gameSpeed, context)` - обновляет все spawner'ы
+- `fillLaneWithCoins(lane)` - заполняет полосу монетами (booster mode)
+- `clearAllObstacles()` - очищает препятствия (при активации бустера)
+- `emitCoinSparkle(x, y)` - эффект при сборе монеты
+- `getActiveObstacles/Coins/Boosters()` - получить активные объекты
+
+#### Как добавить новый тип объектов:
+
+```javascript
+// 1. Создать новый spawner (наследует BaseSpawner)
+class PowerUpSpawner extends BaseSpawner {
+  spawn(gameSpeed, context) {
+    const lane = Math.floor(Math.random() * 3);
+    const powerup = this.pool.acquire();
+    powerup.activate(lane, CONFIG.CANVAS_WIDTH + 500);
+  }
+}
+
+// 2. Зарегистрировать в SpawnSystem.initializePools()
+this.poolManager.registerPool('powerup', PowerUp, 10);
+
+// 3. Создать spawner в SpawnSystem.initializeSpawners()
+this.powerUpSpawner = new PowerUpSpawner({
+  pool: this.poolManager.getPool('powerup'),
+  stage: this.stage
+});
+
+// 4. Добавить в SpawnSystem.update()
+this.powerUpSpawner.update(deltaTime, gameSpeed, context);
+```
+
+**Готово!** Никакие существующие spawner'ы не изменились.
 
 ### 2. Booster Mechanic
 
@@ -245,13 +321,35 @@ Assets are loaded from `/assets/sprites/` by default. Override in Webflow:
 
 ## Development Guidelines
 
-### When Adding New Entities
+### When Adding New Entities (NEW ARCHITECTURE)
 
-1. Create class in `src/entities/` extending base pattern (see `Coin.js` or `Obstacle.js`)
-2. Implement: `activate(lane, x)`, `update(dt, speed)`, `deactivate()`, `isActive()`, `getHitbox()`
-3. Add pool to `SpawnSystem.js` constructor
-4. Add spawn logic in `SpawnSystem.js` update method
-5. Update collision detection in `CollisionSystem.js` if needed
+**Старый подход (до рефакторинга):** изменить 5+ мест в одном 591-строчном файле
+**Новый подход:** создать один новый файл
+
+1. **Создать Entity класс** в `src/entities/` (см. `Coin.js` или `Obstacle.js`)
+   - Implement: `activate(lane, x)`, `update(dt, speed)`, `deactivate()`, `isActive()`, `getHitbox()`
+
+2. **Создать Spawner класс** в `src/systems/spawners/`
+   ```javascript
+   import BaseSpawner from './BaseSpawner.js';
+
+   export default class MyEntitySpawner extends BaseSpawner {
+     spawn(gameSpeed, context) {
+       // Ваша логика спавна
+       const entity = this.pool.acquire();
+       entity.activate(lane, x);
+     }
+   }
+   ```
+
+3. **Зарегистрировать в SpawnSystem** (`src/systems/SpawnSystem.js`)
+   - В `initializePools()`: `this.poolManager.registerPool('myentity', MyEntity, 20);`
+   - В `initializeSpawners()`: создать инстанс spawner'а
+   - В `update()`: вызвать `this.myEntitySpawner.update(...)`
+
+4. **Обновить CollisionSystem** (если нужна коллизия)
+
+**Преимущества:** Весь код для нового типа объектов в одном файле (~100 строк), никакие существующие файлы не меняются.
 
 ### When Modifying Game Balance
 

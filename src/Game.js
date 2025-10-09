@@ -4,7 +4,7 @@ import { Renderer } from './core/Renderer.js';
 import { GameLoop } from './core/GameLoop.js';
 import { AssetLoader } from './core/AssetLoader.js';
 import { Player } from './entities/Player.js';
-import { SpawnSystem } from './systems/SpawnSystem.js';
+import SpawnSystem from './systems/SpawnSystem.js'; // Изменено: default export
 import { CollisionSystem } from './systems/CollisionSystem.js';
 import { DifficultyManager } from './systems/DifficultyManager.js';
 import { UIController } from './ui/UIController.js';
@@ -276,16 +276,14 @@ export class Game {
     // Update difficulty manager with current score
     this.difficultyManager.updateScore(this.score);
 
-    // Update spawn system (pass booster mode flag, active lane, and cooldown status)
-    const isBoosterOnCooldown = this.boosterCooldownTimer > 0;
-    this.spawnSystem.update(
-      deltaTime,
-      this.gameSpeed,
-      this.isBoosterActive,
-      this.boosterCurrentLane,
-      isBoosterOnCooldown,
-      this.difficultyManager
-    );
+    // Update spawn system (новый API с context объектом)
+    this.spawnSystem.update(deltaTime, this.gameSpeed, {
+      isBoosterMode: this.isBoosterActive,
+      boosterActiveLane: this.boosterCurrentLane,
+      isBoosterActive: this.isBoosterActive,
+      boosterCooldown: this.boosterCooldownTimer,
+      difficultyManager: this.difficultyManager
+    });
 
     // Check collisions
     const obstacles = this.spawnSystem.getActiveObstacles();

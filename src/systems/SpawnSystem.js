@@ -1,591 +1,228 @@
-import { CONFIG } from '../config/constants.js';
-import { MathUtils } from '../utils/MathUtils.js';
-import { ObjectPool } from '../utils/ObjectPool.js';
-import { Obstacle } from '../entities/Obstacle.js';
-import { Coin } from '../entities/Coin.js';
-import { Star } from '../entities/Star.js';
-import { Cloud } from '../entities/Cloud.js';
-import { Booster } from '../entities/Booster.js';
-import { CoinSparkle } from '../entities/CoinSparkle.js';
+import EntityPoolManager from './pools/EntityPoolManager.js';
+import LaneSafetyService from './services/LaneSafetyService.js';
 
-export class SpawnSystem {
-  constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterTexture, stage) {
+// Spawners
+import ObstacleSpawner from './spawners/ObstacleSpawner.js';
+import CoinSpawner from './spawners/CoinSpawner.js';
+import CloudSpawner from './spawners/CloudSpawner.js';
+import StarSpawner from './spawners/StarSpawner.js';
+import BoosterSpawner from './spawners/BoosterSpawner.js';
+import SparkleSpawner from './spawners/SparkleSpawner.js';
+
+// Entities
+import Obstacle from '../entities/Obstacle.js';
+import Coin from '../entities/Coin.js';
+import Cloud from '../entities/Cloud.js';
+import Star from '../entities/Star.js';
+import Booster from '../entities/Booster.js';
+import CoinSparkle from '../entities/CoinSparkle.js';
+
+import CONFIG from '../config/constants.js';
+
+export default class SpawnSystem {
+  constructor(stage) {
     this.stage = stage;
-    this.obstacleTextures = Array.isArray(obstacleTextures) ? obstacleTextures : [obstacleTextures];
 
-    // Create object pools for obstacles and coins
-    this.obstaclePool = new ObjectPool(
-      () => {
-        // Randomly choose texture for variety
-        const randomTexture = this.obstacleTextures[MathUtils.randomInt(0, this.obstacleTextures.length - 1)];
-        const obstacle = new Obstacle(randomTexture);
-        this.stage.addChild(obstacle.getSprite());
-        return obstacle;
-      },
-      (obstacle) => obstacle.reset(),
-      CONFIG.OBSTACLE.POOL_SIZE
+    // Инициализация пулов через EntityPoolManager
+    this.poolManager = new EntityPoolManager(stage);
+    this.initializePools();
+
+    // Сервис безопасности полос
+    this.laneSafetyService = new LaneSafetyService(
+      this.poolManager.getPool('obstacle')
     );
 
-    this.coinPool = new ObjectPool(
-      () => {
-        const coin = new Coin(coinTexture);
-        this.stage.addChild(coin.getSprite());
-        return coin;
-      },
-      (coin) => coin.reset(),
-      CONFIG.COIN.POOL_SIZE
-    );
-
-    // Create object pools for decorative elements
-    // Stars - декоративные звездочки
-    this.starPool = new ObjectPool(
-      () => {
-        const star = new Star(starTexture);
-        this.stage.addChild(star.getSprite());
-        return star;
-      },
-      (star) => star.reset(),
-      15 // Pool size для звездочек
-    );
-
-    // Clouds - декоративные облака
-    this.cloudPool = new ObjectPool(
-      () => {
-        const cloud = new Cloud(cloudTexture);
-        this.stage.addChild(cloud.getSprite());
-        return cloud;
-      },
-      (cloud) => cloud.reset(),
-      10 // Pool size для облаков
-    );
-
-    // Boosters - интерактивные бустеры/кубки
-    this.boosterPool = new ObjectPool(
-      () => {
-        const booster = new Booster(boosterTexture);
-        this.stage.addChild(booster.getSprite());
-        return booster;
-      },
-      (booster) => booster.reset(),
-      5 // Pool size для бустеров
-    );
-
-    // CoinSparkles - эффекты при сборе монет
-    this.sparklePool = new ObjectPool(
-      () => {
-        const sparkle = new CoinSparkle();
-        this.stage.addChild(sparkle);
-        return sparkle;
-      },
-      (sparkle) => sparkle.deactivate(),
-      10 // Pool size для эффектов (максимум ~10 монет на экране одновременно)
-    );
-
-    // Track last spawn positions for each lane
-    this.lastObstacleX = Array(CONFIG.LANES.TOTAL).fill(CONFIG.CANVAS_WIDTH);
-    this.lastCoinX = Array(CONFIG.LANES.TOTAL).fill(CONFIG.CANVAS_WIDTH);
-    this.lastStarX = Array(CONFIG.LANES.TOTAL).fill(CONFIG.CANVAS_WIDTH);
-    this.lastCloudX = Array(CONFIG.LANES.TOTAL).fill(CONFIG.CANVAS_WIDTH);
-    this.lastBoosterX = Array(CONFIG.LANES.TOTAL).fill(CONFIG.CANVAS_WIDTH);
-
-    // Track last spawn times for each lane (to prevent rapid sequential spawns)
-    // This prevents "impossible chains" where obstacles appear too close together
-    this.lastObstacleTime = Array(CONFIG.LANES.TOTAL).fill(0);
-
-    // Spawn timers
-    this.obstacleSpawnTimer = 0;
-    this.coinSpawnTimer = 0;
-    this.starSpawnTimer = 0;
-    this.cloudSpawnTimer = 0;
-    this.boosterSpawnTimer = 0;
-
-    console.log('🎯 Spawn system initialized with decorative elements');
+    // Инициализация spawner'ов
+    this.initializeSpawners();
   }
 
   /**
-   * Update spawn system
-   * @param {number} deltaTime - Delta time in seconds
-   * @param {number} gameSpeed - Current game speed
-   * @param {boolean} isBoosterMode - Whether booster mode is active
-   * @param {number} boosterActiveLane - Active lane during booster mode
-   * @param {boolean} isBoosterOnCooldown - Whether booster is on cooldown
-   * @param {Object} difficultyManager - Difficulty manager instance
+   * Регистрация всех пулов объектов
    */
-  update(deltaTime, gameSpeed, isBoosterMode = false, boosterActiveLane = 0, isBoosterOnCooldown = false, difficultyManager = null) {
-    // Update all active obstacles
-    const activeObstacles = this.obstaclePool.getActive();
-    for (const obstacle of activeObstacles) {
-      obstacle.update(deltaTime, gameSpeed);
-
-      // Return to pool if deactivated
-      if (!obstacle.isActive()) {
-        this.obstaclePool.release(obstacle);
-      }
-    }
-
-    // Update all active coins
-    const activeCoins = this.coinPool.getActive();
-    for (const coin of activeCoins) {
-      coin.update(deltaTime, gameSpeed);
-
-      // Return to pool if deactivated
-      if (!coin.isActive()) {
-        this.coinPool.release(coin);
-      }
-    }
-
-    // Update stars - декоративные звездочки
-    const activeStars = this.starPool.getActive();
-    for (const star of activeStars) {
-      star.update(deltaTime, gameSpeed);
-      if (!star.isActive()) {
-        this.starPool.release(star);
-      }
-    }
-
-    // Update clouds - декоративные облака
-    const activeClouds = this.cloudPool.getActive();
-    for (const cloud of activeClouds) {
-      cloud.update(deltaTime, gameSpeed);
-      if (!cloud.isActive()) {
-        this.cloudPool.release(cloud);
-      }
-    }
-
-    // Update boosters - интерактивные бустеры
-    const activeBoosters = this.boosterPool.getActive();
-    for (const booster of activeBoosters) {
-      booster.update(deltaTime, gameSpeed);
-      if (!booster.isActive()) {
-        this.boosterPool.release(booster);
-      }
-    }
-
-    // Update sparkles - эффекты при сборе монет
-    const activeSparkles = this.sparklePool.getActive();
-    for (const sparkle of activeSparkles) {
-      sparkle.update(deltaTime);
-      if (!sparkle.isActive()) {
-        this.sparklePool.release(sparkle);
-      }
-    }
-
-    // Spawn new obstacles (skip during booster mode)
-    if (!isBoosterMode) {
-      this.spawnObstacles(deltaTime, gameSpeed, difficultyManager);
-    }
-
-    // Spawn new coins (special mechanics during booster mode)
-    this.spawnCoins(deltaTime, gameSpeed, isBoosterMode, boosterActiveLane, difficultyManager);
-
-    // Spawn decorative elements
-    this.spawnStars(deltaTime, gameSpeed);
-    this.spawnClouds(deltaTime, gameSpeed);
-
-    // Spawn boosters (skip during booster mode AND cooldown)
-    if (!isBoosterMode && !isBoosterOnCooldown) {
-      this.spawnBoosters(deltaTime, gameSpeed);
-    }
+  initializePools() {
+    this.poolManager.registerPool('obstacle', Obstacle, 20);
+    this.poolManager.registerPool('coin', Coin, 50);
+    this.poolManager.registerPool('star', Star, 30);
+    this.poolManager.registerPool('cloud', Cloud, 15);
+    this.poolManager.registerPool('booster', Booster, 5);
+    this.poolManager.registerPool('sparkle', CoinSparkle, 20);
   }
 
   /**
-   * Spawn obstacles at random intervals
+   * Инициализация всех spawner'ов
    */
-  spawnObstacles(deltaTime, gameSpeed, difficultyManager) {
-    this.obstacleSpawnTimer += deltaTime;
+  initializeSpawners() {
+    // Obstacle Spawner - с lane safety logic
+    this.obstacleSpawner = new ObstacleSpawner({
+      pool: this.poolManager.getPool('obstacle'),
+      stage: this.stage,
+      laneSafetyService: this.laneSafetyService,
+      getIntervalModifier: (context) => {
+        // Модификатор интервала из difficulty manager
+        const { difficultyManager } = context;
+        if (!difficultyManager) return 1.0;
 
-    // Get interval from difficulty manager (or fallback to default)
-    const baseInterval = difficultyManager ? difficultyManager.getObstacleSpawnInterval() : 1.2;
-    const spawnInterval = baseInterval / gameSpeed;
-
-    if (this.obstacleSpawnTimer >= spawnInterval) {
-      this.obstacleSpawnTimer = 0;
-
-      // Get lanes that currently have obstacles near spawn area
-      // Pass gameSpeed to dynamically adjust safe distance
-      const blockedLanes = this.getBlockedLanes(gameSpeed);
-
-      // CRITICAL: Never block all lanes - always leave at least 1 free
-      let availableLanes = [];
-      for (let i = 0; i < CONFIG.LANES.TOTAL; i++) {
-        if (!blockedLanes.includes(i)) {
-          availableLanes.push(i);
-        }
+        const baseInterval = CONFIG.OBSTACLE.MIN_DISTANCE;
+        const currentInterval = difficultyManager.getObstacleSpawnInterval();
+        return currentInterval / baseInterval;
       }
+    });
 
-      // If all lanes would be blocked, skip this spawn
-      if (availableLanes.length === 0) {
-        console.warn('⚠️ All lanes blocked - skipping obstacle spawn');
-        return;
+    // Coin Spawner - с booster mode support
+    this.coinSpawner = new CoinSpawner({
+      pool: this.poolManager.getPool('coin'),
+      stage: this.stage,
+      getIntervalModifier: (context) => {
+        // Интервал зависит от difficulty manager и booster mode
+        // (логика внутри CoinSpawner.getCurrentInterval)
+        return 1.0;
       }
+    });
 
-      // Choose random lane from available lanes
-      const lane = availableLanes[MathUtils.randomInt(0, availableLanes.length - 1)];
+    // Decorative Spawners
+    this.cloudSpawner = new CloudSpawner({
+      pool: this.poolManager.getPool('cloud'),
+      stage: this.stage
+    });
 
-      // Calculate spawn position with increased minimum distance
-      // This prevents "tight chains" even on a single lane
-      const minDist = CONFIG.OBSTACLE.MIN_DISTANCE;
-      const maxDist = CONFIG.OBSTACLE.MAX_DISTANCE;
-      const distance = MathUtils.randomFloat(minDist, maxDist);
+    this.starSpawner = new StarSpawner({
+      pool: this.poolManager.getPool('star'),
+      stage: this.stage
+    });
 
-      const spawnX = Math.max(
-        CONFIG.CANVAS_WIDTH + distance,
-        this.lastObstacleX[lane] + distance
-      );
+    // Booster Spawner
+    this.boosterSpawner = new BoosterSpawner({
+      pool: this.poolManager.getPool('booster'),
+      stage: this.stage
+    });
 
-      // Spawn obstacle
-      const obstacle = this.obstaclePool.acquire();
-      obstacle.activate(lane, spawnX);
-
-      this.lastObstacleX[lane] = spawnX;
-      this.lastObstacleTime[lane] = performance.now(); // Track spawn time for this lane
-    }
+    // Sparkle Spawner (manual trigger only)
+    this.sparkleSpawner = new SparkleSpawner({
+      pool: this.poolManager.getPool('sparkle'),
+      stage: this.stage
+    });
   }
 
   /**
-   * Get lanes that currently have obstacles in the near spawn area
-   * This prevents blocking all lanes simultaneously AND ensures player has time to react
+   * Обновление всех spawner'ов
    *
-   * Improved algorithm:
-   * 1. Checks for obstacles in extended safe zone
-   * 2. Accounts for player reaction time + lane switch animation (0.15s)
-   * 3. Scales safe distance based on game speed
+   * @param {number} deltaTime - Время с последнего кадра (секунды)
+   * @param {number} gameSpeed - Текущая скорость игры
+   * @param {Object} context - Контекст игры
+   * @param {boolean} context.isBoosterMode - Активен ли режим бустера
+   * @param {number} context.boosterActiveLane - Активная полоса бустера (0-2)
+   * @param {boolean} context.isBoosterActive - Активен ли бустер (для BoosterSpawner)
+   * @param {number} context.boosterCooldown - Кулдаун бустера
+   * @param {DifficultyManager} context.difficultyManager - Менеджер сложности
    */
-  getBlockedLanes(gameSpeed = 1.0) {
-    const blocked = [];
+  update(deltaTime, gameSpeed, context = {}) {
+    const {
+      isBoosterMode = false,
+      boosterActiveLane = 0,
+      isBoosterActive = false,
+      boosterCooldown = 0,
+      difficultyManager = null
+    } = context;
 
-    // CRITICAL: Calculate dynamic safe distance based on game speed
-    // Formula: base distance + speed multiplier to ensure minimum reaction time
-    //
-    // Reasoning:
-    // - Player needs ~0.15s for lane switch animation (CONFIG.PLAYER.SWITCH_DURATION)
-    // - Player needs ~0.2-0.3s reaction time (human factor)
-    // - Total: ~0.5s minimum safe window
-    // - At speed 2.5x, obstacles move ~800px/s, so we need ~2000px buffer
-    const baseDistance = 1500;
-    const speedMultiplier = Math.max(1.0, gameSpeed * 0.8); // Scale with speed, but not linearly
-    const safeDistance = baseDistance * speedMultiplier;
-
-    const activeObstacles = this.obstaclePool.getActive();
-
-    for (const obstacle of activeObstacles) {
-      if (!obstacle.isActive()) continue;
-
-      const obstacleX = obstacle.getSprite().x;
-
-      // If obstacle is in the spawn/near area, mark its lane as blocked
-      if (obstacleX > CONFIG.CANVAS_WIDTH - safeDistance) {
-        const lane = obstacle.lane;
-        if (!blocked.includes(lane)) {
-          blocked.push(lane);
-        }
-      }
+    // Обновляем препятствия (не спавним во время booster mode)
+    if (!isBoosterMode) {
+      this.obstacleSpawner.update(deltaTime, gameSpeed, { difficultyManager });
     }
 
-    return blocked;
+    // Обновляем монеты (в booster mode работает по-особому)
+    this.coinSpawner.update(deltaTime, gameSpeed, {
+      isBoosterMode,
+      boosterActiveLane,
+      gameSpeed,
+      difficultyManager
+    });
+
+    // Обновляем декоративные элементы
+    this.cloudSpawner.update(deltaTime, gameSpeed);
+    this.starSpawner.update(deltaTime, gameSpeed);
+
+    // Обновляем бустеры (не спавним если бустер активен или кулдаун)
+    this.boosterSpawner.update(deltaTime, gameSpeed, {
+      isBoosterActive,
+      boosterCooldown
+    });
+
+    // Обновляем sparkles (только активные объекты, без автоспавна)
+    this.sparkleSpawner.update(deltaTime, gameSpeed);
   }
 
   /**
-   * Spawn coins at random intervals
-   * @param {boolean} isBoosterMode - If true, spawn on specific lane with very high frequency
-   * @param {number} boosterActiveLane - Active lane during booster mode
-   * @param {Object} difficultyManager - Difficulty manager instance
-   */
-  spawnCoins(deltaTime, gameSpeed, isBoosterMode = false, boosterActiveLane = 0, difficultyManager = null) {
-    this.coinSpawnTimer += deltaTime;
-
-    let spawnInterval;
-
-    if (isBoosterMode) {
-      // Во время бустера используем очень короткий интервал из CONFIG
-      spawnInterval = CONFIG.BOOSTER_COIN_SPAWN_INTERVAL;
-    } else {
-      // Обычный режим: используем интервал из difficulty manager
-      const baseInterval = difficultyManager ? difficultyManager.getCoinSpawnInterval() : 0.8;
-      spawnInterval = baseInterval / gameSpeed;
-    }
-
-    if (this.coinSpawnTimer >= spawnInterval) {
-      this.coinSpawnTimer = 0;
-
-      if (isBoosterMode) {
-        // Во время бустера спавним монеты ТОЛЬКО на активной линии, очень плотно
-        const lane = boosterActiveLane;
-
-        // Минимальная дистанция между монетами (очень плотно)
-        const distance = 80; // Очень близко друг к другу
-
-        const spawnX = Math.max(
-          CONFIG.CANVAS_WIDTH + distance,
-          this.lastCoinX[lane] + distance
-        );
-
-        const coin = this.coinPool.acquire();
-        if (coin) {
-          coin.activate(lane, spawnX);
-          this.lastCoinX[lane] = spawnX;
-        }
-      } else {
-        // Обычный режим: случайная линия
-        const lane = MathUtils.randomInt(0, CONFIG.LANES.TOTAL - 1);
-
-        const minDist = CONFIG.COIN.MIN_DISTANCE;
-        const maxDist = CONFIG.COIN.MAX_DISTANCE;
-        const distance = MathUtils.randomFloat(minDist, maxDist);
-
-        const spawnX = Math.max(
-          CONFIG.CANVAS_WIDTH + distance,
-          this.lastCoinX[lane] + distance
-        );
-
-        const coin = this.coinPool.acquire();
-        if (coin) {
-          coin.activate(lane, spawnX);
-          this.lastCoinX[lane] = spawnX;
-        }
-      }
-    }
-  }
-
-  /**
-   * Get all active obstacles
-   */
-  getActiveObstacles() {
-    return this.obstaclePool.getActive().filter(o => o.isActive());
-  }
-
-  /**
-   * Get all active coins
-   */
-  getActiveCoins() {
-    return this.coinPool.getActive().filter(c => c.isActive());
-  }
-
-  /**
-   * Spawn stars at random intervals - декоративные звездочки
-   */
-  spawnStars(deltaTime, gameSpeed) {
-    this.starSpawnTimer += deltaTime;
-
-    const spawnInterval = 0.6; // Частый спавн звездочек
-
-    if (this.starSpawnTimer >= spawnInterval) {
-      this.starSpawnTimer = 0;
-
-      const lane = MathUtils.randomInt(0, CONFIG.LANES.TOTAL - 1);
-      const distance = MathUtils.randomFloat(200, 600);
-      const spawnX = CONFIG.CANVAS_WIDTH + distance;
-
-      const star = this.starPool.acquire();
-      star.activate(lane, spawnX);
-
-      this.lastStarX[lane] = spawnX;
-    }
-  }
-
-  /**
-   * Spawn clouds at random intervals - декоративные облака
-   * Использует улучшенную логику для предотвращения кластеризации
-   */
-  spawnClouds(deltaTime, gameSpeed) {
-    this.cloudSpawnTimer += deltaTime;
-
-    const spawnInterval = 2.5; // Редкий спавн облаков
-
-    if (this.cloudSpawnTimer >= spawnInterval) {
-      this.cloudSpawnTimer = 0;
-
-      // Находим лучшую линию для спавна (с минимальным количеством облаков)
-      const lane = this.getBestCloudLane();
-
-      // Проверяем минимальную дистанцию до существующих облаков на этой линии
-      const MIN_CLOUD_DISTANCE = 1000; // Минимум 1000px между облаками
-      const canSpawn = this.canSpawnCloud(lane, MIN_CLOUD_DISTANCE);
-
-      if (!canSpawn) {
-        // Пропускаем спавн, если слишком близко к другим облакам
-        return;
-      }
-
-      const distance = MathUtils.randomFloat(300, 800);
-      const spawnX = Math.max(
-        CONFIG.CANVAS_WIDTH + distance,
-        this.lastCloudX[lane] + MIN_CLOUD_DISTANCE
-      );
-
-      const cloud = this.cloudPool.acquire();
-      if (cloud) {
-        cloud.activate(lane, spawnX);
-        this.lastCloudX[lane] = spawnX;
-      }
-    }
-  }
-
-  /**
-   * Проверяет, можно ли заспавнить облако на линии
-   * (проверяет дистанцию до всех активных облаков)
-   */
-  canSpawnCloud(lane, minDistance) {
-    const activeClouds = this.cloudPool.getActive();
-    const spawnX = CONFIG.CANVAS_WIDTH;
-
-    for (const cloud of activeClouds) {
-      if (!cloud.isActive() || cloud.lane !== lane) continue;
-
-      const cloudX = cloud.getSprite().x;
-      const distance = Math.abs(cloudX - spawnX);
-
-      // Если облако слишком близко - нельзя спавнить
-      if (distance < minDistance) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Находит лучшую линию для спавна облака
-   * (линию с наименьшим количеством активных облаков)
-   */
-  getBestCloudLane() {
-    const activeClouds = this.cloudPool.getActive();
-    const laneCounts = Array(CONFIG.LANES.TOTAL).fill(0);
-
-    // Подсчитываем количество облаков на каждой линии
-    for (const cloud of activeClouds) {
-      if (cloud.isActive()) {
-        laneCounts[cloud.lane]++;
-      }
-    }
-
-    // Находим линию с минимальным количеством облаков
-    let minCount = Infinity;
-    let bestLanes = [];
-
-    for (let i = 0; i < CONFIG.LANES.TOTAL; i++) {
-      if (laneCounts[i] < minCount) {
-        minCount = laneCounts[i];
-        bestLanes = [i];
-      } else if (laneCounts[i] === minCount) {
-        bestLanes.push(i);
-      }
-    }
-
-    // Если несколько линий с одинаковым минимумом - выбираем случайную
-    return bestLanes[MathUtils.randomInt(0, bestLanes.length - 1)];
-  }
-
-  /**
-   * Spawn boosters at random intervals - интерактивные бустеры
-   */
-  spawnBoosters(deltaTime, gameSpeed) {
-    this.boosterSpawnTimer += deltaTime;
-
-    const spawnInterval = 8; // Редкий спавн бустеров (раз в 8 секунд)
-
-    if (this.boosterSpawnTimer >= spawnInterval) {
-      this.boosterSpawnTimer = 0;
-
-      const lane = MathUtils.randomInt(0, CONFIG.LANES.TOTAL - 1);
-      const distance = MathUtils.randomFloat(400, 800);
-      const spawnX = CONFIG.CANVAS_WIDTH + distance;
-
-      const booster = this.boosterPool.acquire();
-      booster.activate(lane, spawnX);
-
-      this.lastBoosterX[lane] = spawnX;
-    }
-  }
-
-  /**
-   * Get all active boosters
-   */
-  getActiveBoosters() {
-    return this.boosterPool.getActive().filter(b => b.isActive());
-  }
-
-  /**
-   * Emit sparkle effect at coin collection position
-   * @param {number} x - X coordinate of collected coin
-   * @param {number} y - Y coordinate of collected coin
-   */
-  emitCoinSparkle(x, y) {
-    const sparkle = this.sparklePool.acquire();
-    if (sparkle) {
-      sparkle.activate(x, y);
-    }
-  }
-
-  /**
-   * Reset spawn system
-   */
-  reset() {
-    this.obstaclePool.releaseAll();
-    this.coinPool.releaseAll();
-    this.starPool.releaseAll();
-    this.cloudPool.releaseAll();
-    this.boosterPool.releaseAll();
-    this.sparklePool.releaseAll();
-
-    this.lastObstacleX.fill(CONFIG.CANVAS_WIDTH);
-    this.lastCoinX.fill(CONFIG.CANVAS_WIDTH);
-    this.lastStarX.fill(CONFIG.CANVAS_WIDTH);
-    this.lastCloudX.fill(CONFIG.CANVAS_WIDTH);
-    this.lastBoosterX.fill(CONFIG.CANVAS_WIDTH);
-    this.lastObstacleTime.fill(0); // Reset spawn times
-
-    this.obstacleSpawnTimer = 0;
-    this.coinSpawnTimer = 0;
-    this.starSpawnTimer = 0;
-    this.cloudSpawnTimer = 0;
-    this.boosterSpawnTimer = 0;
-  }
-
-  /**
-   * Clear all active obstacles (for booster mode)
-   */
-  clearAllObstacles() {
-    const activeObstacles = this.obstaclePool.getActive();
-    for (const obstacle of activeObstacles) {
-      obstacle.deactivate();
-    }
-    this.obstaclePool.releaseAll();
-    console.log('🧹 All obstacles cleared');
-  }
-
-  /**
-   * Instantly fill a lane with coins (for booster activation)
-   * @param {number} lane - Lane to fill with coins
+   * Заполнить полосу монетами (для начала booster режима)
+   * @param {number} lane - Номер полосы (0, 1, 2)
    */
   fillLaneWithCoins(lane) {
-    const numCoins = 20; // Количество монет для заполнения
-    const spacing = 100; // Расстояние между монетами
-
-    for (let i = 0; i < numCoins; i++) {
-      const spawnX = CONFIG.CANVAS_WIDTH + (i * spacing);
-
-      const coin = this.coinPool.acquire();
-      if (coin) {
-        coin.activate(lane, spawnX);
-        this.lastCoinX[lane] = spawnX;
-      }
-    }
-
-    console.log(`💰 Lane ${lane} filled with ${numCoins} coins`);
+    this.coinSpawner.fillLaneWithCoins(lane);
   }
 
   /**
-   * Get pool statistics
+   * Очистить все препятствия (при активации бустера)
+   */
+  clearAllObstacles() {
+    this.obstacleSpawner.clearAll();
+  }
+
+  /**
+   * Испустить sparkle эффект при сборе монеты
+   * @param {number} x - X-координата
+   * @param {number} y - Y-координата
+   */
+  emitCoinSparkle(x, y) {
+    this.sparkleSpawner.emit(x, y);
+  }
+
+  /**
+   * Получить активные препятствия
+   * @returns {Array}
+   */
+  getActiveObstacles() {
+    return this.obstacleSpawner.getActiveObjects();
+  }
+
+  /**
+   * Получить активные монеты
+   * @returns {Array}
+   */
+  getActiveCoins() {
+    return this.coinSpawner.getActiveObjects();
+  }
+
+  /**
+   * Получить активные бустеры
+   * @returns {Array}
+   */
+  getActiveBoosters() {
+    return this.boosterSpawner.getActiveObjects();
+  }
+
+  /**
+   * Сбросить все spawner'ы
+   */
+  reset() {
+    this.obstacleSpawner.reset();
+    this.coinSpawner.reset();
+    this.cloudSpawner.reset();
+    this.starSpawner.reset();
+    this.boosterSpawner.reset();
+    this.sparkleSpawner.reset();
+  }
+
+  /**
+   * Получить статистику всех пулов (для отладки)
+   * @returns {Object}
    */
   getStats() {
-    return {
-      obstacles: this.obstaclePool.getStats(),
-      coins: this.coinPool.getStats(),
-      stars: this.starPool.getStats(),
-      clouds: this.cloudPool.getStats(),
-      boosters: this.boosterPool.getStats(),
-      sparkles: this.sparklePool.getStats()
-    };
+    return this.poolManager.getAllStats();
+  }
+
+  /**
+   * Вывести статистику в консоль (для отладки)
+   */
+  logStats() {
+    this.poolManager.logStats();
   }
 }
