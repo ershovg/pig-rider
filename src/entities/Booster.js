@@ -4,20 +4,32 @@ import { CONFIG } from '../config/constants.js';
 import { Collectible } from './base/Collectible.js';
 
 /**
- * Собираемая монета с анимацией, interpolation и culling
+ * Собираемый бустер с анимированным спрайтшитом (крылья кубка),
+ * плавающей анимацией, interpolation и culling
  */
-export class Coin extends Collectible {
-  constructor(texture) {
+export class Booster extends Collectible {
+  constructor(spritesheet) {
     super();
-    this.sprite = new PIXI.Sprite(texture);
+
+    // 🆕 Создаем AnimatedSprite из спрайтшита cup.json
+    // Анимация "Cup" содержит все 38 кадров (Cup_000.png -> Cup_037.png)
+    const frames = spritesheet.animations['Cup'];
+    this.sprite = new PIXI.AnimatedSprite(frames);
     this.sprite.anchor.set(0.5);
-    const targetSize = CONFIG.COIN.SIZE;
-    const scale = targetSize / texture.width;
+
+    // Настройка анимации
+    this.sprite.animationSpeed = 0.3; // 0.3 кадров за тик (60 FPS) = ~18 FPS анимация
+    this.sprite.loop = true;           // Зацикленная анимация
+
+    // Масштабирование под размер из CONFIG
+    const targetSize = CONFIG.BOOSTER.SIZE;
+    const scale = targetSize / 250; // Cup frames = 250x250px по JSON
     this.sprite.scale.set(scale);
+
     this.active = false;
     this.collected = false;
     this.lane = 0;
-    this.rotationTween = null;
+    this.floatTween = null;
     this.sprite.visible = false;
 
     // 🆕 Interpolation state
@@ -25,6 +37,7 @@ export class Coin extends Collectible {
     this.previousY = 0;
     this.currentX = 0;
     this.currentY = 0;
+    this.baseY = 0; // Base Y для float анимации
   }
 
   activate(lane, x) {
@@ -35,58 +48,80 @@ export class Coin extends Collectible {
     // 🆕 Физическая позиция
     this.currentX = x;
     this.currentY = CONFIG.LANES.Y_POSITIONS[lane];
+    this.baseY = this.currentY;
     this.sprite.x = this.currentX;
     this.sprite.y = this.currentY;
     this.previousX = this.currentX;
     this.previousY = this.currentY;
 
     this.sprite.visible = true;
-    this.sprite.scale.set(1);
-    this.startRotation();
+    const targetSize = CONFIG.BOOSTER.SIZE;
+    const scale = targetSize / 250;
+    this.sprite.scale.set(scale);
+    this.sprite.alpha = 1;
+
+    // 🆕 Запускаем зацикленную анимацию кубка
+    this.sprite.gotoAndPlay(0);
+
+    this.startFloat();
   }
 
   deactivate() {
     this.active = false;
     this.collected = false;
     this.sprite.visible = false;
-    this.stopRotation();
+
+    // 🆕 Останавливаем анимацию для экономии ресурсов
+    this.sprite.stop();
+
+    this.stopFloat();
   }
 
-  startRotation() {
-    this.stopRotation();
-    this.rotationTween = gsap.to(this.sprite, {
-      rotation: Math.PI * 2,
-      duration: 2,
-      ease: 'none',
+  startFloat() {
+    this.stopFloat();
+    // 🆕 Float animation теперь обновляет currentY, а не sprite.y напрямую
+    this.floatTween = gsap.to(this, {
+      currentY: this.baseY - 15,
+      duration: 1,
+      ease: 'sine.inOut',
+      yoyo: true,
       repeat: -1
     });
   }
 
-  stopRotation() {
-    if (this.rotationTween) {
-      this.rotationTween.kill();
-      this.rotationTween = null;
+  stopFloat() {
+    if (this.floatTween) {
+      this.floatTween.kill();
+      this.floatTween = null;
     }
   }
 
   collect() {
-    if (this.collected) return;
+    if (this.collected) return null;
     this.collected = true;
+    gsap.to(this.sprite, {
+      rotation: Math.PI * 2,
+      duration: 0.3,
+      ease: 'back.out'
+    });
     gsap.to(this.sprite.scale, {
-      x: 1.5,
-      y: 1.5,
-      duration: 0.2,
+      x: 1.8,
+      y: 1.8,
+      duration: 0.3,
       ease: 'back.out'
     });
     gsap.to(this.sprite, {
       alpha: 0,
-      duration: 0.2,
+      duration: 0.3,
       onComplete: () => {
         this.deactivate();
         this.sprite.alpha = 1;
       }
     });
-    return CONFIG.COIN.VALUE;
+    return {
+      type: 'booster',
+      value: 10
+    };
   }
 
   update(deltaTime, gameSpeed) {
@@ -96,7 +131,7 @@ export class Coin extends Collectible {
     this.saveState();
     this.currentX -= gameSpeed * deltaTime * 800;
 
-    if (this.currentX < -CONFIG.COIN.SIZE) {
+    if (this.currentX < -100) {
       this.deactivate();
     }
   }
@@ -141,7 +176,8 @@ export class Coin extends Collectible {
   interpolate(alpha) {
     if (!this.sprite) return;
     this.sprite.x = this.previousX + (this.currentX - this.previousX) * alpha;
-    this.sprite.y = this.previousY + (this.currentY - this.previousY) * alpha;
+    // Y уже анимируется через GSAP (float), просто копируем
+    this.sprite.y = this.currentY;
   }
 
   // 🆕 Cullable interface

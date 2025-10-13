@@ -27,16 +27,23 @@ export class UIController {
     // Canvas
     this.canvas = document.getElementById('game-canvas');
 
+    // Game state element (для добавления CSS класса booster-active)
+    this.gameStateElement = document.querySelector('.game-state');
+
+    // НЕ вызываем hideAll() - Webflow уже установил правильное начальное состояние
+    // Стартовый экран должен быть видим, остальные скрыты
+
     console.log('🎨 UIController initialized (Webflow structure)');
   }
 
   /**
    * Show start screen (Webflow)
+   * Статичный экран - используем display
    */
   showStartScreen() {
     this.hideAll();
     if (this.startScreen) {
-      this.startScreen.style.opacity = '1';
+      this.startScreen.style.display = 'block';
     }
     // Hide canvas on start screen
     if (this.canvas) {
@@ -49,17 +56,19 @@ export class UIController {
    */
   hideStartScreen() {
     if (this.startScreen) {
-      this.startScreen.style.opacity = '0';
+      this.startScreen.style.display = 'none';
     }
   }
 
   /**
    * Show running screen (game HUD)
+   * Абсолютный элемент - используем opacity
    */
   showRunningScreen() {
     this.hideAll();
     if (this.runningScreen) {
       this.runningScreen.style.opacity = '1';
+      this.runningScreen.style.pointerEvents = 'auto';
     }
     // Show canvas when game is running
     if (this.canvas) {
@@ -73,6 +82,7 @@ export class UIController {
   hideRunningScreen() {
     if (this.runningScreen) {
       this.runningScreen.style.opacity = '0';
+      this.runningScreen.style.pointerEvents = 'none';
     }
   }
 
@@ -89,43 +99,86 @@ export class UIController {
   }
 
   /**
-   * Show booster modal (TODO: когда будет готов в Webflow)
+   * Show booster modal and wait for user confirmation
+   * Returns a Promise that resolves when user clicks OK
+   * @returns {Promise<boolean>} - Resolves to true when user confirms
    */
   showBoosterModal() {
-    console.warn('⚠️ Booster modal not implemented in Webflow yet');
+    return new Promise((resolve) => {
+      // Используем confirm пока нет Webflow UI
+      const boosterAccepted = confirm('Вы получили бонус бустер!');
+
+      // TODO: добавить когда будет готов в Webflow
+      // if (this.boostScreen) {
+      //   this.boostScreen.style.opacity = '1';
+      //   this.boostScreen.style.pointerEvents = 'auto';
+      //   // Добавить обработчик на кнопку OK, который вызовет resolve(true)
+      // }
+
+      resolve(boosterAccepted);
+    });
   }
 
   /**
-   * Hide booster modal (TODO: когда будет готов в Webflow)
+   * Hide booster modal
    */
   hideBoosterModal() {
+    // TODO: добавить когда будет готов в Webflow
+    // if (this.boostScreen) {
+    //   this.boostScreen.style.opacity = '0';
+    //   this.boostScreen.style.pointerEvents = 'none';
+    // }
     console.warn('⚠️ Booster modal not implemented in Webflow yet');
   }
 
   /**
-   * Show win screen (TODO: когда будет готов в Webflow)
+   * Show win screen
+   * Статичный экран - используем display
    */
   showWinScreen(score) {
+    this.hideAll();
+    if (this.winScreen) {
+      this.winScreen.style.display = 'flex';
+    }
+    // Hide canvas
+    if (this.canvas) {
+      this.canvas.style.display = 'none';
+    }
     console.log(`🏆 WIN! Score: ${score}`);
-    console.warn('⚠️ Win screen not implemented in Webflow yet');
   }
 
   /**
-   * Show lose screen (TODO: когда будет готов в Webflow)
+   * Show lose screen (faild-screen)
+   * Статичный экран - используем display
    */
   showLoseScreen(score) {
-    alert(`Вы проиграли! ${score}`)
     console.log(`💀 LOSE! Score: ${score}`);
-    console.warn('⚠️ Lose screen not implemented in Webflow yet');
+    this.hideAll();
+    if (this.faildScreen) {
+      this.faildScreen.style.display = 'flex';
+    }
+    if (this.canvas) {
+      this.canvas.style.display = 'none';
+    }
   }
 
   /**
    * Hide all screens
+   * Статичные экраны - display: none
+   * Абсолютные элементы - opacity: 0
    */
   hideAll() {
-    if (this.startScreen) this.startScreen.style.opacity = '0';
-    if (this.runningScreen) this.runningScreen.style.opacity = '0';
-    // TODO: Добавить остальные экраны когда будут готовы
+    // Статичные экраны (display)
+    if (this.startScreen) this.startScreen.style.display = 'none';
+    if (this.faildScreen) this.faildScreen.style.display = 'none';
+    if (this.winScreen) this.winScreen.style.display = 'none';
+
+    // Абсолютные элементы (opacity)
+    if (this.runningScreen) {
+      this.runningScreen.style.opacity = '0';
+      this.runningScreen.style.pointerEvents = 'none';
+    }
+    // TODO: добавить boostScreen когда будет готов
   }
 
   /**
@@ -164,6 +217,26 @@ export class UIController {
     // if (callbacks.onRetry && this.retryBtn) {
     //   this.retryBtn.addEventListener('click', callbacks.onRetry);
     // }
+  }
+
+  /**
+   * Add booster-active CSS class to game state element
+   */
+  addBoosterClass() {
+    if (this.gameStateElement) {
+      this.gameStateElement.classList.add('booster-active');
+      console.log('✨ Booster mode activated');
+    }
+  }
+
+  /**
+   * Remove booster-active CSS class from game state element
+   */
+  removeBoosterClass() {
+    if (this.gameStateElement) {
+      this.gameStateElement.classList.remove('booster-active');
+      console.log('⏹️ Booster mode deactivated');
+    }
   }
 
   /**

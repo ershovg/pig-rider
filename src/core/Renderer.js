@@ -19,6 +19,7 @@ export class Renderer {
       height: CONFIG.CANVAS_HEIGHT,
       backgroundAlpha: 0, // Прозрачный фон для Webflow
       antialias: true,
+      roundPixels: true, // Округление координат для pixel-perfect рендеринга (устраняет "дергание")
       resolution: window.devicePixelRatio || 1,
       autoDensity: true,
       canvas: document.getElementById(this.canvasId)

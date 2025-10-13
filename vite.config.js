@@ -15,7 +15,15 @@ export default defineConfig(({ command, mode }) => {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type'
+      },
+      watch: {
+        // Игнорируем папку draft при watch
+        ignored: ['**/draft/**']
       }
+    },
+    // Исключаем draft/ из сканирования зависимостей
+    optimizeDeps: {
+      exclude: ['draft']
     }
   };
 
@@ -23,7 +31,7 @@ export default defineConfig(({ command, mode }) => {
   if (command === 'build' && mode === 'webflow') {
     config.build = {
       outDir: 'dist',
-      emptyOutDir: false, // Не очищаем dist, могут быть другие файлы
+      emptyOutDir: true, // Очищаем dist для чистой сборки
       minify: 'terser',
       terserOptions: {
         compress: {

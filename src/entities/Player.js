@@ -1,215 +1,209 @@
+/**
+ * Игрок с physics-based движением, interpolation и instant response
+ *
+ * Архитектура:
+ * - PlayerPhysicsController: Управляет физикой движения (velocity, acceleration)
+ * - Interpolatable: Плавный рендер на 120 FPS
+ * - PlayerInputController: Обработка input (keyboard, mouse, touch)
+ *
+ * Отличия от GSAP подхода:
+ * ✅ Мгновенный отклик - нет блокировки isAnimating
+ * ✅ Синхронизация с physics loop (60 UPS)
+ * ✅ Плавное торможение через friction
+ * ✅ Возможность смены направления на лету
+ */
 import * as PIXI from 'pixi.js';
 import gsap from 'gsap';
 import { CONFIG } from '../config/constants.js';
+import { PlayerInputController } from '../controllers/PlayerInputController.js';
+import { PlayerPhysicsController } from '../controllers/PlayerPhysicsController.js';
 
 export class Player {
-  constructor(texture) {
+  constructor(spritesheet, boostSpritesheet, physicsController, screenWidth = CONFIG.CANVAS_WIDTH, screenHeight = CONFIG.CANVAS_HEIGHT) {
     this.currentLane = CONFIG.LANES.MIDDLE;
-    this.isAnimating = false;
+    this.targetLane = CONFIG.LANES.MIDDLE;
 
-    // Create sprite
-    this.sprite = new PIXI.Sprite(texture);
+    this.physicsController = physicsController || new PlayerPhysicsController(CONFIG.PLAYER.PHYSICS);
+
+    // Сохраняем оба spritesheet'а для переключения анимаций
+    this.normalSpritesheet = spritesheet;
+    this.boostSpritesheet = boostSpritesheet;
+
+    const textures = spritesheet.animations['Hryusha_flying_v2'];
+    if (!textures) {
+      console.error('❌ Animation "Hryusha_flying_v2" not found in spritesheet!');
+      console.log('Available animations:', Object.keys(spritesheet.animations));
+      throw new Error('Missing animation: Hryusha_flying_v2');
+    }
+    this.sprite = new PIXI.AnimatedSprite(textures);
     this.sprite.anchor.set(0.5);
+    this.sprite.animationSpeed = 0.5;
+    this.sprite.loop = true;
+    this.sprite.play();
     this.sprite.width = CONFIG.PLAYER.SIZE;
     this.sprite.height = CONFIG.PLAYER.SIZE;
 
-    // Set initial position
-    this.sprite.x = CONFIG.PLAYER.START_X;
-    this.sprite.y = CONFIG.LANES.Y_POSITIONS[this.currentLane];
+    // 🆕 Физическая позиция (для interpolation)
+    this.currentX = CONFIG.PLAYER.START_X;
+    this.currentY = CONFIG.LANES.Y_POSITIONS[this.currentLane];
+    this.previousX = this.currentX;
+    this.previousY = this.currentY;
 
-    // Input setup
-    this.setupInput();
+    this.sprite.x = this.currentX;
+    this.sprite.y = this.currentY;
 
-    console.log('🐷 Player created');
+    this.physicsController.reset(this.currentY);
+
+    // Input handling
+    this.inputController = new PlayerInputController(this);
+
+    console.log('🐷 Animated Player created with', textures.length, 'frames (physics-based)');
   }
 
   /**
-   * Setup keyboard and touch input handlers
-   */
-  setupInput() {
-    this.keys = {
-      up: false,
-      down: false
-    };
-
-    window.addEventListener('keydown', (e) => this.handleKeyDown(e));
-    window.addEventListener('keyup', (e) => this.handleKeyUp(e));
-
-    // Touch controls
-    this.touchStartY = null;
-    window.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
-    window.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
-    window.addEventListener('touchend', () => this.handleTouchEnd());
-  }
-
-  /**
-   * Handle keydown events
-   */
-  handleKeyDown(e) {
-    switch (e.key) {
-      case 'ArrowUp':
-      case 'w':
-      case 'W':
-        e.preventDefault();
-        if (!this.keys.up) {
-          this.keys.up = true;
-          this.moveUp();
-        }
-        break;
-      case 'ArrowDown':
-      case 's':
-      case 'S':
-        e.preventDefault();
-        if (!this.keys.down) {
-          this.keys.down = true;
-          this.moveDown();
-        }
-        break;
-    }
-  }
-
-  /**
-   * Handle keyup events
-   */
-  handleKeyUp(e) {
-    switch (e.key) {
-      case 'ArrowUp':
-      case 'w':
-      case 'W':
-        this.keys.up = false;
-        break;
-      case 'ArrowDown':
-      case 's':
-      case 'S':
-        this.keys.down = false;
-        break;
-    }
-  }
-
-  /**
-   * Handle touch start
-   */
-  handleTouchStart(e) {
-    this.touchStartY = e.touches[0].clientY;
-  }
-
-  /**
-   * Handle touch move (swipe detection)
-   */
-  handleTouchMove(e) {
-    if (!this.touchStartY) return;
-
-    e.preventDefault(); // Prevent scrolling
-
-    const touchY = e.touches[0].clientY;
-    const deltaY = this.touchStartY - touchY;
-    const threshold = 30; // Minimum swipe distance
-
-    if (Math.abs(deltaY) > threshold) {
-      if (deltaY > 0) {
-        // Swipe up
-        this.moveUp();
-      } else {
-        // Swipe down
-        this.moveDown();
-      }
-      this.touchStartY = touchY; // Reset for continuous swipes
-    }
-  }
-
-  /**
-   * Handle touch end
-   */
-  handleTouchEnd() {
-    this.touchStartY = null;
-  }
-
-  /**
-   * Move player to lane above
+   * Движение вверх (мгновенный отклик)
+   *
+   * Старая версия блокировала повторные вызовы через isAnimating.
+   * Новая версия позволяет смену направления на лету.
    */
   moveUp() {
-    if (this.isAnimating || this.currentLane === CONFIG.LANES.TOP) return;
+    if (this.targetLane === CONFIG.LANES.TOP) return; // Уже двигаемся к верхней
 
-    this.currentLane--;
-    this.animateToLane();
+    this.targetLane = Math.max(CONFIG.LANES.TOP, this.targetLane - 1);
+    const targetY = CONFIG.LANES.Y_POSITIONS[this.targetLane];
+    this.physicsController.setTarget(targetY);
   }
 
   /**
-   * Move player to lane below
+   * Движение вниз (мгновенный отклик)
    */
   moveDown() {
-    if (this.isAnimating || this.currentLane === CONFIG.LANES.BOTTOM) return;
+    if (this.targetLane === CONFIG.LANES.BOTTOM) return; // Уже двигаемся к нижней
 
-    this.currentLane++;
-    this.animateToLane();
+    this.targetLane = Math.min(CONFIG.LANES.BOTTOM, this.targetLane + 1);
+    const targetY = CONFIG.LANES.Y_POSITIONS[this.targetLane];
+    this.physicsController.setTarget(targetY);
   }
 
-  /**
-   * Animate sprite to target lane using GSAP
-   */
-  animateToLane() {
-    const targetY = CONFIG.LANES.Y_POSITIONS[this.currentLane];
-    this.isAnimating = true;
-
-    gsap.to(this.sprite, {
-      y: targetY,
-      duration: CONFIG.PLAYER.SWITCH_DURATION,
-      ease: 'power2.out',
-      onComplete: () => {
-        this.isAnimating = false;
-      }
-    });
-  }
-
-  /**
-   * Get hitbox for collision detection
-   */
   getHitbox() {
     const scale = CONFIG.COLLISION.PLAYER_HITBOX_SCALE;
     const width = this.sprite.width * scale;
     const height = this.sprite.height * scale;
 
+    // 🆕 Используем физическую позицию для точных коллизий
     return {
-      x: this.sprite.x - width / 2,
-      y: this.sprite.y - height / 2,
+      x: this.currentX - width / 2,
+      y: this.currentY - height / 2,
       width: width,
       height: height
     };
   }
 
   /**
-   * Update player (called each frame)
+   * Обновление физики (вызывается в game loop 60 UPS)
    */
   update(deltaTime) {
-    // Player position is fixed horizontally
-    // Vertical movement is handled by GSAP animations
-    // Additional update logic can be added here if needed
+    // 🆕 Сохраняем состояние для interpolation
+    this.saveState();
+
+    // Обновляем физику через controller
+    const result = this.physicsController.update(deltaTime);
+    this.currentY = result.y;
+
+    // Обновляем lane когда достигли цели
+    if (!result.isMoving && this.currentLane !== this.targetLane) {
+      this.currentLane = this.targetLane;
+    }
+
+    // X позиция фиксирована
+    // (если будут power-ups с горизонтальным движением, добавить здесь)
   }
 
-  /**
-   * Reset player to initial state
-   */
   reset() {
     this.currentLane = CONFIG.LANES.MIDDLE;
-    this.sprite.y = CONFIG.LANES.Y_POSITIONS[this.currentLane];
-    this.isAnimating = false;
+    this.targetLane = CONFIG.LANES.MIDDLE;
+
+    this.currentY = CONFIG.LANES.Y_POSITIONS[this.currentLane];
+    this.previousY = this.currentY;
+    this.sprite.x = CONFIG.PLAYER.START_X;
+    this.sprite.y = this.currentY;
+    this.sprite.rotation = 0;
+    this.sprite.visible = true;
+
+    this.physicsController.reset(this.currentY);
+    this.inputController.enable();
+
     gsap.killTweensOf(this.sprite);
   }
 
-  /**
-   * Get sprite for adding to stage
-   */
   getSprite() {
     return this.sprite;
   }
 
   /**
-   * Destroy player and cleanup
+   * Проверяет, движется ли игрок в данный момент
    */
+  isMoving() {
+    return this.physicsController.isMoving();
+  }
+
+  /**
+   * Получить текущую lane (0 = top, 1 = middle, 2 = bottom)
+   */
+  getCurrentLane() {
+    return this.currentLane;
+  }
+
+  /**
+   * Переключение анимации свиньи (обычная ↔ бустер)
+   * @param {boolean} isBoosted - true = бустер анимация, false = обычная
+   */
+  switchAnimation(isBoosted) {
+    const animationName = isBoosted ? 'Hryusha_boost' : 'Hryusha_flying_v2';
+    const spritesheet = isBoosted ? this.boostSpritesheet : this.normalSpritesheet;
+
+    const textures = spritesheet.animations[animationName];
+    if (!textures) {
+      console.error(`❌ Animation "${animationName}" not found!`);
+      return;
+    }
+
+    // Сохраняем текущий прогресс анимации
+    const wasPlaying = this.sprite.playing;
+
+    // Переключаем текстуры
+    this.sprite.textures = textures;
+
+    // Возобновляем воспроизведение если было активно
+    if (wasPlaying) {
+      this.sprite.play();
+    }
+
+    console.log(`🐷 Switched to ${isBoosted ? 'BOOST' : 'NORMAL'} animation (${textures.length} frames)`);
+  }
+
   destroy() {
     gsap.killTweensOf(this.sprite);
-    window.removeEventListener('keydown', this.handleKeyDown);
-    window.removeEventListener('keyup', this.handleKeyUp);
+    if (this.inputController) {
+      this.inputController.destroy();
+    }
     this.sprite.destroy();
+  }
+
+  // 🆕 Interpolatable interface
+  saveState() {
+    this.previousX = this.currentX;
+    this.previousY = this.currentY;
+  }
+
+  interpolate(alpha) {
+    if (!this.sprite) return;
+    this.sprite.x = this.currentX;
+    this.sprite.y = this.previousY + (this.currentY - this.previousY) * alpha;
+  }
+
+  // Player не cullable (всегда на экране), но должен реагировать на isActive() проверки
+  isActive() {
+    return true;
   }
 }

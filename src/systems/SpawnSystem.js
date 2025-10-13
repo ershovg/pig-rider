@@ -1,224 +1,151 @@
-import { CONFIG } from '../config/constants.js';
-import { MathUtils } from '../utils/MathUtils.js';
-import { ObjectPool } from '../utils/ObjectPool.js';
+/**
+ * Система спавна объектов (оркестратор spawner'ов)
+ */
+import { EntityPoolManager } from './pools/EntityPoolManager.js';
+import { ObstacleSpawner } from './spawners/ObstacleSpawner.js';
+import { CoinSpawner } from './spawners/CoinSpawner.js';
+import { CloudSpawner } from './spawners/CloudSpawner.js';
+import { StarSpawner } from './spawners/StarSpawner.js';
+import { BoosterSpawner } from './spawners/BoosterSpawner.js';
 import { Obstacle } from '../entities/Obstacle.js';
 import { Coin } from '../entities/Coin.js';
+import { Cloud } from '../entities/Cloud.js';
+import { Star } from '../entities/Star.js';
+import { Booster } from '../entities/Booster.js';
+import { CONFIG } from '../config/constants.js';
 
 export class SpawnSystem {
-  constructor(obstacleTextures, coinTexture, stage) {
+  constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterSpritesheet, stage) {
     this.stage = stage;
-    this.obstacleTextures = Array.isArray(obstacleTextures) ? obstacleTextures : [obstacleTextures];
-
-    // Create object pools
-    this.obstaclePool = new ObjectPool(
-      () => {
-        // Randomly choose texture for variety
-        const randomTexture = this.obstacleTextures[MathUtils.randomInt(0, this.obstacleTextures.length - 1)];
-        const obstacle = new Obstacle(randomTexture);
-        this.stage.addChild(obstacle.getSprite());
-        return obstacle;
-      },
-      (obstacle) => obstacle.reset(),
-      CONFIG.OBSTACLE.POOL_SIZE
-    );
-
-    this.coinPool = new ObjectPool(
-      () => {
-        const coin = new Coin(coinTexture);
-        this.stage.addChild(coin.getSprite());
-        return coin;
-      },
-      (coin) => coin.reset(),
-      CONFIG.COIN.POOL_SIZE
-    );
-
-    // Track last spawn positions for each lane
-    this.lastObstacleX = Array(CONFIG.LANES.TOTAL).fill(CONFIG.CANVAS_WIDTH);
-    this.lastCoinX = Array(CONFIG.LANES.TOTAL).fill(CONFIG.CANVAS_WIDTH);
-
-    // Spawn timers
-    this.obstacleSpawnTimer = 0;
-    this.coinSpawnTimer = 0;
-
-    console.log('🎯 Spawn system initialized');
-  }
-
-  /**
-   * Update spawn system
-   */
-  update(deltaTime, gameSpeed) {
-    // Update all active obstacles
-    const activeObstacles = this.obstaclePool.getActive();
-    for (const obstacle of activeObstacles) {
-      obstacle.update(deltaTime, gameSpeed);
-
-      // Return to pool if deactivated
-      if (!obstacle.isActive()) {
-        this.obstaclePool.release(obstacle);
-      }
-    }
-
-    // Update all active coins
-    const activeCoins = this.coinPool.getActive();
-    for (const coin of activeCoins) {
-      coin.update(deltaTime, gameSpeed);
-
-      // Return to pool if deactivated
-      if (!coin.isActive()) {
-        this.coinPool.release(coin);
-      }
-    }
-
-    // Spawn new obstacles
-    this.spawnObstacles(deltaTime, gameSpeed);
-
-    // Spawn new coins
-    this.spawnCoins(deltaTime, gameSpeed);
-  }
-
-  /**
-   * Spawn obstacles at random intervals
-   */
-  spawnObstacles(deltaTime, gameSpeed) {
-    this.obstacleSpawnTimer += deltaTime;
-
-    // Determine spawn interval based on speed
-    const baseInterval = 1.2; // seconds
-    const spawnInterval = baseInterval / gameSpeed;
-
-    if (this.obstacleSpawnTimer >= spawnInterval) {
-      this.obstacleSpawnTimer = 0;
-
-      // Get lanes that currently have obstacles near spawn area
-      const blockedLanes = this.getBlockedLanes();
-
-      // CRITICAL: Never block all lanes - always leave at least 1 free
-      let availableLanes = [];
-      for (let i = 0; i < CONFIG.LANES.TOTAL; i++) {
-        if (!blockedLanes.includes(i)) {
-          availableLanes.push(i);
-        }
-      }
-
-      // If all lanes would be blocked, skip this spawn
-      if (availableLanes.length === 0) {
-        console.warn('⚠️ All lanes blocked - skipping obstacle spawn');
-        return;
-      }
-
-      // Choose random lane from available lanes
-      const lane = availableLanes[MathUtils.randomInt(0, availableLanes.length - 1)];
-
-      // Calculate spawn position
-      const minDist = CONFIG.OBSTACLE.MIN_DISTANCE;
-      const maxDist = CONFIG.OBSTACLE.MAX_DISTANCE;
-      const distance = MathUtils.randomFloat(minDist, maxDist);
-
-      const spawnX = Math.max(
-        CONFIG.CANVAS_WIDTH + distance,
-        this.lastObstacleX[lane] + distance
-      );
-
-      // Spawn obstacle
-      const obstacle = this.obstaclePool.acquire();
-      obstacle.activate(lane, spawnX);
-
-      this.lastObstacleX[lane] = spawnX;
-    }
-  }
-
-  /**
-   * Get lanes that currently have obstacles in the near spawn area
-   * This prevents blocking all lanes simultaneously
-   */
-  getBlockedLanes() {
-    const blocked = [];
-    const safeDistance = 1500; // Distance threshold to consider a lane "blocked"
-
-    const activeObstacles = this.obstaclePool.getActive();
-    for (const obstacle of activeObstacles) {
-      if (!obstacle.isActive()) continue;
-
-      const obstacleX = obstacle.getSprite().x;
-
-      // If obstacle is in the spawn/near area, mark its lane as blocked
-      if (obstacleX > CONFIG.CANVAS_WIDTH - safeDistance) {
-        const lane = obstacle.lane;
-        if (!blocked.includes(lane)) {
-          blocked.push(lane);
-        }
-      }
-    }
-
-    return blocked;
-  }
-
-  /**
-   * Spawn coins at random intervals
-   */
-  spawnCoins(deltaTime, gameSpeed) {
-    this.coinSpawnTimer += deltaTime;
-
-    const baseInterval = 0.8; // seconds
-    const spawnInterval = baseInterval / gameSpeed;
-
-    if (this.coinSpawnTimer >= spawnInterval) {
-      this.coinSpawnTimer = 0;
-
-      // Choose random lane (avoid spawning too many in player's lane)
-      const lane = MathUtils.randomInt(0, CONFIG.LANES.TOTAL - 1);
-
-      // Calculate spawn position
-      const minDist = CONFIG.COIN.MIN_DISTANCE;
-      const maxDist = CONFIG.COIN.MAX_DISTANCE;
-      const distance = MathUtils.randomFloat(minDist, maxDist);
-
-      const spawnX = Math.max(
-        CONFIG.CANVAS_WIDTH + distance,
-        this.lastCoinX[lane] + distance
-      );
-
-      // Spawn coin
-      const coin = this.coinPool.acquire();
-      coin.activate(lane, spawnX);
-
-      this.lastCoinX[lane] = spawnX;
-    }
-  }
-
-  /**
-   * Get all active obstacles
-   */
-  getActiveObstacles() {
-    return this.obstaclePool.getActive().filter(o => o.isActive());
-  }
-
-  /**
-   * Get all active coins
-   */
-  getActiveCoins() {
-    return this.coinPool.getActive().filter(c => c.isActive());
-  }
-
-  /**
-   * Reset spawn system
-   */
-  reset() {
-    this.obstaclePool.releaseAll();
-    this.coinPool.releaseAll();
-    this.lastObstacleX.fill(CONFIG.CANVAS_WIDTH);
-    this.lastCoinX.fill(CONFIG.CANVAS_WIDTH);
-    this.obstacleSpawnTimer = 0;
-    this.coinSpawnTimer = 0;
-  }
-
-  /**
-   * Get pool statistics
-   */
-  getStats() {
-    return {
-      obstacles: this.obstaclePool.getStats(),
-      coins: this.coinPool.getStats()
+    this.textures = {
+      obstacles: obstacleTextures,
+      coin: coinTexture,
+      star: starTexture,
+      cloud: cloudTexture,
+      boosterSpritesheet: boosterSpritesheet // 🆕 Теперь это спрайтшит, не просто текстура
     };
+    this.poolManager = new EntityPoolManager(stage);
+    this.initializePools();
+    this.initializeSpawners();
+  }
+
+  initializePools() {
+    this.poolManager.registerPool('obstacle', Obstacle, 20, {
+      texture: this.textures.obstacles[Math.floor(Math.random() * this.textures.obstacles.length)]
+    });
+    this.poolManager.registerPool('coin', Coin, 50, { texture: this.textures.coin });
+    this.poolManager.registerPool('star', Star, 30, { texture: this.textures.star });
+    this.poolManager.registerPool('cloud', Cloud, 15, { texture: this.textures.cloud });
+    // 🆕 Передаем спрайтшит в конструктор Booster
+    this.poolManager.registerPool('booster', Booster, CONFIG.BOOSTER.POOL_SIZE, { texture: this.textures.boosterSpritesheet });
+  }
+
+  initializeSpawners() {
+    this.obstacleSpawner = new ObstacleSpawner({
+      pool: this.poolManager.getPool('obstacle'),
+      stage: this.stage,
+      textures: this.textures.obstacles, // 🆕 Передаём массив текстур
+      getIntervalModifier: (context) => {
+        const { difficultyManager } = context;
+        if (!difficultyManager) return 1.0;
+        const baseInterval = CONFIG.OBSTACLE.MIN_DISTANCE;
+        const currentInterval = difficultyManager.getObstacleSpawnInterval();
+        return currentInterval / baseInterval;
+      }
+    });
+
+    this.coinSpawner = new CoinSpawner({
+      pool: this.poolManager.getPool('coin'),
+      stage: this.stage,
+      getIntervalModifier: (context) => 1.0
+    });
+
+    this.cloudSpawner = new CloudSpawner({
+      pool: this.poolManager.getPool('cloud'),
+      stage: this.stage
+    });
+
+    this.starSpawner = new StarSpawner({
+      pool: this.poolManager.getPool('star'),
+      stage: this.stage
+    });
+
+    this.boosterSpawner = new BoosterSpawner({
+      pool: this.poolManager.getPool('booster'),
+      stage: this.stage
+    });
+  }
+
+  update(deltaTime, gameSpeed, context = {}) {
+    const {
+      isBoosterMode = false,
+      boosterActiveLane = 0,
+      isBoosterActive = false,
+      boosterCooldown = 0,
+      difficultyManager = null
+    } = context;
+
+    if (!isBoosterMode) {
+      this.obstacleSpawner.update(deltaTime, gameSpeed, { difficultyManager });
+    }
+
+    this.coinSpawner.update(deltaTime, gameSpeed, {
+      isBoosterMode,
+      boosterActiveLane,
+      gameSpeed,
+      difficultyManager
+    });
+
+    this.cloudSpawner.update(deltaTime, gameSpeed);
+    this.starSpawner.update(deltaTime, gameSpeed);
+    this.boosterSpawner.update(deltaTime, gameSpeed, {
+      isBoosterActive,
+      boosterCooldown
+    });
+  }
+
+  fillLaneWithCoins(lane) {
+    this.coinSpawner.fillLaneWithCoins(lane);
+  }
+
+  clearAllObstacles() {
+    this.obstacleSpawner.clearAll();
+  }
+
+  getActiveObstacles() {
+    return this.obstacleSpawner.getActiveObjects();
+  }
+
+  getActiveCoins() {
+    return this.coinSpawner.getActiveObjects();
+  }
+
+  getActiveBoosters() {
+    return this.boosterSpawner.getActiveObjects();
+  }
+
+  // 🆕 Методы для culling декораций
+  getActiveClouds() {
+    return this.cloudSpawner.getActiveObjects();
+  }
+
+  getActiveStars() {
+    return this.starSpawner.getActiveObjects();
+  }
+
+  reset() {
+    this.obstacleSpawner.reset();
+    this.coinSpawner.reset();
+    this.cloudSpawner.reset();
+    this.starSpawner.reset();
+    this.boosterSpawner.reset();
+  }
+
+  getStats() {
+    return this.poolManager.getAllStats();
+  }
+
+  logStats() {
+    this.poolManager.logStats();
   }
 }
