@@ -1,6 +1,6 @@
-import BaseSpawner from './BaseSpawner.js';
-import CONFIG from '../../config/constants.js';
-import MathUtils from '../../utils/MathUtils.js';
+import { BaseSpawner } from './BaseSpawner.js';
+import { CONFIG } from '../../config/constants.js';
+import { MathUtils } from '../../utils/MathUtils.js';
 
 /**
  * CoinSpawner - Отвечает за спавн монет
@@ -14,7 +14,7 @@ import MathUtils from '../../utils/MathUtils.js';
  * - Разные интервалы спавна для разных режимов
  * - Отслеживание последних позиций на каждой полосе
  */
-export default class CoinSpawner extends BaseSpawner {
+export class CoinSpawner extends BaseSpawner {
   /**
    * @param {Object} config
    * @param {ObjectPool} config.pool - Пул монет

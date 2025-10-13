@@ -1,6 +1,6 @@
-import BaseSpawner from './BaseSpawner.js';
-import CONFIG from '../../config/constants.js';
-import MathUtils from '../../utils/MathUtils.js';
+import { BaseSpawner } from './BaseSpawner.js';
+import { CONFIG } from '../../config/constants.js';
+import { MathUtils } from '../../utils/MathUtils.js';
 
 /**
  * BoosterSpawner - Отвечает за спавн power-up объектов (бустеров)
@@ -13,7 +13,7 @@ import MathUtils from '../../utils/MathUtils.js';
  * Бустеры - это интерактивные объекты, которые при сборе активируют
  * специальный режим с плотным потоком монет.
  */
-export default class BoosterSpawner extends BaseSpawner {
+export class BoosterSpawner extends BaseSpawner {
   /**
    * @param {Object} config
    * @param {ObjectPool} config.pool - Пул бустеров

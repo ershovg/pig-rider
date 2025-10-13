@@ -3,13 +3,22 @@ import gsap from 'gsap';
 import { CONFIG } from '../config/constants.js';
 
 export class Player {
-  constructor(texture) {
+  constructor(spritesheet) {
     this.currentLane = CONFIG.LANES.MIDDLE;
     this.isAnimating = false;
 
-    // Create sprite
-    this.sprite = new PIXI.Sprite(texture);
+    // Create AnimatedSprite from spritesheet
+    // spritesheet.animations содержит массив текстур для анимации "Hryusha_flying"
+    const textures = spritesheet.animations['Hryusha_flying'];
+    this.sprite = new PIXI.AnimatedSprite(textures);
+
+    // Animation settings
     this.sprite.anchor.set(0.5);
+    this.sprite.animationSpeed = 0.5; // Скорость анимации (frames per game tick)
+    this.sprite.loop = true;           // Бесконечный loop
+    this.sprite.play();                // Запускаем анимацию
+
+    // Size
     this.sprite.width = CONFIG.PLAYER.SIZE;
     this.sprite.height = CONFIG.PLAYER.SIZE;
 
@@ -20,7 +29,7 @@ export class Player {
     // Input setup
     this.setupInput();
 
-    console.log('🐷 Player created');
+    console.log('🐷 Animated Player created with', textures.length, 'frames');
   }
 
   /**

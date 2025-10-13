@@ -1,6 +1,6 @@
-import BaseSpawner from './BaseSpawner.js';
-import CONFIG from '../../config/constants.js';
-import MathUtils from '../../utils/MathUtils.js';
+import { BaseSpawner } from './BaseSpawner.js';
+import { CONFIG } from '../../config/constants.js';
+import { MathUtils } from '../../utils/MathUtils.js';
 
 /**
  * StarSpawner - Отвечает за спавн декоративных звезд
@@ -13,7 +13,7 @@ import MathUtils from '../../utils/MathUtils.js';
  * Не требует сложной логики, так как звезды чисто декоративные
  * и не влияют на геймплей.
  */
-export default class StarSpawner extends BaseSpawner {
+export class StarSpawner extends BaseSpawner {
   /**
    * @param {Object} config
    * @param {ObjectPool} config.pool - Пул звезд

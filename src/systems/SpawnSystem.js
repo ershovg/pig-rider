@@ -1,36 +1,39 @@
-import EntityPoolManager from './pools/EntityPoolManager.js';
-import LaneSafetyService from './services/LaneSafetyService.js';
+import { EntityPoolManager } from './pools/EntityPoolManager.js';
 
 // Spawners
-import ObstacleSpawner from './spawners/ObstacleSpawner.js';
-import CoinSpawner from './spawners/CoinSpawner.js';
-import CloudSpawner from './spawners/CloudSpawner.js';
-import StarSpawner from './spawners/StarSpawner.js';
-import BoosterSpawner from './spawners/BoosterSpawner.js';
-import SparkleSpawner from './spawners/SparkleSpawner.js';
+import { ObstacleSpawner } from './spawners/ObstacleSpawner.js';
+import { CoinSpawner } from './spawners/CoinSpawner.js';
+import { CloudSpawner } from './spawners/CloudSpawner.js';
+import { StarSpawner } from './spawners/StarSpawner.js';
+import { BoosterSpawner } from './spawners/BoosterSpawner.js';
+import { SparkleSpawner } from './spawners/SparkleSpawner.js';
 
 // Entities
-import Obstacle from '../entities/Obstacle.js';
-import Coin from '../entities/Coin.js';
-import Cloud from '../entities/Cloud.js';
-import Star from '../entities/Star.js';
-import Booster from '../entities/Booster.js';
-import CoinSparkle from '../entities/CoinSparkle.js';
+import { Obstacle } from '../entities/Obstacle.js';
+import { Coin } from '../entities/Coin.js';
+import { Cloud } from '../entities/Cloud.js';
+import { Star } from '../entities/Star.js';
+import { Booster } from '../entities/Booster.js';
+import { CoinSparkle } from '../entities/CoinSparkle.js';
 
-import CONFIG from '../config/constants.js';
+import { CONFIG } from '../config/constants.js';
 
-export default class SpawnSystem {
-  constructor(stage) {
+export class SpawnSystem {
+  constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterTexture, stage) {
     this.stage = stage;
+
+    // Сохраняем текстуры для создания entities
+    this.textures = {
+      obstacles: obstacleTextures,
+      coin: coinTexture,
+      star: starTexture,
+      cloud: cloudTexture,
+      booster: boosterTexture
+    };
 
     // Инициализация пулов через EntityPoolManager
     this.poolManager = new EntityPoolManager(stage);
     this.initializePools();
-
-    // Сервис безопасности полос
-    this.laneSafetyService = new LaneSafetyService(
-      this.poolManager.getPool('obstacle')
-    );
 
     // Инициализация spawner'ов
     this.initializeSpawners();
@@ -40,23 +43,25 @@ export default class SpawnSystem {
    * Регистрация всех пулов объектов
    */
   initializePools() {
-    this.poolManager.registerPool('obstacle', Obstacle, 20);
-    this.poolManager.registerPool('coin', Coin, 50);
-    this.poolManager.registerPool('star', Star, 30);
-    this.poolManager.registerPool('cloud', Cloud, 15);
-    this.poolManager.registerPool('booster', Booster, 5);
-    this.poolManager.registerPool('sparkle', CoinSparkle, 20);
+    // Выбираем случайную текстуру препятствия для каждого объекта
+    this.poolManager.registerPool('obstacle', Obstacle, 20, {
+      texture: this.textures.obstacles[Math.floor(Math.random() * this.textures.obstacles.length)]
+    });
+    this.poolManager.registerPool('coin', Coin, 50, { texture: this.textures.coin });
+    this.poolManager.registerPool('star', Star, 30, { texture: this.textures.star });
+    this.poolManager.registerPool('cloud', Cloud, 15, { texture: this.textures.cloud });
+    this.poolManager.registerPool('booster', Booster, 5, { texture: this.textures.booster });
+    this.poolManager.registerPool('sparkle', CoinSparkle, 20, { texture: this.textures.coin });
   }
 
   /**
    * Инициализация всех spawner'ов
    */
   initializeSpawners() {
-    // Obstacle Spawner - с lane safety logic
+    // Obstacle Spawner - с pattern-based generation (v2.0)
     this.obstacleSpawner = new ObstacleSpawner({
       pool: this.poolManager.getPool('obstacle'),
       stage: this.stage,
-      laneSafetyService: this.laneSafetyService,
       getIntervalModifier: (context) => {
         // Модификатор интервала из difficulty manager
         const { difficultyManager } = context;

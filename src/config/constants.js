@@ -30,7 +30,7 @@ export const CONFIG = {
   PLAYER: {
     START_X: 300,
     SWITCH_DURATION: 0.15, // GSAP animation duration in seconds
-    SIZE: 150
+    SIZE: 260  // 130×2 для @2x качества на Retina (было 150)
   },
 
   // Obstacles
@@ -74,6 +74,7 @@ const getAssetPath = (path) => {
 export const ASSET_PATHS = {
   // PNG спрайты из Figma (@2x)
   get PLAYER() { return getAssetPath('/assets/sprites/pig_rider.png'); },
+  get PLAYER_ANIMATED() { return getAssetPath('/assets/sprites/hryusha-flying.json'); }, // Sprite sheet анимация свиньи
   get OBSTACLE_BASE() { return getAssetPath('/assets/sprites/barier_base.png'); },
   get OBSTACLE_LARGE() { return getAssetPath('/assets/sprites/barier_large.png'); },
   get COIN() { return getAssetPath('/assets/sprites/coin.png'); },

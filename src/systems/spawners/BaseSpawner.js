@@ -10,7 +10,7 @@
  * - Обеспечивает единообразный API
  * - Упрощает добавление новых типов объектов
  */
-export default class BaseSpawner {
+export class BaseSpawner {
   /**
    * @param {Object} config - Конфигурация spawner'а
    * @param {EntityPool} config.pool - Пул объектов для спавна
@@ -76,7 +76,7 @@ export default class BaseSpawner {
    * @param {Object} context - Контекст игры
    */
   updateActiveObjects(deltaTime, gameSpeed, context) {
-    const objects = this.pool.getActiveObjects();
+    const objects = this.pool.getActive();
 
     for (let i = objects.length - 1; i >= 0; i--) {
       const obj = objects[i];
@@ -153,6 +153,6 @@ export default class BaseSpawner {
    * @returns {Array}
    */
   getActiveObjects() {
-    return this.pool.getActiveObjects();
+    return this.pool.getActive();
   }
 }

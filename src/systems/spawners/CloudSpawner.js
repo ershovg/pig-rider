@@ -1,6 +1,6 @@
-import BaseSpawner from './BaseSpawner.js';
-import CONFIG from '../../config/constants.js';
-import MathUtils from '../../utils/MathUtils.js';
+import { BaseSpawner } from './BaseSpawner.js';
+import { CONFIG } from '../../config/constants.js';
+import { MathUtils } from '../../utils/MathUtils.js';
 
 /**
  * CloudSpawner - Отвечает за спавн декоративных облаков
@@ -12,7 +12,7 @@ import MathUtils from '../../utils/MathUtils.js';
  *
  * Паттерн: Strategy (выбор лучшей полосы)
  */
-export default class CloudSpawner extends BaseSpawner {
+export class CloudSpawner extends BaseSpawner {
   /**
    * @param {Object} config
    * @param {ObjectPool} config.pool - Пул облаков
@@ -80,7 +80,7 @@ export default class CloudSpawner extends BaseSpawner {
    * @returns {number} Номер полосы (0, 1, 2)
    */
   getBestLane() {
-    const activeClouds = this.pool.getActiveObjects();
+    const activeClouds = this.pool.getActive();
     const laneCounts = Array(CONFIG.LANES.TOTAL).fill(0);
 
     // Подсчитываем количество облаков на каждой полосе
@@ -112,7 +112,7 @@ export default class CloudSpawner extends BaseSpawner {
    * @returns {boolean} true, если можно спавнить
    */
   canSpawnOnLane(lane) {
-    const activeClouds = this.pool.getActiveObjects();
+    const activeClouds = this.pool.getActive();
     const spawnX = CONFIG.CANVAS_WIDTH;
 
     for (const cloud of activeClouds) {
@@ -144,7 +144,7 @@ export default class CloudSpawner extends BaseSpawner {
    * @returns {number[]} [count_lane0, count_lane1, count_lane2]
    */
   getCloudDistribution() {
-    const activeClouds = this.pool.getActiveObjects();
+    const activeClouds = this.pool.getActive();
     const laneCounts = [0, 0, 0];
 
     for (const cloud of activeClouds) {

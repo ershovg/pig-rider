@@ -1,23 +1,33 @@
-import BaseSpawner from './BaseSpawner.js';
-import CONFIG from '../../config/constants.js';
-import MathUtils from '../../utils/MathUtils.js';
+import { BaseSpawner } from './BaseSpawner.js';
+import { CONFIG } from '../../config/constants.js';
+import { MathUtils } from '../../utils/MathUtils.js';
+import { ObstaclePatternLibrary } from '../patterns/ObstaclePatternLibrary.js';
 
 /**
- * ObstacleSpawner - Отвечает за спавн препятствий
+ * ObstacleSpawner - Отвечает за спавн препятствий используя Pattern-Based подход
+ *
+ * Архитектурное изменение (v2.0):
+ * Переход с runtime validation на pre-validated patterns для 100% гарантии проходимости.
  *
  * Ключевые особенности:
- * - Использует LaneSafetyService для предотвращения блокировки всех полос
- * - Отслеживает последние позиции спавна на каждой полосе
- * - Учитывает сложность игры (DifficultyManager) для динамических интервалов
+ * - Использует ObstaclePatternLibrary с предопределенными безопасными паттернами
+ * - Каждый паттерн ГАРАНТИРОВАННО оставляет минимум 1 свободную полосу
+ * - Weighted random selection с anti-repetition механизмом
+ * - Difficulty scaling через выбор паттернов разной сложности
  *
- * Паттерн: Strategy (через LaneSafetyService)
+ * Паттерн: Strategy + Registry (через PatternLibrary)
+ *
+ * Преимущества перед старым подходом:
+ * - Устранены race conditions в runtime проверках
+ * - 100% гарантия проходимости (не может заблокировать все полосы)
+ * - Более предсказуемый game feel
+ * - Меньше кода, проще поддержка
  */
-export default class ObstacleSpawner extends BaseSpawner {
+export class ObstacleSpawner extends BaseSpawner {
   /**
    * @param {Object} config
    * @param {ObjectPool} config.pool - Пул препятствий
    * @param {PIXI.Container} config.stage - Сцена
-   * @param {LaneSafetyService} config.laneSafetyService - Сервис безопасности полос
    * @param {Function} config.getIntervalModifier - Функция для получения модификатора интервала
    */
   constructor(config) {
@@ -28,61 +38,90 @@ export default class ObstacleSpawner extends BaseSpawner {
       getIntervalModifier: config.getIntervalModifier
     });
 
-    this.laneSafetyService = config.laneSafetyService;
+    // Pattern library для выбора безопасных комбинаций
+    this.patternLibrary = new ObstaclePatternLibrary();
 
-    // Отслеживаем последнюю позицию спавна на каждой полосе
-    // Это предотвращает "tight chains" - слишком плотное расположение препятствий
-    this.lastObstacleX = [0, 0, 0]; // X-координата последнего препятствия для каждой полосы
-    this.lastObstacleTime = [0, 0, 0]; // Время последнего спавна (для отладки)
+    // Отслеживаем глобальную позицию последнего спавна (любой полосы)
+    // Используется для расчета следующей позиции паттерна
+    this.lastPatternX = 0;
   }
 
   /**
-   * Логика спавна препятствия
+   * Логика спавна препятствий (Pattern-Based)
    *
-   * Алгоритм:
-   * 1. Получаем доступные полосы через LaneSafetyService
-   * 2. Если все полосы заблокированы → пропускаем спавн (это нормально!)
-   * 3. Выбираем случайную доступную полосу
-   * 4. Рассчитываем позицию с учетом минимального расстояния
-   * 5. Спавним препятствие
+   * Новый алгоритм (v2.0):
+   * 1. Получаем текущую сложность игры (из gameSpeed)
+   * 2. Выбираем безопасный паттерн из библиотеки (с учетом сложности)
+   * 3. Рассчитываем базовую позицию спавна
+   * 4. Спавним ВСЕ препятствия паттерна одновременно (атомарная операция)
    *
-   * @param {number} gameSpeed - Текущая скорость игры
-   * @param {Object} context - Контекст (не используется, но может понадобиться)
+   * Ключевое отличие от старого подхода:
+   * - Было: Спавнили 1 препятствие → проверяли полосы → надеялись что не блокируем все
+   * - Стало: Выбираем готовый валидированный паттерн → спавним всю группу
+   *
+   * @param {number} gameSpeed - Текущая скорость игры (используется как difficulty)
+   * @param {Object} context - Контекст игры
    */
   spawn(gameSpeed, context = {}) {
-    // CRITICAL: Проверяем доступные полосы через LaneSafetyService
-    const availableLanes = this.laneSafetyService.getAvailableLanes(gameSpeed);
+    // Используем gameSpeed как меру сложности
+    // gameSpeed изменяется от CONFIG.GAME_SPEED (1.0) до CONFIG.MAX_SPEED (2.5)
+    const currentDifficulty = gameSpeed || 1.0;
 
-    // Если все полосы заблокированы, пропускаем спавн
-    // Это нормальная ситуация - лучше пропустить, чем заблокировать игрока
-    if (availableLanes.length === 0) {
-      console.warn('[ObstacleSpawner] All lanes blocked - skipping spawn (safety mechanism)');
-      return;
-    }
+    // Выбираем паттерн из библиотеки (weighted random + anti-repetition)
+    const pattern = this.patternLibrary.selectPattern(currentDifficulty);
 
-    // Выбираем случайную полосу из доступных
-    const lane = availableLanes[MathUtils.randomInt(0, availableLanes.length - 1)];
+    console.log(`[ObstacleSpawner] === SPAWN PATTERN: ${pattern.name} ===`);
+    console.log(`[ObstacleSpawner] Difficulty: ${currentDifficulty.toFixed(2)}, Pattern difficulty: ${pattern.difficulty}`);
+    console.log(`[ObstacleSpawner] Blocking lanes: [${pattern.lanes.join(', ')}], Free lanes: [${this.getFreeLanes(pattern.lanes).join(', ')}]`);
 
-    // Рассчитываем позицию спавна
-    // Используем случайное расстояние между MIN и MAX для разнообразия
+    // Рассчитываем базовую позицию спавна
     const minDist = CONFIG.OBSTACLE.MIN_DISTANCE;
     const maxDist = CONFIG.OBSTACLE.MAX_DISTANCE;
     const distance = MathUtils.randomFloat(minDist, maxDist);
 
-    // Спавним либо за правым краем экрана, либо после последнего препятствия
-    // (в зависимости от того, что дальше)
-    const spawnX = Math.max(
+    // Базовая X позиция для паттерна (справа от экрана)
+    const baseX = Math.max(
       CONFIG.CANVAS_WIDTH + distance,
-      this.lastObstacleX[lane] + distance
+      this.lastPatternX + distance
     );
 
-    // Получаем препятствие из пула и активируем
-    const obstacle = this.pool.acquire();
-    obstacle.activate(lane, spawnX);
+    // Спавним все препятствия паттерна
+    let spawnedCount = 0;
+    for (let i = 0; i < pattern.lanes.length; i++) {
+      const lane = pattern.lanes[i];
 
-    // Обновляем позицию последнего спавна для этой полосы
-    this.lastObstacleX[lane] = spawnX;
-    this.lastObstacleTime[lane] = performance.now();
+      // Рассчитываем X с учетом offset (если есть)
+      const offset = (i === 1 && pattern.offset) ? pattern.offset : 0;
+      const spawnX = baseX + offset;
+
+      // Получаем препятствие из пула и активируем
+      const obstacle = this.pool.acquire();
+      if (obstacle) {
+        obstacle.activate(lane, spawnX);
+        spawnedCount++;
+
+        console.log(`[ObstacleSpawner]   → Spawned at lane ${lane}, X=${spawnX.toFixed(0)}${offset > 0 ? ` (offset +${offset})` : ''}`);
+      }
+    }
+
+    // Обновляем позицию последнего паттерна
+    // Используем максимальную X координату (с учетом offset)
+    this.lastPatternX = baseX + (pattern.offset || 0);
+
+    const stats = this.pool.getStats();
+    console.log(`[ObstacleSpawner] ✔️ Pattern complete: ${spawnedCount} obstacles spawned`);
+    console.log(`[ObstacleSpawner] Active obstacles: ${stats.active}/${stats.total}`);
+  }
+
+  /**
+   * Получить свободные полосы (не заблокированные паттерном)
+   * Utility метод для логирования
+   *
+   * @param {number[]} blockedLanes - Заблокированные полосы
+   * @returns {number[]} Свободные полосы
+   */
+  getFreeLanes(blockedLanes) {
+    return [0, 1, 2].filter(lane => !blockedLanes.includes(lane));
   }
 
   /**
@@ -92,9 +131,11 @@ export default class ObstacleSpawner extends BaseSpawner {
   reset() {
     super.reset();
 
-    // Сбрасываем позиции последних препятствий
-    this.lastObstacleX = [0, 0, 0];
-    this.lastObstacleTime = [0, 0, 0];
+    // Сбрасываем позицию последнего паттерна
+    this.lastPatternX = 0;
+
+    // Сбрасываем историю паттернов в библиотеке
+    this.patternLibrary.reset();
   }
 
   /**
@@ -102,8 +143,7 @@ export default class ObstacleSpawner extends BaseSpawner {
    */
   clearAll() {
     this.pool.releaseAll();
-    this.lastObstacleX = [0, 0, 0];
-    this.lastObstacleTime = [0, 0, 0];
+    this.lastPatternX = 0;
   }
 
   /**
@@ -113,5 +153,13 @@ export default class ObstacleSpawner extends BaseSpawner {
    */
   getObstaclesInLane(lane) {
     return this.getActiveObjects().filter(obstacle => obstacle.lane === lane);
+  }
+
+  /**
+   * Получить статистику паттернов (для отладки)
+   * @returns {Object}
+   */
+  getPatternStats() {
+    return this.patternLibrary.getStats();
   }
 }

@@ -1,4 +1,4 @@
-import BaseSpawner from './BaseSpawner.js';
+import { BaseSpawner } from './BaseSpawner.js';
 
 /**
  * SparkleSpawner - Отвечает за спавн визуальных эффектов при сборе монет
@@ -10,7 +10,7 @@ import BaseSpawner from './BaseSpawner.js';
  * Использование:
  * sparkleSpawner.emit(x, y); // При сборе монеты
  */
-export default class SparkleSpawner extends BaseSpawner {
+export class SparkleSpawner extends BaseSpawner {
   /**
    * @param {Object} config
    * @param {ObjectPool} config.pool - Пул sparkle эффектов

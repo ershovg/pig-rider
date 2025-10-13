@@ -4,7 +4,7 @@ import { Renderer } from './core/Renderer.js';
 import { GameLoop } from './core/GameLoop.js';
 import { AssetLoader } from './core/AssetLoader.js';
 import { Player } from './entities/Player.js';
-import SpawnSystem from './systems/SpawnSystem.js'; // Изменено: default export
+import { SpawnSystem } from './systems/SpawnSystem.js';
 import { CollisionSystem } from './systems/CollisionSystem.js';
 import { DifficultyManager } from './systems/DifficultyManager.js';
 import { UIController } from './ui/UIController.js';
@@ -97,9 +97,9 @@ export class Game {
    * Initialize game systems
    */
   initSystems() {
-    // Create player
-    const playerTexture = this.assetLoader.getAsset('player');
-    this.player = new Player(playerTexture);
+    // Create player with animated spritesheet
+    const playerSpritesheet = this.assetLoader.getAsset('playerAnimated');
+    this.player = new Player(playerSpritesheet);
     this.renderer.addToStage(this.player.getSprite());
 
     // Create spawn system with multiple obstacle textures for variety

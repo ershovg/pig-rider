@@ -1,283 +1,212 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Инструкции для Claude Code при работе с этим проектом.
 
-## Working Style & Agent Usage
+---
 
-**IMPORTANT**: Follow these rules for agent usage and workflow:
+## Working Style
 
-- **Never automatically start dev server or run tests** unless explicitly requested by the user
-- **Never automatically run build commands** after making code changes - wait for user's request
-- **Use agents only when explicitly asked** by the user (e.g., "review this code", "debug this issue")
-- **Don't be overly proactive** with testing - make changes, explain them, and let the user decide when to test
-- When user asks "how to do X", answer first - don't immediately jump into implementation
-- Only run commands that are directly requested or clearly necessary for the current task
+**ВАЖНО - Правила работы:**
 
-This ensures you work **with** the user, not ahead of them.
+- **Никогда не запускай автоматически** dev server, тесты или build команды без явного запроса
+- **Используй агентов только по запросу** (faang-code-reviewer, debugger, performance-profiler)
+- **Не будь чрезмерно проактивным** - делай изменения, объясняй их, дай пользователю решать, когда тестировать
+- Когда пользователь спрашивает "как сделать X", **сначала ответь** - не прыгай сразу в реализацию
+- Выполняй только команды, которые напрямую запрошены или явно необходимы для текущей задачи
 
-## Project Overview
+---
 
-**Pig Rider** is an endless runner game built with PixiJS for Webflow integration. The game features a pig character navigating three lanes, collecting coins while avoiding obstacles. The architecture separates WebGL rendering (PixiJS) from UI (HTML/CSS), making it ideal for Webflow deployment.
+## Проект: Pig Rider Game
 
-## Build Commands
+**Endless runner** игра на PixiJS для интеграции в Webflow. Игрок управляет свиньей по трем полосам, собирает монеты, избегает препятствий.
 
-### Development
+**Ключевая особенность:** Hybrid rendering - PixiJS (WebGL) для игровых объектов, HTML/CSS для UI. Это позволяет легко стилизовать интерфейс через Webflow.
+
+---
+
+## Build Команды
+
 ```bash
-npm run dev          # Start dev server at localhost:3000 with hot reload
+npm run dev              # Dev server (localhost:3000)
+npm run build            # Стандартная сборка → dist/game.min.js
+npm run build:webflow    # Webflow bundle → dist/game.bundle.js (PixiJS external)
+npm run preview          # Preview production build
 ```
 
-### Production Builds
-```bash
-npm run build        # Standard build → dist/game.min.js
-npm run build:webflow # Webflow-specific build → dist/game.bundle.js
-npm run preview      # Preview production build locally
-```
+**Важно:** `build:webflow` создает IIFE bundle, который ожидает PixiJS из CDN (`window.PIXI`).
 
-**Important**:
-- `build:webflow` creates an IIFE bundle that expects PixiJS to be loaded via CDN
-- Regular `build` includes all dependencies inline
-- Both builds use Terser for minification with source maps enabled
+---
 
-## Architecture
+## Архитектура
 
 ### Entry Points
 
-The project has **two entry points** for different deployment targets:
+**1. Local Dev:** `src/main.js`
+- Полностью автономная разработка
+- Все зависимости включены
 
-1. **Local Development**: `src/main.js`
-   - Full standalone development
-   - All dependencies bundled
-   - Used with `npm run dev`
+**2. Webflow:** `src/webflow.js`
+- Ожидает PixiJS из CDN
+- Экспортирует `window.PigRiderGame`
+- Мержит `window.GAME_CONFIG` если доступен
 
-2. **Webflow Integration**: `src/webflow.js`
-   - Expects PixiJS loaded from CDN
-   - Exposes `window.PigRiderGame` globally
-   - Merges custom config from `window.GAME_CONFIG` if provided
-   - Used with `npm run build:webflow`
+### Hybrid Rendering Pattern
 
-### Core Architecture Pattern
+**PixiJS (WebGL):** game entities (player, obstacles, coins, decorations)
+**HTML/CSS:** все UI экраны (start, HUD, modals, end screens)
+**EventBus:** коммуникация между Canvas ↔ HTML UI
 
-The game follows a **hybrid rendering architecture**:
+Это разделение - основа архитектуры. HTML UI полностью независим от PixiJS, управляется через `UIController`.
 
-- **PixiJS (WebGL)**: Game entities only (player, obstacles, coins, decorative elements)
-- **HTML/CSS**: All UI screens (start, HUD, modals, end screens)
-- **Communication**: EventBus connects Canvas ↔ HTML UI
+---
 
-This separation enables easy styling through CSS and seamless Webflow integration.
-
-### Directory Structure
+## Структура Проекта
 
 ```
 src/
-├── config/              # Game configuration
-│   ├── constants.js     # All game constants (TARGET_COINS, speeds, sizes)
-│   └── env.js          # Environment variables (API keys)
+├── config/
+│   ├── constants.js      # Все константы (TARGET_COINS, скорости, размеры)
+│   └── env.js           # Env переменные (API keys)
 │
-├── core/               # PixiJS engine core
-│   ├── AssetLoader.js  # Handles all asset loading
-│   ├── Renderer.js     # PixiJS renderer setup
-│   └── GameLoop.js     # Fixed timestep game loop (60 FPS)
+├── core/                # PixiJS engine
+│   ├── AssetLoader.js   # Загрузка assets
+│   ├── Renderer.js      # PixiJS renderer setup
+│   └── GameLoop.js      # Fixed timestep (60 FPS)
 │
-├── entities/           # Game objects
-│   ├── Player.js       # Player character (3-lane movement)
-│   ├── Obstacle.js     # Barriers
-│   ├── Coin.js         # Collectibles
-│   ├── Booster.js      # Power-up collectibles
-│   ├── Star.js         # Decorative stars
-│   └── Cloud.js        # Decorative clouds
+├── entities/            # Game objects (Player, Obstacle, Coin, Booster, Star, Cloud, CoinSparkle)
 │
-├── systems/            # Game systems
-│   ├── SpawnSystem.js            # Orchestrator для всех spawner'ов
-│   ├── CollisionSystem.js        # AABB collision detection
-│   ├── DifficultyManager.js      # Progressive difficulty scaling
+├── systems/
+│   ├── SpawnSystem.js           # Orchestrator всех spawner'ов
+│   ├── CollisionSystem.js       # AABB collision detection
+│   ├── DifficultyManager.js     # Прогрессивное усложнение
 │   │
-│   ├── spawners/                 # Специализированные spawner'ы
-│   │   ├── BaseSpawner.js        # Абстрактный базовый класс
-│   │   ├── ObstacleSpawner.js    # Спавн препятствий + lane safety
-│   │   ├── CoinSpawner.js        # Спавн монет + booster режим
-│   │   ├── CloudSpawner.js       # Спавн облаков с анти-кластеризацией
-│   │   ├── StarSpawner.js        # Спавн декоративных звезд
-│   │   ├── BoosterSpawner.js     # Спавн power-up объектов
-│   │   └── SparkleSpawner.js     # Эффекты при сборе монет
+│   ├── spawners/                # Модульные spawner'ы
+│   │   ├── BaseSpawner.js       # Абстрактный базовый класс (Template Method)
+│   │   ├── ObstacleSpawner.js   # Препятствия + lane safety
+│   │   ├── CoinSpawner.js       # Монеты + booster mode
+│   │   ├── CloudSpawner.js      # Облака (декор)
+│   │   ├── StarSpawner.js       # Звезды (декор)
+│   │   ├── BoosterSpawner.js    # Power-up объекты
+│   │   └── SparkleSpawner.js    # Эффекты (manual trigger)
 │   │
-│   ├── pools/                    # Управление пулами объектов
-│   │   └── EntityPoolManager.js  # Централизованное управление пулами
+│   ├── pools/
+│   │   └── EntityPoolManager.js # Централизованное управление пулами
 │   │
-│   └── services/                 # Игровые сервисы
-│       └── LaneSafetyService.js  # Логика безопасности полос
+│   └── services/
+│       └── LaneSafetyService.js # Гарантирует безопасный проход
 │
-├── ui/                 # HTML UI management
-│   ├── UIController.js # Controls all HTML screens/modals
-│   └── AIBotModal.js   # ElevenLabs AI bot integration (optional)
+├── ui/
+│   ├── UIController.js  # Управление HTML экранами
+│   └── AIBotModal.js    # ElevenLabs AI bot (опционально)
 │
-├── services/
-│   └── ElevenLabsService.js # AI voice service (optional)
+├── animations/          # GSAP анимации (clouds, stars, buttons)
+├── services/            # ElevenLabsService (опционально)
+├── utils/               # EventBus, MathUtils, ObjectPool
 │
-├── animations/         # GSAP animations
-│   ├── gsap-clouds.js  # Cloud animations
-│   ├── gsap-stars.js   # Star animations
-│   └── gsap-buttons.js # Button animations
-│
-├── utils/
-│   ├── EventBus.js     # Event communication system
-│   ├── MathUtils.js    # Math helpers (AABB, random)
-│   └── ObjectPool.js   # Object pooling for performance
-│
-├── Game.js             # Main game orchestrator
-├── main.js             # Entry point for local dev
-└── webflow.js          # Entry point for Webflow bundle
+├── Game.js              # Главный оркестратор
+├── main.js              # Entry: local dev
+└── webflow.js           # Entry: Webflow bundle
 ```
 
-## Key Systems
+---
 
-### 1. Spawn System (Refactored Architecture)
+## Ключевые Системы
 
-**Location**: `src/systems/SpawnSystem.js` + `src/systems/spawners/*`
+### 1. SpawnSystem (Modular Architecture)
 
-**Новая модульная архитектура** (рефакторинг 2024):
+**Паттерн:** Orchestrator (Facade) координирует специализированные spawner'ы.
 
-SpawnSystem теперь работает как **Orchestrator** (Facade Pattern), координируя специализированные spawner'ы. Это решает проблему "god object" старой версии (591 строка → 242 строки).
+**Компоненты:**
+- `BaseSpawner` - абстрактный класс (Template Method Pattern)
+- `EntityPoolManager` - централизованное управление пулами (Registry Pattern)
+- `LaneSafetyService` - гарантирует, что хотя бы одна полоса всегда свободна
+- Специализированные spawner'ы: `ObstacleSpawner`, `CoinSpawner`, `CloudSpawner`, `StarSpawner`, `BoosterSpawner`, `SparkleSpawner`
 
-#### Компоненты:
-
-**BaseSpawner** (`spawners/BaseSpawner.js`)
-- Абстрактный базовый класс для всех spawner'ов
-- Template Method Pattern: определяет общий алгоритм спавна
-- Управляет таймерами и обновлением активных объектов
-- Подклассы переопределяют только `spawn()` метод
-
-**EntityPoolManager** (`pools/EntityPoolManager.js`)
-- Централизованное управление всеми пулами объектов
-- Registry Pattern: один класс знает о всех пулах
-- Упрощает отладку и статистику
-
-**LaneSafetyService** (`services/LaneSafetyService.js`)
-- Сервис для обеспечения безопасности полос
-- Гарантирует, что игрок всегда имеет хотя бы один проход
-- Динамический расчет безопасного расстояния на основе скорости игры
-
-**Специализированные Spawner'ы:**
-- `ObstacleSpawner` - препятствия с lane safety логикой
-- `CoinSpawner` - монеты с поддержкой booster режима
-- `CloudSpawner` - облака с анти-кластеризацией
-- `StarSpawner` - декоративные звезды
-- `BoosterSpawner` - power-up объекты
-- `SparkleSpawner` - визуальные эффекты (ручной trigger)
-
-#### Преимущества новой архитектуры:
-
-✅ **Single Responsibility**: каждый spawner отвечает только за свой тип объектов
-✅ **Open/Closed**: добавить новый тип = создать новый spawner без изменения существующих
-✅ **Тестируемость**: каждый spawner тестируется изолированно
-✅ **Читаемость**: ObstacleSpawner - 120 строк вместо части 591-строчного файла
-✅ **Расширяемость**: новый spawner наследует BaseSpawner (80% кода уже готово)
-
-#### Ключевые методы SpawnSystem:
-
+**API:**
 - `update(deltaTime, gameSpeed, context)` - обновляет все spawner'ы
-- `fillLaneWithCoins(lane)` - заполняет полосу монетами (booster mode)
-- `clearAllObstacles()` - очищает препятствия (при активации бустера)
-- `emitCoinSparkle(x, y)` - эффект при сборе монеты
+- `fillLaneWithCoins(lane)` - заполнить полосу монетами (booster mode)
+- `clearAllObstacles()` - очистить препятствия (при бустере)
+- `emitCoinSparkle(x, y)` - эффект сбора монеты
 - `getActiveObstacles/Coins/Boosters()` - получить активные объекты
 
-#### Как добавить новый тип объектов:
-
-```javascript
-// 1. Создать новый spawner (наследует BaseSpawner)
-class PowerUpSpawner extends BaseSpawner {
-  spawn(gameSpeed, context) {
-    const lane = Math.floor(Math.random() * 3);
-    const powerup = this.pool.acquire();
-    powerup.activate(lane, CONFIG.CANVAS_WIDTH + 500);
-  }
-}
-
-// 2. Зарегистрировать в SpawnSystem.initializePools()
-this.poolManager.registerPool('powerup', PowerUp, 10);
-
-// 3. Создать spawner в SpawnSystem.initializeSpawners()
-this.powerUpSpawner = new PowerUpSpawner({
-  pool: this.poolManager.getPool('powerup'),
-  stage: this.stage
-});
-
-// 4. Добавить в SpawnSystem.update()
-this.powerUpSpawner.update(deltaTime, gameSpeed, context);
-```
-
-**Готово!** Никакие существующие spawner'ы не изменились.
+**Как добавить новый тип объектов:**
+1. Создай Entity класс в `entities/` (имплементируй: `activate()`, `update()`, `deactivate()`, `isActive()`, `getHitbox()`)
+2. Создай Spawner в `spawners/` (наследуй `BaseSpawner`, переопредели `spawn()`)
+3. В `SpawnSystem.initializePools()` регистрируй пул: `this.poolManager.registerPool('name', EntityClass, size)`
+4. В `SpawnSystem.initializeSpawners()` создай инстанс spawner'а
+5. В `SpawnSystem.update()` вызови `this.mySpawner.update(...)`
 
 ### 2. Booster Mechanic
 
-**Locations**: `src/Game.js` (lines 350-409), `src/entities/Booster.js`
+**Flow:**
+1. Player собирает booster → игра на паузу → modal
+2. User подтверждает → все препятствия удаляются
+3. Одна случайная полоса заполняется монетами
+4. Каждые 2 секунды полоса меняется (3 смены = 6 секунд)
+5. После 6 секунд: бустер кончается, 5-секундный cooldown
 
-Booster flow:
-1. Player collects booster → game pauses → modal shows
-2. User confirms → all obstacles cleared
-3. One random lane fills with dense coins
-4. Every 2 seconds, lane switches (3 switches total = 6 seconds)
-5. After 6 seconds: booster ends, 5-second cooldown before next booster spawns
-
-State management in `Game.js`:
-- `isBoosterActive` - Current booster status
-- `boosterTimeRemaining` - Countdown timer
-- `boosterCurrentLane` - Active lane (0, 1, or 2)
-- `boosterCooldownTimer` - Prevents immediate respawn
-- `preBoosterSnapshot` - Saves difficulty state to restore after booster
+**Состояние** (в `Game.js`):
+- `isBoosterActive` - активен ли бустер
+- `boosterTimeRemaining` - оставшееся время
+- `boosterCurrentLane` - активная полоса (0, 1, 2)
+- `boosterCooldownTimer` - cooldown перед следующим спавном бустера
+- `preBoosterSnapshot` - сохраненное состояние difficulty manager
 
 ### 3. Configuration System
 
-**Location**: `src/config/constants.js`
+**Файл:** `src/config/constants.js`
 
-All game parameters are centralized and can be overridden via `window.GAME_CONFIG` in Webflow:
+Все параметры игры централизованы. В Webflow можно переопределить через `window.GAME_CONFIG`:
 
 ```javascript
 window.GAME_CONFIG = {
-  TARGET_COINS: 300,           // Change win condition
-  GAME_SPEED: 1.5,            // Adjust base speed
-  BOOSTER_DURATION: 8,        // Extend booster time
-  PLAYER: { SIZE: 200 }       // Resize player
+  TARGET_COINS: 300,        // Условие победы
+  GAME_SPEED: 1.5,          // Базовая скорость
+  BOOSTER_DURATION: 8,      // Длительность бустера
+  PLAYER: { SIZE: 200 }     // Размер игрока
 };
 ```
 
-Asset paths use `window.GAME_ASSETS_URL` for CDN flexibility.
+Пути к assets используют `window.GAME_ASSETS_URL` для гибкости CDN.
 
-### 4. UI Controller
+### 4. UIController
 
-**Location**: `src/ui/UIController.js`
+**Файл:** `src/ui/UIController.js`
 
-Manages all HTML screens without touching PixiJS:
+Управляет всеми HTML экранами без касания PixiJS:
 
 - `showStartScreen()` / `hideStartScreen()`
 - `showHUD()` / `hideHUD()`
 - `updateCoinCount(current, target)`
-- `showBoosterModal()` - Returns Promise that resolves when user clicks continue
+- `showBoosterModal()` - возвращает Promise, разрешается при клике пользователя
 - `showWinScreen(score)` / `showLoseScreen(score)`
-- `addBoosterClass()` / `removeBoosterClass()` - Adds visual effects to HTML during booster
+- `addBoosterClass()` / `removeBoosterClass()` - визуальные эффекты HTML во время бустера
 
-### 5. Game Loop
+### 5. GameLoop
 
-**Location**: `src/core/GameLoop.js`
+**Файл:** `src/core/GameLoop.js`
 
-Fixed timestep loop (60 FPS) with interpolation support:
-- Update: Fixed 16.67ms timesteps
-- Render: Variable rate with alpha for interpolation
-- Handles pause/resume without drift
+Fixed timestep loop (60 FPS) с поддержкой interpolation:
+- Update: фиксированные шаги 16.67ms
+- Render: переменная частота с alpha для интерполяции
+- Pause/resume без drift
+
+---
 
 ## Webflow Integration
 
-### HTML Structure Required
+### HTML Структура
 
-The game expects this structure in Webflow (see `index.html`):
+Требуемые селекторы (см. `index.html`):
 
 ```html
-<div id="game-root">
+<div id="game-root" class="game-state">
   <!-- Start Screen -->
   <div class="game-ui game-start">
     <a game-btn-start href="#">Play now</a>
   </div>
 
-  <!-- Game HUD -->
+  <!-- Running Screen (HUD) -->
   <div class="game-ui game-running" style="display: none;">
     <span game-counter>0</span>/500
   </div>
@@ -287,128 +216,99 @@ The game expects this structure in Webflow (see `index.html`):
 </div>
 ```
 
-### Required Selectors
+**Селекторы:**
+- `#game-canvas` - PixiJS canvas
+- `.game-ui.game-start` - стартовый экран
+- `.game-ui.game-running` - HUD
+- `[game-btn-start]` - кнопка старта
+- `[game-counter]` - текст счетчика монет
 
-- `#game-canvas` - PixiJS canvas element
-- `.game-ui.game-start` - Start screen
-- `.game-ui.game-running` - HUD during gameplay
-- `[game-btn-start]` - Start button
-- `[game-counter]` - Coin counter text element
+### CDN Setup
 
-### CDN Setup for Webflow
-
-In Webflow Page Settings → Custom Code:
-
-**Head**:
+**Head:**
 ```html
 <script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
 ```
 
-**Before `</body>`**:
+**Before `</body>`:**
 ```html
 <script src="https://cdn.jsdelivr.net/gh/YOUR-USERNAME/pig-rider-game@main/dist/game.bundle.js"></script>
 ```
 
-### Asset Loading
-
-Assets are loaded from `/assets/sprites/` by default. Override in Webflow:
-
+**Assets:** Override `window.GAME_ASSETS_URL` если нужно:
 ```html
 <script>
   window.GAME_ASSETS_URL = 'https://uploads-ssl.webflow.com/YOUR-SITE-ID';
 </script>
 ```
 
+---
+
 ## Development Guidelines
 
-### When Adding New Entities (NEW ARCHITECTURE)
+### Изменение Game Balance
 
-**Старый подход (до рефакторинга):** изменить 5+ мест в одном 591-строчном файле
-**Новый подход:** создать один новый файл
+Редактируй `src/config/constants.js`:
+- `TARGET_COINS` - условие победы
+- `GAME_SPEED`, `MAX_SPEED`, `SPEED_INCREMENT` - прогрессия скорости
+- `OBSTACLE.MIN_DISTANCE`, `MAX_DISTANCE` - расстояние между препятствиями
+- `BOOSTER_DURATION`, `BOOSTER_LANE_SWITCH_INTERVAL` - механика бустера
 
-1. **Создать Entity класс** в `src/entities/` (см. `Coin.js` или `Obstacle.js`)
-   - Implement: `activate(lane, x)`, `update(dt, speed)`, `deactivate()`, `isActive()`, `getHitbox()`
+### Добавление UI Экранов
 
-2. **Создать Spawner класс** в `src/systems/spawners/`
-   ```javascript
-   import BaseSpawner from './BaseSpawner.js';
+1. Добавь HTML структуру в `index.html`
+2. Добавь методы show/hide в `UIController.js`
+3. Вызывай из `Game.js` при переходах состояния
+4. Используй EventBus для Canvas ↔ UI коммуникации при необходимости
 
-   export default class MyEntitySpawner extends BaseSpawner {
-     spawn(gameSpeed, context) {
-       // Ваша логика спавна
-       const entity = this.pool.acquire();
-       entity.activate(lane, x);
-     }
-   }
-   ```
-
-3. **Зарегистрировать в SpawnSystem** (`src/systems/SpawnSystem.js`)
-   - В `initializePools()`: `this.poolManager.registerPool('myentity', MyEntity, 20);`
-   - В `initializeSpawners()`: создать инстанс spawner'а
-   - В `update()`: вызвать `this.myEntitySpawner.update(...)`
-
-4. **Обновить CollisionSystem** (если нужна коллизия)
-
-**Преимущества:** Весь код для нового типа объектов в одном файле (~100 строк), никакие существующие файлы не меняются.
-
-### When Modifying Game Balance
-
-Edit `src/config/constants.js`:
-- `TARGET_COINS` - Win condition
-- `GAME_SPEED`, `MAX_SPEED`, `SPEED_INCREMENT` - Speed progression
-- `OBSTACLE.MIN_DISTANCE`, `MAX_DISTANCE` - Spawn spacing
-- `BOOSTER_DURATION`, `BOOSTER_LANE_SWITCH_INTERVAL` - Booster mechanics
-
-### When Adding UI Screens
-
-1. Add HTML structure to `index.html`
-2. Add show/hide methods to `UIController.js`
-3. Call from `Game.js` state transitions
-4. Use EventBus for Canvas ↔ UI communication if needed
-
-### Testing Webflow Build
+### Тестирование Webflow Build
 
 ```bash
 npm run build:webflow
-# Verify dist/game.bundle.js exists
-# Check that PixiJS is marked as external (not bundled)
-# Test in local HTML file with PixiJS CDN before deploying
+# Проверь, что dist/game.bundle.js создан
+# Убедись, что PixiJS external (не включен в bundle)
+# Протестируй в локальном HTML с PixiJS CDN перед деплоем
 ```
 
-## ElevenLabs Integration (Optional)
-
-If `ELEVENLABS_API_KEY` is set in `.env`, the AI bot modal will activate on game start. Users can interact with an AI character before playing. This feature is optional and gracefully disabled if no API key is provided.
+---
 
 ## Performance Notes
 
-- Object pooling prevents GC pauses (pools in SpawnSystem)
-- Fixed timestep prevents physics issues across different frame rates
-- AABB collision detection with spatial optimization
-- Vite's Terser minification reduces bundle to ~50-100KB (excluding PixiJS)
-- PixiJS via CDN enables browser caching across pages
+- **Object pooling** предотвращает GC паузы (пулы в SpawnSystem)
+- **Fixed timestep** предотвращает физические проблемы при разных FPS
+- **AABB collision** с пространственной оптимизацией
+- **Terser minification** сжимает bundle до ~50-100KB (без PixiJS)
+- **PixiJS via CDN** позволяет browser caching между страницами
+
+---
 
 ## Common Tasks
 
-### Change Target Score
-Edit `src/config/constants.js`:
+**Изменить целевой счет:**
 ```javascript
-TARGET_COINS: 500 // Change from 200 to 500
+// src/config/constants.js
+TARGET_COINS: 500 // вместо 200
 ```
 
-### Adjust Difficulty Curve
-Edit `src/systems/DifficultyManager.js` thresholds and intervals.
+**Добавить новый asset:**
+1. Добавь PNG в `public/assets/sprites/`
+2. Добавь путь в `ASSET_PATHS` в `src/config/constants.js`
+3. Загрузи в `src/core/AssetLoader.js`
 
-### Add New Asset
-1. Add PNG to `public/assets/sprites/`
-2. Add path to `ASSET_PATHS` in `src/config/constants.js`
-3. Load in `src/core/AssetLoader.js`
+**Отладка коллизий:**
+Добавь визуализацию hitbox'ов в collision system. Hitbox'ы масштабированы: player (0.7x), obstacles (0.8x), coins (0.6x).
 
-### Debug Collision Issues
-Check hitbox rendering by adding visualization to collision system. Hitboxes are scaled (player: 0.7x, obstacles: 0.8x, coins: 0.6x).
+---
 
 ## Build Output
 
-- **Standard build**: `dist/game.min.js` + assets (standalone)
-- **Webflow build**: `dist/game.bundle.js` (expects PixiJS CDN)
-- Source maps enabled in both modes for debugging
-- Console logs preserved in Webflow builds for production debugging
+- **Standard build:** `dist/game.min.js` + assets (standalone)
+- **Webflow build:** `dist/game.bundle.js` (ожидает PixiJS CDN)
+- Source maps включены в обоих режимах для дебага
+- Console logs сохранены в Webflow builds для production debugging
+
+---
+
+## ElevenLabs Integration (Optional)
+
+Если `ELEVENLABS_API_KEY` установлен в `.env`, AI bot modal активируется при старте игры. Эта функция опциональна и отключается gracefully при отсутствии API key.

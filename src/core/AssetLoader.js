@@ -17,6 +17,11 @@ export class AssetLoader {
 
       // Load PNG sprites from Figma
       this.assets.player = await PIXI.Assets.load(ASSET_PATHS.PLAYER);
+
+      // Load animated player sprite sheet
+      // PixiJS автоматически распарсит JSON и создаст текстуры для всех кадров
+      this.assets.playerAnimated = await PIXI.Assets.load(ASSET_PATHS.PLAYER_ANIMATED);
+
       this.assets.obstacleBase = await PIXI.Assets.load(ASSET_PATHS.OBSTACLE_BASE);
       this.assets.obstacleLarge = await PIXI.Assets.load(ASSET_PATHS.OBSTACLE_LARGE);
       this.assets.coin = await PIXI.Assets.load(ASSET_PATHS.COIN);

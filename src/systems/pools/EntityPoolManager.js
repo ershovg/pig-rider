@@ -1,4 +1,4 @@
-import ObjectPool from '../../utils/ObjectPool.js';
+import { ObjectPool } from '../../utils/ObjectPool.js';
 
 /**
  * EntityPoolManager - Централизованное управление всеми пулами объектов
@@ -16,7 +16,7 @@ import ObjectPool from '../../utils/ObjectPool.js';
  * manager.registerPool('obstacle', Obstacle, 20);
  * const obstacle = manager.acquire('obstacle');
  */
-export default class EntityPoolManager {
+export class EntityPoolManager {
   constructor(stage) {
     this.stage = stage;
     this.pools = new Map(); // Хранилище пулов: name -> ObjectPool
@@ -37,10 +37,29 @@ export default class EntityPoolManager {
     }
 
     // Factory функция для создания объектов
-    const factory = () => new EntityClass({ stage: this.stage, ...entityConfig });
+    // Entities принимают texture как первый параметр
+    const factory = () => {
+      const entity = new EntityClass(entityConfig.texture);
 
-    // Создаем пул с фабрикой
-    const pool = new ObjectPool(factory, initialSize);
+      // Добавляем спрайт на stage, если entity имеет метод getSprite()
+      if (entity.getSprite && typeof entity.getSprite === 'function') {
+        this.stage.addChild(entity.getSprite());
+      }
+
+      return entity;
+    };
+
+    // Reset функция для возврата объектов в пул
+    const reset = (entity) => {
+      if (entity.reset) {
+        entity.reset();
+      } else if (entity.deactivate) {
+        entity.deactivate();
+      }
+    };
+
+    // Создаем пул с фабрикой и reset функцией
+    const pool = new ObjectPool(factory, reset, initialSize);
 
     this.pools.set(name, pool);
 
@@ -92,7 +111,7 @@ export default class EntityPoolManager {
    * @returns {Array}
    */
   getActiveObjects(poolName) {
-    return this.getPool(poolName).getActiveObjects();
+    return this.getPool(poolName).getActive();
   }
 
   /**
