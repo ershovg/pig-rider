@@ -4,10 +4,11 @@
 import { CONFIG } from '../config/constants.js';
 
 export class BoosterManager {
-  constructor(spawnSystem, difficultyManager, ui) {
+  constructor(spawnSystem, difficultyManager, ui, player) {
     this.spawnSystem = spawnSystem;
     this.difficultyManager = difficultyManager;
     this.ui = ui;
+    this.player = player; // 🆕 Для переключения анимации
 
     this.isActive = false;
     this.timeRemaining = 0;
@@ -56,6 +57,11 @@ export class BoosterManager {
     this.spawnSystem.fillLaneWithCoins(this.currentLane);
     this.ui.addBoosterClass();
 
+    // 🆕 Переключаем анимацию на бустер
+    if (this.player) {
+      this.player.switchAnimation(true);
+    }
+
     console.log(`✨ Booster activated! Lane: ${this.currentLane}`);
   }
 
@@ -71,6 +77,11 @@ export class BoosterManager {
 
     this.cooldownTimer = CONFIG.BOOSTER_COOLDOWN_DURATION;
     this.ui.removeBoosterClass();
+
+    // 🆕 Возвращаем обычную анимацию
+    if (this.player) {
+      this.player.switchAnimation(false);
+    }
 
     console.log(`⏹️ Booster deactivated. Cooldown: ${CONFIG.BOOSTER_COOLDOWN_DURATION}s`);
   }

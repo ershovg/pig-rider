@@ -94,8 +94,10 @@ export class Game {
 
   initSystems() {
     const playerSpritesheet = this.assetLoader.getAsset('playerAnimated');
+    const playerBoostSpritesheet = this.assetLoader.getAsset('playerAnimatedBoost');
     this.player = new Player(
       playerSpritesheet,
+      playerBoostSpritesheet,
       this.playerPhysicsController,
       CONFIG.CANVAS_WIDTH,
       CONFIG.CANVAS_HEIGHT
@@ -127,7 +129,8 @@ export class Game {
     this.boosterManager = new BoosterManager(
       this.spawnSystem,
       this.difficultyManager,
-      this.ui
+      this.ui,
+      this.player // 🆕 Передаем player для переключения анимации
     );
 
     this.gameLoop = new GameLoop(

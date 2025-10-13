@@ -20,11 +20,15 @@ import { PlayerPhysicsController } from '../controllers/PlayerPhysicsController.
 import { CollisionPhysicsController } from '../controllers/CollisionPhysicsController.js';
 
 export class Player {
-  constructor(spritesheet, physicsController, screenWidth = CONFIG.CANVAS_WIDTH, screenHeight = CONFIG.CANVAS_HEIGHT) {
+  constructor(spritesheet, boostSpritesheet, physicsController, screenWidth = CONFIG.CANVAS_WIDTH, screenHeight = CONFIG.CANVAS_HEIGHT) {
     this.currentLane = CONFIG.LANES.MIDDLE;
     this.targetLane = CONFIG.LANES.MIDDLE;
 
     this.physicsController = physicsController || new PlayerPhysicsController(CONFIG.PLAYER.PHYSICS);
+
+    // Сохраняем оба spritesheet'а для переключения анимаций
+    this.normalSpritesheet = spritesheet;
+    this.boostSpritesheet = boostSpritesheet;
 
     const textures = spritesheet.animations['Hryusha_flying_v2'];
     if (!textures) {
@@ -168,6 +172,34 @@ export class Player {
   triggerCollision(obstacleSprite, callback) {
     this.inputController.disable();
     this.collisionPhysics.activate(obstacleSprite, callback);
+  }
+
+  /**
+   * Переключение анимации свиньи (обычная ↔ бустер)
+   * @param {boolean} isBoosted - true = бустер анимация, false = обычная
+   */
+  switchAnimation(isBoosted) {
+    const animationName = isBoosted ? 'Hryusha_boost' : 'Hryusha_flying_v2';
+    const spritesheet = isBoosted ? this.boostSpritesheet : this.normalSpritesheet;
+
+    const textures = spritesheet.animations[animationName];
+    if (!textures) {
+      console.error(`❌ Animation "${animationName}" not found!`);
+      return;
+    }
+
+    // Сохраняем текущий прогресс анимации
+    const wasPlaying = this.sprite.playing;
+
+    // Переключаем текстуры
+    this.sprite.textures = textures;
+
+    // Возобновляем воспроизведение если было активно
+    if (wasPlaying) {
+      this.sprite.play();
+    }
+
+    console.log(`🐷 Switched to ${isBoosted ? 'BOOST' : 'NORMAL'} animation (${textures.length} frames)`);
   }
 
   destroy() {

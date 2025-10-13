@@ -112,7 +112,8 @@ const getAssetPath = (path) => {
 export const ASSET_PATHS = {
   // PNG спрайты из Figma (@2x)
   get PLAYER() { return getAssetPath('/assets/sprites/pig_rider.png'); },
-  get PLAYER_ANIMATED() { return getAssetPath('/assets/sprites/hryusha-flying.json'); }, // Sprite sheet анимация свиньи
+  get PLAYER_ANIMATED() { return getAssetPath('/assets/sprites/hryusha-flying.json'); }, // Sprite sheet анимация свиньи (обычная)
+  get PLAYER_ANIMATED_BOOST() { return getAssetPath('/assets/sprites/hryusha-boost.json'); }, // Sprite sheet анимация свиньи (бустер)
   get OBSTACLE_BASE() { return getAssetPath('/assets/sprites/barier_base.png'); },
   get OBSTACLE_LARGE() { return getAssetPath('/assets/sprites/barier_large.png'); },
   get COIN() { return getAssetPath('/assets/sprites/coin.png'); },
