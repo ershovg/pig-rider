@@ -153,6 +153,7 @@ export class UIController {
    */
   showLoseScreen(score) {
     console.log(`💀 LOSE! Score: ${score}`);
+    alert(`💀 LOSE! Score: ${score}`)
     this.hideAll();
     if (this.faildScreen) {
       this.faildScreen.style.display = 'flex';
