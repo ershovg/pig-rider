@@ -29,6 +29,7 @@ export class ObstacleSpawner extends BaseSpawner {
    * @param {ObjectPool} config.pool - Пул препятствий
    * @param {PIXI.Container} config.stage - Сцена
    * @param {Function} config.getIntervalModifier - Функция для получения модификатора интервала
+   * @param {PIXI.Texture[]} config.textures - Массив текстур для препятствий
    */
   constructor(config) {
     super({
@@ -44,6 +45,24 @@ export class ObstacleSpawner extends BaseSpawner {
     // Отслеживаем глобальную позицию последнего спавна (любой полосы)
     // Используется для расчета следующей позиции паттерна
     this.lastPatternX = 0;
+
+    // 🆕 Текстуры для рандомизации препятствий
+    this.textures = config.textures || [];
+  }
+
+  /**
+   * Выбор случайной текстуры с весами
+   * Соотношение: 30% base (obstacleBase), 70% large (obstacleLarge)
+   *
+   * @returns {PIXI.Texture} Выбранная текстура
+   */
+  getRandomTexture() {
+    if (this.textures.length === 0) return null;
+    if (this.textures.length === 1) return this.textures[0];
+
+    // Weighted random: 30% первая текстура (base), 70% вторая (large)
+    const random = Math.random();
+    return random < 0.3 ? this.textures[0] : this.textures[1];
   }
 
   /**
@@ -90,10 +109,13 @@ export class ObstacleSpawner extends BaseSpawner {
       const offset = (i === 1 && pattern.offset) ? pattern.offset : 0;
       const spawnX = baseX + offset;
 
-      // Получаем препятствие из пула и активируем
+      // 🆕 Выбираем случайную текстуру для каждого препятствия
+      const texture = this.getRandomTexture();
+
+      // Получаем препятствие из пула и активируем с выбранной текстурой
       const obstacle = this.pool.acquire();
       if (obstacle) {
-        obstacle.activate(lane, spawnX);
+        obstacle.activate(lane, spawnX, texture);
         spawnedCount++;
       }
     }

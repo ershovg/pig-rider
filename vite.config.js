@@ -31,7 +31,7 @@ export default defineConfig(({ command, mode }) => {
   if (command === 'build' && mode === 'webflow') {
     config.build = {
       outDir: 'dist',
-      emptyOutDir: false, // Не очищаем dist, могут быть другие файлы
+      emptyOutDir: true, // Очищаем dist для чистой сборки
       minify: 'terser',
       terserOptions: {
         compress: {

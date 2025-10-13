@@ -4,16 +4,28 @@ import { CONFIG } from '../config/constants.js';
 import { Collectible } from './base/Collectible.js';
 
 /**
- * Собираемый бустер с плавающей анимацией, interpolation и culling
+ * Собираемый бустер с анимированным спрайтшитом (крылья кубка),
+ * плавающей анимацией, interpolation и culling
  */
 export class Booster extends Collectible {
-  constructor(texture) {
+  constructor(spritesheet) {
     super();
-    this.sprite = new PIXI.Sprite(texture);
+
+    // 🆕 Создаем AnimatedSprite из спрайтшита cup.json
+    // Анимация "Cup" содержит все 38 кадров (Cup_000.png -> Cup_037.png)
+    const frames = spritesheet.animations['Cup'];
+    this.sprite = new PIXI.AnimatedSprite(frames);
     this.sprite.anchor.set(0.5);
-    const targetSize = CONFIG.COIN.SIZE * 1.2;
-    const scale = targetSize / texture.width;
+
+    // Настройка анимации
+    this.sprite.animationSpeed = 0.3; // 0.3 кадров за тик (60 FPS) = ~18 FPS анимация
+    this.sprite.loop = true;           // Зацикленная анимация
+
+    // Масштабирование под размер из CONFIG
+    const targetSize = CONFIG.BOOSTER.SIZE;
+    const scale = targetSize / 250; // Cup frames = 250x250px по JSON
     this.sprite.scale.set(scale);
+
     this.active = false;
     this.collected = false;
     this.lane = 0;
@@ -43,8 +55,14 @@ export class Booster extends Collectible {
     this.previousY = this.currentY;
 
     this.sprite.visible = true;
-    this.sprite.scale.set(1);
+    const targetSize = CONFIG.BOOSTER.SIZE;
+    const scale = targetSize / 250;
+    this.sprite.scale.set(scale);
     this.sprite.alpha = 1;
+
+    // 🆕 Запускаем зацикленную анимацию кубка
+    this.sprite.gotoAndPlay(0);
+
     this.startFloat();
   }
 
@@ -52,6 +70,10 @@ export class Booster extends Collectible {
     this.active = false;
     this.collected = false;
     this.sprite.visible = false;
+
+    // 🆕 Останавливаем анимацию для экономии ресурсов
+    this.sprite.stop();
+
     this.stopFloat();
   }
 

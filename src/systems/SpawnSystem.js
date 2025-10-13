@@ -7,24 +7,22 @@ import { CoinSpawner } from './spawners/CoinSpawner.js';
 import { CloudSpawner } from './spawners/CloudSpawner.js';
 import { StarSpawner } from './spawners/StarSpawner.js';
 import { BoosterSpawner } from './spawners/BoosterSpawner.js';
-import { SparkleSpawner } from './spawners/SparkleSpawner.js';
 import { Obstacle } from '../entities/Obstacle.js';
 import { Coin } from '../entities/Coin.js';
 import { Cloud } from '../entities/Cloud.js';
 import { Star } from '../entities/Star.js';
 import { Booster } from '../entities/Booster.js';
-import { CoinSparkle } from '../entities/CoinSparkle.js';
 import { CONFIG } from '../config/constants.js';
 
 export class SpawnSystem {
-  constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterTexture, stage) {
+  constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterSpritesheet, stage) {
     this.stage = stage;
     this.textures = {
       obstacles: obstacleTextures,
       coin: coinTexture,
       star: starTexture,
       cloud: cloudTexture,
-      booster: boosterTexture
+      boosterSpritesheet: boosterSpritesheet // 🆕 Теперь это спрайтшит, не просто текстура
     };
     this.poolManager = new EntityPoolManager(stage);
     this.initializePools();
@@ -38,14 +36,15 @@ export class SpawnSystem {
     this.poolManager.registerPool('coin', Coin, 50, { texture: this.textures.coin });
     this.poolManager.registerPool('star', Star, 30, { texture: this.textures.star });
     this.poolManager.registerPool('cloud', Cloud, 15, { texture: this.textures.cloud });
-    this.poolManager.registerPool('booster', Booster, 5, { texture: this.textures.booster });
-    this.poolManager.registerPool('sparkle', CoinSparkle, 20, { texture: this.textures.coin });
+    // 🆕 Передаем спрайтшит в конструктор Booster
+    this.poolManager.registerPool('booster', Booster, CONFIG.BOOSTER.POOL_SIZE, { texture: this.textures.boosterSpritesheet });
   }
 
   initializeSpawners() {
     this.obstacleSpawner = new ObstacleSpawner({
       pool: this.poolManager.getPool('obstacle'),
       stage: this.stage,
+      textures: this.textures.obstacles, // 🆕 Передаём массив текстур
       getIntervalModifier: (context) => {
         const { difficultyManager } = context;
         if (!difficultyManager) return 1.0;
@@ -73,11 +72,6 @@ export class SpawnSystem {
 
     this.boosterSpawner = new BoosterSpawner({
       pool: this.poolManager.getPool('booster'),
-      stage: this.stage
-    });
-
-    this.sparkleSpawner = new SparkleSpawner({
-      pool: this.poolManager.getPool('sparkle'),
       stage: this.stage
     });
   }
@@ -108,7 +102,6 @@ export class SpawnSystem {
       isBoosterActive,
       boosterCooldown
     });
-    this.sparkleSpawner.update(deltaTime, gameSpeed);
   }
 
   fillLaneWithCoins(lane) {
@@ -117,10 +110,6 @@ export class SpawnSystem {
 
   clearAllObstacles() {
     this.obstacleSpawner.clearAll();
-  }
-
-  emitCoinSparkle(x, y) {
-    this.sparkleSpawner.emit(x, y);
   }
 
   getActiveObstacles() {
@@ -150,7 +139,6 @@ export class SpawnSystem {
     this.cloudSpawner.reset();
     this.starSpawner.reset();
     this.boosterSpawner.reset();
-    this.sparkleSpawner.reset();
   }
 
   getStats() {

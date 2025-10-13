@@ -35,9 +35,26 @@ export class Obstacle extends Collidable {
     this.currentY = 0;
   }
 
-  activate(lane, x) {
+  /**
+   * Устанавливает текстуру препятствия
+   * @param {PIXI.Texture} texture - Новая текстура
+   */
+  setTexture(texture) {
+    this.sprite.texture = texture;
+    // Пересчитываем масштаб под новую текстуру
+    const targetSize = CONFIG.OBSTACLE.SIZE;
+    const scale = targetSize / texture.width;
+    this.sprite.scale.set(scale);
+  }
+
+  activate(lane, x, texture = null) {
     this.active = true;
     this.lane = lane;
+
+    // Если передана текстура, меняем её перед активацией
+    if (texture) {
+      this.setTexture(texture);
+    }
 
     // 🆕 Устанавливаем физическую позицию
     this.currentX = x;

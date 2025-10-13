@@ -38,24 +38,6 @@ export const CONFIG = {
       ACCELERATION: 12000,   // Ускорение при движении (px/s²)
       FRICTION: 0.85,        // Коэффициент торможения при приближении к цели (0-1)
       BRAKE_DISTANCE: 50     // Дистанция начала торможения (px)
-    },
-
-    // 🆕 Collision physics (Matter.js + GSAP hybrid)
-    COLLISION_PHYSICS: {
-      // Matter.js параметры
-      GRAVITY: 0.2,              // Низкая гравитация
-      FRICTION: 0.01,            // Низкое трение (скользит)
-      FRICTION_AIR: 0.15,        // Воздушное сопротивление (быстрое торможение)
-      RESTITUTION: 0.6,          // Упругость игрока (0-1, выше = больше отскок)
-
-      // Timing
-      MAX_PHYSICS_DURATION: 1000, // Максимум 1 сек физики (мс)
-      RETURN_DURATION: 0.4,      // GSAP возврат на место (сек)
-      MIN_VELOCITY_STOP: 0.3,    // Минимальная скорость для остановки
-
-      // Boundaries (стены)
-      LEFT_WALL_X: -50,          // X координата левой стены
-      WALL_RESTITUTION: 0.8      // Упругость препятствия (выше = сильнее отскок)
     }
   },
 
@@ -74,6 +56,12 @@ export const CONFIG = {
     SIZE: 60,
     POOL_SIZE: 80, // Увеличен для поддержки множества монет во время бустера
     VALUE: 1
+  },
+
+  // Booster (cup with animated wings)
+  BOOSTER: {
+    SIZE: 65, // Размер кубка в пикселях (можно менять: 50, 65, 70...)
+    POOL_SIZE: 5
   },
 
   // Collision
@@ -118,7 +106,7 @@ export const ASSET_PATHS = {
   get OBSTACLE_LARGE() { return getAssetPath('/assets/sprites/barier_large.png'); },
   get COIN() { return getAssetPath('/assets/sprites/coin.png'); },
   get COIN_STAR() { return getAssetPath('/assets/sprites/coin_star.png'); },
-  get BOOSTER() { return getAssetPath('/assets/sprites/booster.png'); },
+  get BOOSTER() { return getAssetPath('/assets/sprites/cup.json'); }, // Анимированный спрайтшит кубка с крыльями
   get STAR() { return getAssetPath('/assets/sprites/star.png'); },
   get CLOUD() { return getAssetPath('/assets/sprites/cloud.png'); },
 

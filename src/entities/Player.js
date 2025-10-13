@@ -17,7 +17,6 @@ import gsap from 'gsap';
 import { CONFIG } from '../config/constants.js';
 import { PlayerInputController } from '../controllers/PlayerInputController.js';
 import { PlayerPhysicsController } from '../controllers/PlayerPhysicsController.js';
-import { CollisionPhysicsController } from '../controllers/CollisionPhysicsController.js';
 
 export class Player {
   constructor(spritesheet, boostSpritesheet, physicsController, screenWidth = CONFIG.CANVAS_WIDTH, screenHeight = CONFIG.CANVAS_HEIGHT) {
@@ -54,13 +53,6 @@ export class Player {
     this.sprite.y = this.currentY;
 
     this.physicsController.reset(this.currentY);
-
-    this.collisionPhysics = new CollisionPhysicsController(
-      this.sprite,
-      CONFIG.PLAYER.COLLISION_PHYSICS,
-      screenWidth,
-      screenHeight
-    );
 
     // Input handling
     this.inputController = new PlayerInputController(this);
@@ -111,12 +103,6 @@ export class Player {
    * Обновление физики (вызывается в game loop 60 UPS)
    */
   update(deltaTime) {
-    // Если активна физика столкновения - она управляет позицией
-    if (this.collisionPhysics.isActive()) {
-      this.collisionPhysics.update(deltaTime);
-      return;
-    }
-
     // 🆕 Сохраняем состояние для interpolation
     this.saveState();
 
@@ -145,7 +131,6 @@ export class Player {
     this.sprite.visible = true;
 
     this.physicsController.reset(this.currentY);
-    this.collisionPhysics.deactivate();
     this.inputController.enable();
 
     gsap.killTweensOf(this.sprite);
@@ -167,11 +152,6 @@ export class Player {
    */
   getCurrentLane() {
     return this.currentLane;
-  }
-
-  triggerCollision(obstacleSprite, callback) {
-    this.inputController.disable();
-    this.collisionPhysics.activate(obstacleSprite, callback);
   }
 
   /**
@@ -207,9 +187,6 @@ export class Player {
     if (this.inputController) {
       this.inputController.destroy();
     }
-    if (this.collisionPhysics) {
-      this.collisionPhysics.destroy();
-    }
     this.sprite.destroy();
   }
 
@@ -221,9 +198,6 @@ export class Player {
 
   interpolate(alpha) {
     if (!this.sprite) return;
-    if (this.collisionPhysics.isActive()) {
-      return;
-    }
     this.sprite.x = this.currentX;
     this.sprite.y = this.previousY + (this.currentY - this.previousY) * alpha;
   }

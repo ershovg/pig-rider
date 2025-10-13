@@ -1,0 +1,105 @@
+{"frames": {
+
+"Hryusha_boost_000.png":
+{
+	"frame": {"x":0,"y":0,"w":260,"h":260},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"Hryusha_boost_001.png":
+{
+	"frame": {"x":260,"y":0,"w":260,"h":260},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"Hryusha_boost_002.png":
+{
+	"frame": {"x":520,"y":0,"w":260,"h":260},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"Hryusha_boost_003.png":
+{
+	"frame": {"x":0,"y":260,"w":260,"h":260},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"Hryusha_boost_004.png":
+{
+	"frame": {"x":260,"y":260,"w":260,"h":260},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"Hryusha_boost_005.png":
+{
+	"frame": {"x":520,"y":260,"w":260,"h":260},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"Hryusha_boost_006.png":
+{
+	"frame": {"x":0,"y":520,"w":260,"h":260},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"Hryusha_boost_007.png":
+{
+	"frame": {"x":260,"y":520,"w":260,"h":260},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"Hryusha_boost_008.png":
+{
+	"frame": {"x":520,"y":520,"w":260,"h":260},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
+},
+"Hryusha_boost_009.png":
+{
+	"frame": {"x":0,"y":780,"w":260,"h":260},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
+}},
+"animations": {
+	"Hryusha_boost": ["Hryusha_boost_000.png","Hryusha_boost_001.png","Hryusha_boost_002.png","Hryusha_boost_003.png","Hryusha_boost_004.png","Hryusha_boost_005.png","Hryusha_boost_006.png","Hryusha_boost_007.png","Hryusha_boost_008.png","Hryusha_boost_009.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.1",
+	"image": "hryusha-boost.png",
+	"format": "RGBA8888",
+	"size": {"w":780,"h":1040},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:3560d8972bee0d845941153c62a32453:1b095a82df2991986bf72f81bff51998:6d93d7244948eeaacd2f09974351f361$"
+}
+}

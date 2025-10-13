@@ -111,14 +111,14 @@ export class Game {
     const coinTexture = this.assetLoader.getAsset('coin');
     const starTexture = this.assetLoader.getAsset('star');
     const cloudTexture = this.assetLoader.getAsset('cloud');
-    const boosterTexture = this.assetLoader.getAsset('booster');
+    const boosterSpritesheet = this.assetLoader.getAsset('booster'); // 🆕 Теперь это спрайтшит cup.json
 
     this.spawnSystem = new SpawnSystem(
       obstacleTextures,
       coinTexture,
       starTexture,
       cloudTexture,
-      boosterTexture,
+      boosterSpritesheet, // 🆕 Передаем спрайтшит с анимацией кубка
       this.renderer.stage
     );
 
@@ -190,6 +190,11 @@ export class Game {
     this.stateManager.setState('ended');
     this.gameLoop.stop();
 
+    // Отключаем input игрока, чтобы не было дёрганий
+    if (this.player && this.player.inputController) {
+      this.player.inputController.disable();
+    }
+
     this.ui.hideHUD();
     if (isWin) {
       this.ui.showWinScreen(this.progressionManager.getScore());
@@ -204,11 +209,6 @@ export class Game {
     if (!this.stateManager.isPlaying()) return;
 
     this.frameCount++;
-
-    if (this.isColliding) {
-      this.player.update(deltaTime);
-      return;
-    }
 
     this.interpolationManager.saveStates([
       this.spawnSystem.getActiveObstacles(),
@@ -243,13 +243,7 @@ export class Game {
 
     if (collisions.obstacleHit && !this.isColliding) {
       this.isColliding = true;
-
-      const obstacle = collisions.hitObstacle;
-      const obstacleSprite = obstacle.getSprite();
-
-      this.player.triggerCollision(obstacleSprite, () => {
-        this.endGame(false);
-      });
+      this.endGame(false);
       return;
     }
 
@@ -257,8 +251,6 @@ export class Game {
       const value = coin.collect();
       if (value) {
         this.progressionManager.addScore(value);
-        const coinSprite = coin.getSprite();
-        this.spawnSystem.emitCoinSparkle(coinSprite.x, coinSprite.y);
 
         if (this.progressionManager.checkWinCondition()) {
           this.endGame(true);
