@@ -39,6 +39,45 @@ npm run preview          # Preview production build
 
 ## Архитектура
 
+### 🏛️ Архитектурные Принципы
+
+**⚠️ КРИТИЧЕСКИ ВАЖНО:** Весь код проекта **СТРОГО** следует **SOLID принципам**. Это не рекомендация, а обязательное требование для всего будущего кода.
+
+#### SOLID Принципы в Проекте
+
+**1. Single Responsibility Principle (SRP)**
+- Каждый класс/модуль отвечает за **одну** задачу
+- ✅ `BoosterManager` - только логика бустеров, ничего больше
+- ✅ `EffectManager` - только визуальные эффекты
+- ✅ `SpawnSystem` - только оркестрация спавнеров
+- ❌ НЕ смешивай responsibilities в одном классе
+
+**2. Open/Closed Principle (OCP)**
+- Открыт для расширения, закрыт для модификации
+- ✅ Новые spawner'ы наследуют `BaseSpawner` без изменения базового класса
+- ✅ Новые эффекты добавляются через `EffectManager` API
+- ✅ Новые managers добавляются в `Game.js` без изменения существующих
+
+**3. Liskov Substitution Principle (LSP)**
+- Наследники должны быть взаимозаменяемы с базовым классом
+- ✅ Все spawner'ы реализуют единый интерфейс `BaseSpawner`
+- ✅ Все entities имеют стандартные методы: `activate()`, `update()`, `deactivate()`, `isActive()`, `getHitbox()`
+
+**4. Interface Segregation Principle (ISP)**
+- Минимальные, специфичные интерфейсы вместо "толстых"
+- ✅ Managers предоставляют только необходимые публичные методы
+- ✅ EventBus для loosely coupled коммуникации между модулями
+- ✅ Не заставляй классы зависеть от методов, которые они не используют
+
+**5. Dependency Inversion Principle (DIP)**
+- Зависимость от абстракций, а не конкретных реализаций
+- ✅ `Game.js` работает с managers через их публичные API
+- ✅ Managers не зависят от конкретных implementations entities
+- ✅ Используй dependency injection где возможно
+
+**Правило для нового кода:**
+> Перед написанием нового класса/модуля, спроси себя: "Соблюдаю ли я все 5 принципов SOLID?" Если нет - рефактори дизайн, прежде чем писать код.
+
 ### Entry Points
 
 **1. Local Dev:** `src/main.js`
@@ -73,7 +112,14 @@ src/
 │   ├── Renderer.js      # PixiJS renderer setup
 │   └── GameLoop.js      # Fixed timestep (60 FPS)
 │
-├── entities/            # Game objects (Player, Obstacle, Coin, Booster, Star, Cloud, CoinSparkle)
+├── entities/            # Game objects (Player, Obstacle, Coin, Booster, Star, Cloud)
+│
+├── effects/             # 🆕 Визуальные эффекты (PixiJS sprites)
+│   └── CoinSparkle.js   # Эффект сбора монеты
+│
+├── managers/            # 🆕 High-level игровая логика (SOLID)
+│   ├── BoosterManager.js     # Вся логика бустеров (Single Responsibility)
+│   └── EffectManager.js      # Управление визуальными эффектами
 │
 ├── systems/
 │   ├── SpawnSystem.js           # Orchestrator всех spawner'ов
@@ -86,8 +132,7 @@ src/
 │   │   ├── CoinSpawner.js       # Монеты + booster mode
 │   │   ├── CloudSpawner.js      # Облака (декор)
 │   │   ├── StarSpawner.js       # Звезды (декор)
-│   │   ├── BoosterSpawner.js    # Power-up объекты
-│   │   └── SparkleSpawner.js    # Эффекты (manual trigger)
+│   │   └── BoosterSpawner.js    # Power-up объекты
 │   │
 │   ├── pools/
 │   │   └── EntityPoolManager.js # Централизованное управление пулами
@@ -107,6 +152,19 @@ src/
 ├── main.js              # Entry: local dev
 └── webflow.js           # Entry: Webflow bundle
 ```
+
+### 🆕 Новые Папки (Manager Pattern)
+
+**`managers/`** - High-level игровая логика, следующая SOLID:
+- Каждый manager отвечает за одну domain область (SRP)
+- Инкапсулирует сложную логику из `Game.js`
+- Предоставляет чистый публичный API
+- Примеры: `BoosterManager`, `EffectManager`
+
+**`effects/`** - Визуальные эффекты (PixiJS sprites):
+- Отделены от game entities для clarity
+- Управляются через `EffectManager`
+- Используют object pooling через `EntityPoolManager`
 
 ---
 
