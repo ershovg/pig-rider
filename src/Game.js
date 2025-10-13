@@ -16,6 +16,9 @@ import { ElevenLabsService } from './services/ElevenLabsService.js';
 import { GameStateManager } from './managers/GameStateManager.js';
 import { BoosterManager } from './managers/BoosterManager.js';
 import { ProgressionManager } from './managers/ProgressionManager.js';
+import { CullingManager } from './managers/CullingManager.js';
+import { InterpolationManager } from './managers/InterpolationManager.js';
+import { PlayerPhysicsController } from './controllers/PlayerPhysicsController.js';
 import { MathUtils } from './utils/MathUtils.js';
 
 export class Game {
@@ -36,6 +39,18 @@ export class Game {
     this.stateManager = new GameStateManager();
     this.boosterManager = null;
     this.progressionManager = null;
+    this.isColliding = false;
+
+    // 🆕 Performance managers
+    this.cullingManager = new CullingManager({
+      cullThreshold: CONFIG.CULLING.THRESHOLD,
+      timeBudgetMs: CONFIG.CULLING.TIME_BUDGET_MS
+    });
+    this.interpolationManager = new InterpolationManager();
+    this.playerPhysicsController = new PlayerPhysicsController(CONFIG.PLAYER.PHYSICS);
+
+    // Frame counter для periodic culling
+    this.frameCount = 0;
 
     console.log('🎮 Game instance created');
   }
@@ -79,7 +94,12 @@ export class Game {
 
   initSystems() {
     const playerSpritesheet = this.assetLoader.getAsset('playerAnimated');
-    this.player = new Player(playerSpritesheet);
+    this.player = new Player(
+      playerSpritesheet,
+      this.playerPhysicsController,
+      CONFIG.CANVAS_WIDTH,
+      CONFIG.CANVAS_HEIGHT
+    );
     this.renderer.addToStage(this.player.getSprite());
 
     const obstacleTextures = [
@@ -138,6 +158,9 @@ export class Game {
     this.difficultyManager.reset();
     this.player.reset();
     this.spawnSystem.reset();
+    this.isColliding = false;
+
+    this.frameCount = 0;
 
     this.ui.hideStartScreen();
     this.ui.showHUD();
@@ -147,7 +170,7 @@ export class Game {
     this.renderer.start();
     this.gameLoop.start();
 
-    console.log('🚀 Game started');
+    console.log('🚀 Game started (with interpolation & culling)');
   }
 
   resumeGame() {
@@ -177,6 +200,20 @@ export class Game {
   update(deltaTime) {
     if (!this.stateManager.isPlaying()) return;
 
+    this.frameCount++;
+
+    if (this.isColliding) {
+      this.player.update(deltaTime);
+      return;
+    }
+
+    this.interpolationManager.saveStates([
+      this.spawnSystem.getActiveObstacles(),
+      this.spawnSystem.getActiveCoins(),
+      this.spawnSystem.getActiveBoosters(),
+      [this.player]
+    ]);
+
     this.boosterManager.update(deltaTime);
     this.progressionManager.update(deltaTime);
     this.difficultyManager.updateScore(this.progressionManager.getScore());
@@ -189,6 +226,9 @@ export class Game {
       difficultyManager: this.difficultyManager
     });
 
+    // 🆕 Culling - удаляем объекты за пределами viewport
+    this.performCulling();
+
     const obstacles = this.spawnSystem.getActiveObstacles();
     const coins = this.spawnSystem.getActiveCoins();
     const boosters = this.spawnSystem.getActiveBoosters();
@@ -198,8 +238,15 @@ export class Game {
       coins
     );
 
-    if (collisions.obstacleHit) {
-      this.endGame(false);
+    if (collisions.obstacleHit && !this.isColliding) {
+      this.isColliding = true;
+
+      const obstacle = collisions.hitObstacle;
+      const obstacleSprite = obstacle.getSprite();
+
+      this.player.triggerCollision(obstacleSprite, () => {
+        this.endGame(false);
+      });
       return;
     }
 
@@ -250,8 +297,49 @@ export class Game {
     this.gameLoop.resume();
   }
 
+  /**
+   * Render (вызывается на каждом RAF, до 120+ FPS)
+   *
+   * @param {number} alpha - Прогресс между physics frames (0.0 to 1.0)
+   */
   render(alpha) {
+    // 🆕 Интерполируем все движущиеся объекты для плавности 120 FPS
+    if (CONFIG.INTERPOLATION.ENABLED) {
+      this.interpolationManager.interpolate(alpha, [
+        this.spawnSystem.getActiveObstacles(),
+        this.spawnSystem.getActiveCoins(),
+        this.spawnSystem.getActiveBoosters(),
+        [this.player]
+      ]);
+    }
+
     // Renderer automatically renders stage
+  }
+
+  /**
+   * Culling объектов за пределами viewport
+   *
+   * Вызывается после physics update, но перед collision detection.
+   * Использует временной бюджет чтобы не блокировать frame.
+   */
+  performCulling() {
+    const obstacles = this.spawnSystem.getActiveObstacles();
+    const coins = this.spawnSystem.getActiveCoins();
+    const boosters = this.spawnSystem.getActiveBoosters();
+
+    // Culling критичных объектов с временным бюджетом
+    this.cullingManager.cullWithBudget(obstacles);
+    this.cullingManager.cullWithBudget(coins);
+    this.cullingManager.cullWithBudget(boosters);
+
+    // Декорации culling реже (каждые N frames) - они некритичны
+    if (this.frameCount % CONFIG.CULLING.DECORATION_INTERVAL === 0) {
+      const clouds = this.spawnSystem.getActiveClouds();
+      const stars = this.spawnSystem.getActiveStars();
+
+      this.cullingManager.cullAll(clouds);
+      this.cullingManager.cullAll(stars);
+    }
   }
 
   pause() {

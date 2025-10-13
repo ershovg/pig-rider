@@ -135,6 +135,15 @@ export class SpawnSystem {
     return this.boosterSpawner.getActiveObjects();
   }
 
+  // 🆕 Методы для culling декораций
+  getActiveClouds() {
+    return this.cloudSpawner.getActiveObjects();
+  }
+
+  getActiveStars() {
+    return this.starSpawner.getActiveObjects();
+  }
+
   reset() {
     this.obstacleSpawner.reset();
     this.coinSpawner.reset();

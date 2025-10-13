@@ -55,4 +55,9 @@ export class Cloud extends Renderable {
   isActive() {
     return this.active;
   }
+
+  // 🆕 Cullable interface
+  shouldCull(threshold) {
+    return this.active && this.sprite.x < threshold;
+  }
 }

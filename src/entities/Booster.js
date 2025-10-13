@@ -4,7 +4,7 @@ import { CONFIG } from '../config/constants.js';
 import { Collectible } from './base/Collectible.js';
 
 /**
- * Собираемый бустер с плавающей анимацией
+ * Собираемый бустер с плавающей анимацией, interpolation и culling
  */
 export class Booster extends Collectible {
   constructor(texture) {
@@ -19,14 +19,29 @@ export class Booster extends Collectible {
     this.lane = 0;
     this.floatTween = null;
     this.sprite.visible = false;
+
+    // 🆕 Interpolation state
+    this.previousX = 0;
+    this.previousY = 0;
+    this.currentX = 0;
+    this.currentY = 0;
+    this.baseY = 0; // Base Y для float анимации
   }
 
   activate(lane, x) {
     this.active = true;
     this.collected = false;
     this.lane = lane;
-    this.sprite.x = x;
-    this.sprite.y = CONFIG.LANES.Y_POSITIONS[lane];
+
+    // 🆕 Физическая позиция
+    this.currentX = x;
+    this.currentY = CONFIG.LANES.Y_POSITIONS[lane];
+    this.baseY = this.currentY;
+    this.sprite.x = this.currentX;
+    this.sprite.y = this.currentY;
+    this.previousX = this.currentX;
+    this.previousY = this.currentY;
+
     this.sprite.visible = true;
     this.sprite.scale.set(1);
     this.sprite.alpha = 1;
@@ -42,9 +57,9 @@ export class Booster extends Collectible {
 
   startFloat() {
     this.stopFloat();
-    const originalY = this.sprite.y;
-    this.floatTween = gsap.to(this.sprite, {
-      y: originalY - 15,
+    // 🆕 Float animation теперь обновляет currentY, а не sprite.y напрямую
+    this.floatTween = gsap.to(this, {
+      currentY: this.baseY - 15,
       duration: 1,
       ease: 'sine.inOut',
       yoyo: true,
@@ -89,8 +104,12 @@ export class Booster extends Collectible {
 
   update(deltaTime, gameSpeed) {
     if (!this.active || this.collected) return;
-    this.sprite.x = Math.round(this.sprite.x - gameSpeed * deltaTime * 800);
-    if (this.sprite.x < -100) {
+
+    // 🆕 Сохраняем и обновляем физику
+    this.saveState();
+    this.currentX -= gameSpeed * deltaTime * 800;
+
+    if (this.currentX < -100) {
       this.deactivate();
     }
   }
@@ -100,9 +119,11 @@ export class Booster extends Collectible {
     const scale = CONFIG.COLLISION.COIN_HITBOX_SCALE;
     const width = this.sprite.width * scale;
     const height = this.sprite.height * scale;
+
+    // 🆕 Используем физическую позицию
     return {
-      x: this.sprite.x - width / 2,
-      y: this.sprite.y - height / 2,
+      x: this.currentX - width / 2,
+      y: this.currentY - height / 2,
       width: width,
       height: height
     };
@@ -110,7 +131,8 @@ export class Booster extends Collectible {
 
   reset() {
     this.deactivate();
-    this.sprite.x = CONFIG.CANVAS_WIDTH + 100;
+    this.currentX = CONFIG.CANVAS_WIDTH + 100;
+    this.sprite.x = this.currentX;
     this.sprite.rotation = 0;
     this.sprite.alpha = 1;
   }
@@ -121,5 +143,23 @@ export class Booster extends Collectible {
 
   isActive() {
     return this.active && !this.collected;
+  }
+
+  // 🆕 Interpolatable interface
+  saveState() {
+    this.previousX = this.currentX;
+    this.previousY = this.currentY;
+  }
+
+  interpolate(alpha) {
+    if (!this.sprite) return;
+    this.sprite.x = this.previousX + (this.currentX - this.previousX) * alpha;
+    // Y уже анимируется через GSAP (float), просто копируем
+    this.sprite.y = this.currentY;
+  }
+
+  // 🆕 Cullable interface
+  shouldCull(threshold) {
+    return (this.active && !this.collected) && this.currentX < threshold;
   }
 }

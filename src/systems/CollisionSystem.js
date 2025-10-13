@@ -70,14 +70,9 @@ export class CollisionSystem {
     return Array.from(potential);
   }
 
-  /**
-   * Check collision between player and obstacles
-   * @returns {boolean} True if collision occurred
-   */
   checkObstacleCollisions(player, obstacles) {
     this.clearGrid();
 
-    // Add all obstacles to spatial grid
     for (const obstacle of obstacles) {
       const hitbox = obstacle.getHitbox();
       if (hitbox) {
@@ -85,18 +80,16 @@ export class CollisionSystem {
       }
     }
 
-    // Check player against potential collisions
     const playerHitbox = player.getHitbox();
     const potentialCollisions = this.getPotentialCollisions(playerHitbox);
 
     for (const { obj, hitbox } of potentialCollisions) {
       if (MathUtils.checkAABB(playerHitbox, hitbox)) {
-        // Collision detected!
-        return true;
+        return { hit: true, obstacle: obj };
       }
     }
 
-    return false;
+    return { hit: false, obstacle: null };
   }
 
   /**
@@ -117,13 +110,11 @@ export class CollisionSystem {
     return collected;
   }
 
-  /**
-   * Process all collisions
-   * @returns {Object} Collision results
-   */
   processCollisions(player, obstacles, coins) {
+    const obstacleCollision = this.checkObstacleCollisions(player, obstacles);
     return {
-      obstacleHit: this.checkObstacleCollisions(player, obstacles),
+      obstacleHit: obstacleCollision.hit,
+      hitObstacle: obstacleCollision.obstacle,
       coinsCollected: this.checkCoinCollisions(player, coins)
     };
   }

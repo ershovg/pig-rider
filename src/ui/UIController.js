@@ -152,18 +152,14 @@ export class UIController {
    * Статичный экран - используем display
    */
   showLoseScreen(score) {
-    alert(`💀 LOSE! Score: ${score}`);
     console.log(`💀 LOSE! Score: ${score}`);
-    // after logic
     this.hideAll();
     if (this.faildScreen) {
       this.faildScreen.style.display = 'flex';
     }
-    // Hide canvas
     if (this.canvas) {
       this.canvas.style.display = 'none';
     }
-
   }
 
   /**

@@ -15,7 +15,15 @@ export default defineConfig(({ command, mode }) => {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type'
+      },
+      watch: {
+        // Игнорируем папку draft при watch
+        ignored: ['**/draft/**']
       }
+    },
+    // Исключаем draft/ из сканирования зависимостей
+    optimizeDeps: {
+      exclude: ['draft']
     }
   };
 

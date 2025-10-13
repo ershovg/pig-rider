@@ -12,6 +12,7 @@ export class PlayerInputController {
     };
 
     this.touchStartY = null;
+    this.enabled = true;
 
     this.setupInput();
   }
@@ -31,6 +32,8 @@ export class PlayerInputController {
   }
 
   handleKeyDown(e) {
+    if (!this.enabled) return;
+
     switch (e.key) {
       case 'ArrowUp':
       case 'w':
@@ -73,7 +76,7 @@ export class PlayerInputController {
   }
 
   handleTouchMove(e) {
-    if (!this.touchStartY) return;
+    if (!this.enabled || !this.touchStartY) return;
     e.preventDefault();
 
     const touchY = e.touches[0].clientY;
@@ -92,6 +95,14 @@ export class PlayerInputController {
 
   handleTouchEnd() {
     this.touchStartY = null;
+  }
+
+  disable() {
+    this.enabled = false;
+  }
+
+  enable() {
+    this.enabled = true;
   }
 
   destroy() {

@@ -1,415 +1,465 @@
 {"frames": {
 
-"Hryusha_flying_000.png":
+"Hryusha_flying_v2_000.png":
 {
-	"frame": {"x":0,"y":0,"w":130,"h":130},
+	"frame": {"x":0,"y":0,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_001.png":
+"Hryusha_flying_v2_001.png":
 {
-	"frame": {"x":130,"y":0,"w":130,"h":130},
+	"frame": {"x":260,"y":0,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_002.png":
+"Hryusha_flying_v2_002.png":
 {
-	"frame": {"x":260,"y":0,"w":130,"h":130},
+	"frame": {"x":520,"y":0,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_003.png":
+"Hryusha_flying_v2_003.png":
 {
-	"frame": {"x":390,"y":0,"w":130,"h":130},
+	"frame": {"x":780,"y":0,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_004.png":
+"Hryusha_flying_v2_004.png":
 {
-	"frame": {"x":520,"y":0,"w":130,"h":130},
+	"frame": {"x":1040,"y":0,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_005.png":
+"Hryusha_flying_v2_005.png":
 {
-	"frame": {"x":650,"y":0,"w":130,"h":130},
+	"frame": {"x":1300,"y":0,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_006.png":
+"Hryusha_flying_v2_006.png":
 {
-	"frame": {"x":780,"y":0,"w":130,"h":130},
+	"frame": {"x":1560,"y":0,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_007.png":
+"Hryusha_flying_v2_007.png":
 {
-	"frame": {"x":0,"y":130,"w":130,"h":130},
+	"frame": {"x":0,"y":260,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_008.png":
+"Hryusha_flying_v2_008.png":
 {
-	"frame": {"x":130,"y":130,"w":130,"h":130},
+	"frame": {"x":260,"y":260,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_009.png":
+"Hryusha_flying_v2_009.png":
 {
-	"frame": {"x":260,"y":130,"w":130,"h":130},
+	"frame": {"x":520,"y":260,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_010.png":
+"Hryusha_flying_v2_010.png":
 {
-	"frame": {"x":390,"y":130,"w":130,"h":130},
+	"frame": {"x":780,"y":260,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_011.png":
+"Hryusha_flying_v2_011.png":
 {
-	"frame": {"x":520,"y":130,"w":130,"h":130},
+	"frame": {"x":1040,"y":260,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_012.png":
+"Hryusha_flying_v2_012.png":
 {
-	"frame": {"x":650,"y":130,"w":130,"h":130},
+	"frame": {"x":1300,"y":260,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_013.png":
+"Hryusha_flying_v2_013.png":
 {
-	"frame": {"x":780,"y":130,"w":130,"h":130},
+	"frame": {"x":1560,"y":260,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_014.png":
+"Hryusha_flying_v2_014.png":
 {
-	"frame": {"x":0,"y":260,"w":130,"h":130},
+	"frame": {"x":0,"y":520,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_015.png":
+"Hryusha_flying_v2_015.png":
 {
-	"frame": {"x":130,"y":260,"w":130,"h":130},
+	"frame": {"x":260,"y":520,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_016.png":
+"Hryusha_flying_v2_016.png":
 {
-	"frame": {"x":260,"y":260,"w":130,"h":130},
+	"frame": {"x":520,"y":520,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_017.png":
+"Hryusha_flying_v2_017.png":
 {
-	"frame": {"x":390,"y":260,"w":130,"h":130},
+	"frame": {"x":780,"y":520,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_018.png":
+"Hryusha_flying_v2_018.png":
 {
-	"frame": {"x":520,"y":260,"w":130,"h":130},
+	"frame": {"x":1040,"y":520,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_019.png":
+"Hryusha_flying_v2_019.png":
 {
-	"frame": {"x":650,"y":260,"w":130,"h":130},
+	"frame": {"x":1300,"y":520,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_020.png":
+"Hryusha_flying_v2_020.png":
 {
-	"frame": {"x":780,"y":260,"w":130,"h":130},
+	"frame": {"x":1560,"y":520,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_021.png":
+"Hryusha_flying_v2_021.png":
 {
-	"frame": {"x":0,"y":390,"w":130,"h":130},
+	"frame": {"x":0,"y":780,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_022.png":
+"Hryusha_flying_v2_022.png":
 {
-	"frame": {"x":130,"y":390,"w":130,"h":130},
+	"frame": {"x":260,"y":780,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_023.png":
+"Hryusha_flying_v2_023.png":
 {
-	"frame": {"x":260,"y":390,"w":130,"h":130},
+	"frame": {"x":520,"y":780,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_024.png":
+"Hryusha_flying_v2_024.png":
 {
-	"frame": {"x":390,"y":390,"w":130,"h":130},
+	"frame": {"x":780,"y":780,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_025.png":
+"Hryusha_flying_v2_025.png":
 {
-	"frame": {"x":520,"y":390,"w":130,"h":130},
+	"frame": {"x":1040,"y":780,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_026.png":
+"Hryusha_flying_v2_026.png":
 {
-	"frame": {"x":650,"y":390,"w":130,"h":130},
+	"frame": {"x":1300,"y":780,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_027.png":
+"Hryusha_flying_v2_027.png":
 {
-	"frame": {"x":780,"y":390,"w":130,"h":130},
+	"frame": {"x":1560,"y":780,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_028.png":
+"Hryusha_flying_v2_028.png":
 {
-	"frame": {"x":0,"y":520,"w":130,"h":130},
+	"frame": {"x":0,"y":1040,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_029.png":
+"Hryusha_flying_v2_029.png":
 {
-	"frame": {"x":130,"y":520,"w":130,"h":130},
+	"frame": {"x":260,"y":1040,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_030.png":
+"Hryusha_flying_v2_030.png":
 {
-	"frame": {"x":260,"y":520,"w":130,"h":130},
+	"frame": {"x":520,"y":1040,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_031.png":
+"Hryusha_flying_v2_031.png":
 {
-	"frame": {"x":390,"y":520,"w":130,"h":130},
+	"frame": {"x":780,"y":1040,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_032.png":
+"Hryusha_flying_v2_032.png":
 {
-	"frame": {"x":520,"y":520,"w":130,"h":130},
+	"frame": {"x":1040,"y":1040,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_033.png":
+"Hryusha_flying_v2_033.png":
 {
-	"frame": {"x":650,"y":520,"w":130,"h":130},
+	"frame": {"x":1300,"y":1040,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_034.png":
+"Hryusha_flying_v2_034.png":
 {
-	"frame": {"x":780,"y":520,"w":130,"h":130},
+	"frame": {"x":1560,"y":1040,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_035.png":
+"Hryusha_flying_v2_035.png":
 {
-	"frame": {"x":0,"y":650,"w":130,"h":130},
+	"frame": {"x":0,"y":1300,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_036.png":
+"Hryusha_flying_v2_036.png":
 {
-	"frame": {"x":130,"y":650,"w":130,"h":130},
+	"frame": {"x":260,"y":1300,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_037.png":
+"Hryusha_flying_v2_037.png":
 {
-	"frame": {"x":260,"y":650,"w":130,"h":130},
+	"frame": {"x":520,"y":1300,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_038.png":
+"Hryusha_flying_v2_038.png":
 {
-	"frame": {"x":390,"y":650,"w":130,"h":130},
+	"frame": {"x":780,"y":1300,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_039.png":
+"Hryusha_flying_v2_039.png":
 {
-	"frame": {"x":520,"y":650,"w":130,"h":130},
+	"frame": {"x":1040,"y":1300,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_040.png":
+"Hryusha_flying_v2_040.png":
 {
-	"frame": {"x":650,"y":650,"w":130,"h":130},
+	"frame": {"x":1300,"y":1300,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_041.png":
+"Hryusha_flying_v2_041.png":
 {
-	"frame": {"x":780,"y":650,"w":130,"h":130},
+	"frame": {"x":1560,"y":1300,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_042.png":
+"Hryusha_flying_v2_042.png":
 {
-	"frame": {"x":0,"y":780,"w":130,"h":130},
+	"frame": {"x":0,"y":1560,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_043.png":
+"Hryusha_flying_v2_043.png":
 {
-	"frame": {"x":130,"y":780,"w":130,"h":130},
+	"frame": {"x":260,"y":1560,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_044.png":
+"Hryusha_flying_v2_044.png":
 {
-	"frame": {"x":260,"y":780,"w":130,"h":130},
+	"frame": {"x":520,"y":1560,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_045.png":
+"Hryusha_flying_v2_045.png":
 {
-	"frame": {"x":390,"y":780,"w":130,"h":130},
+	"frame": {"x":780,"y":1560,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_046.png":
+"Hryusha_flying_v2_046.png":
 {
-	"frame": {"x":520,"y":780,"w":130,"h":130},
+	"frame": {"x":1040,"y":1560,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_047.png":
+"Hryusha_flying_v2_047.png":
 {
-	"frame": {"x":650,"y":780,"w":130,"h":130},
+	"frame": {"x":1300,"y":1560,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_048.png":
+"Hryusha_flying_v2_048.png":
 {
-	"frame": {"x":780,"y":780,"w":130,"h":130},
+	"frame": {"x":1560,"y":1560,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 },
-"Hryusha_flying_049.png":
+"Hryusha_flying_v2_049.png":
 {
-	"frame": {"x":0,"y":910,"w":130,"h":130},
+	"frame": {"x":0,"y":1820,"w":260,"h":260},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":130,"h":130},
-	"sourceSize": {"w":130,"h":130}
+	"spriteSourceSize": {"x":0,"y":0,"w":260,"h":260},
+	"sourceSize": {"w":260,"h":260},
+	"anchor": {"x":0.5,"y":0.5}
 }},
 "animations": {
-	"Hryusha_flying": ["Hryusha_flying_000.png","Hryusha_flying_001.png","Hryusha_flying_002.png","Hryusha_flying_003.png","Hryusha_flying_004.png","Hryusha_flying_005.png","Hryusha_flying_006.png","Hryusha_flying_007.png","Hryusha_flying_008.png","Hryusha_flying_009.png","Hryusha_flying_010.png","Hryusha_flying_011.png","Hryusha_flying_012.png","Hryusha_flying_013.png","Hryusha_flying_014.png","Hryusha_flying_015.png","Hryusha_flying_016.png","Hryusha_flying_017.png","Hryusha_flying_018.png","Hryusha_flying_019.png","Hryusha_flying_020.png","Hryusha_flying_021.png","Hryusha_flying_022.png","Hryusha_flying_023.png","Hryusha_flying_024.png","Hryusha_flying_025.png","Hryusha_flying_026.png","Hryusha_flying_027.png","Hryusha_flying_028.png","Hryusha_flying_029.png","Hryusha_flying_030.png","Hryusha_flying_031.png","Hryusha_flying_032.png","Hryusha_flying_033.png","Hryusha_flying_034.png","Hryusha_flying_035.png","Hryusha_flying_036.png","Hryusha_flying_037.png","Hryusha_flying_038.png","Hryusha_flying_039.png","Hryusha_flying_040.png","Hryusha_flying_041.png","Hryusha_flying_042.png","Hryusha_flying_043.png","Hryusha_flying_044.png","Hryusha_flying_045.png","Hryusha_flying_046.png","Hryusha_flying_047.png","Hryusha_flying_048.png","Hryusha_flying_049.png"]
+	"Hryusha_flying_v2": ["Hryusha_flying_v2_000.png","Hryusha_flying_v2_001.png","Hryusha_flying_v2_002.png","Hryusha_flying_v2_003.png","Hryusha_flying_v2_004.png","Hryusha_flying_v2_005.png","Hryusha_flying_v2_006.png","Hryusha_flying_v2_007.png","Hryusha_flying_v2_008.png","Hryusha_flying_v2_009.png","Hryusha_flying_v2_010.png","Hryusha_flying_v2_011.png","Hryusha_flying_v2_012.png","Hryusha_flying_v2_013.png","Hryusha_flying_v2_014.png","Hryusha_flying_v2_015.png","Hryusha_flying_v2_016.png","Hryusha_flying_v2_017.png","Hryusha_flying_v2_018.png","Hryusha_flying_v2_019.png","Hryusha_flying_v2_020.png","Hryusha_flying_v2_021.png","Hryusha_flying_v2_022.png","Hryusha_flying_v2_023.png","Hryusha_flying_v2_024.png","Hryusha_flying_v2_025.png","Hryusha_flying_v2_026.png","Hryusha_flying_v2_027.png","Hryusha_flying_v2_028.png","Hryusha_flying_v2_029.png","Hryusha_flying_v2_030.png","Hryusha_flying_v2_031.png","Hryusha_flying_v2_032.png","Hryusha_flying_v2_033.png","Hryusha_flying_v2_034.png","Hryusha_flying_v2_035.png","Hryusha_flying_v2_036.png","Hryusha_flying_v2_037.png","Hryusha_flying_v2_038.png","Hryusha_flying_v2_039.png","Hryusha_flying_v2_040.png","Hryusha_flying_v2_041.png","Hryusha_flying_v2_042.png","Hryusha_flying_v2_043.png","Hryusha_flying_v2_044.png","Hryusha_flying_v2_045.png","Hryusha_flying_v2_046.png","Hryusha_flying_v2_047.png","Hryusha_flying_v2_048.png","Hryusha_flying_v2_049.png"]
 },
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
 	"version": "1.1",
 	"image": "hryusha-flying.png",
 	"format": "RGBA8888",
-	"size": {"w":910,"h":1040},
+	"size": {"w":1820,"h":2080},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:8c50582dd6413b42622b74e5ea67ef8a:5dd2ca645706b192e5cbfea420981cf2:89b9f94f0923fc119d83179ff88fdcb7$"
+	"smartupdate": "$TexturePacker:SmartUpdate:43906bf3630145b9a9747c2b84598cd6:5304a9da4da5e2dcd9aa9ee3b7e59548:89b9f94f0923fc119d83179ff88fdcb7$"
 }
 }

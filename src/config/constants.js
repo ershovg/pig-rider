@@ -29,8 +29,34 @@ export const CONFIG = {
   // Player
   PLAYER: {
     START_X: 300,
-    SWITCH_DURATION: 0.15, // GSAP animation duration in seconds
-    SIZE: 260  // 130×2 для @2x качества на Retina (было 150)
+    SWITCH_DURATION: 0.15, // GSAP animation duration in seconds (deprecated, используется physics)
+    SIZE: 260,  // 130×2 для @2x качества на Retina (было 150)
+
+    // 🆕 Physics-based movement parameters
+    PHYSICS: {
+      MAX_SPEED: 3000,       // Максимальная скорость движения между полосами (px/s)
+      ACCELERATION: 12000,   // Ускорение при движении (px/s²)
+      FRICTION: 0.85,        // Коэффициент торможения при приближении к цели (0-1)
+      BRAKE_DISTANCE: 50     // Дистанция начала торможения (px)
+    },
+
+    // 🆕 Collision physics (Matter.js + GSAP hybrid)
+    COLLISION_PHYSICS: {
+      // Matter.js параметры
+      GRAVITY: 0.2,              // Низкая гравитация
+      FRICTION: 0.01,            // Низкое трение (скользит)
+      FRICTION_AIR: 0.15,        // Воздушное сопротивление (быстрое торможение)
+      RESTITUTION: 0.6,          // Упругость игрока (0-1, выше = больше отскок)
+
+      // Timing
+      MAX_PHYSICS_DURATION: 1000, // Максимум 1 сек физики (мс)
+      RETURN_DURATION: 0.4,      // GSAP возврат на место (сек)
+      MIN_VELOCITY_STOP: 0.3,    // Минимальная скорость для остановки
+
+      // Boundaries (стены)
+      LEFT_WALL_X: -50,          // X координата левой стены
+      WALL_RESTITUTION: 0.8      // Упругость препятствия (выше = сильнее отскок)
+    }
   },
 
   // Obstacles
@@ -59,8 +85,20 @@ export const CONFIG = {
   },
 
   // Performance
-  FIXED_TIMESTEP: 1000 / 60, // 60 FPS
-  MAX_DELTA: 100
+  FIXED_TIMESTEP: 1000 / 60, // 60 FPS physics updates (можно увеличить до 120 для еще большей плавности)
+  MAX_DELTA: 100,
+
+  // 🆕 Culling (удаление объектов за пределами viewport)
+  CULLING: {
+    THRESHOLD: -200,           // X координата порога (px за левым краем экрана)
+    TIME_BUDGET_MS: 1,         // Максимальное время на culling операцию (мс)
+    DECORATION_INTERVAL: 5     // Culling декораций каждые N frames
+  },
+
+  // 🆕 Interpolation (плавность на 120+ FPS)
+  INTERPOLATION: {
+    ENABLED: true  // Можно отключить для дебага (увидеть "чистые" physics позиции)
+  }
 };
 
 // Base URL для ассетов (переопределяется через window.GAME_ASSETS_URL)
