@@ -70,10 +70,6 @@ export class ObstacleSpawner extends BaseSpawner {
     // Выбираем паттерн из библиотеки (weighted random + anti-repetition)
     const pattern = this.patternLibrary.selectPattern(currentDifficulty);
 
-    console.log(`[ObstacleSpawner] === SPAWN PATTERN: ${pattern.name} ===`);
-    console.log(`[ObstacleSpawner] Difficulty: ${currentDifficulty.toFixed(2)}, Pattern difficulty: ${pattern.difficulty}`);
-    console.log(`[ObstacleSpawner] Blocking lanes: [${pattern.lanes.join(', ')}], Free lanes: [${this.getFreeLanes(pattern.lanes).join(', ')}]`);
-
     // Рассчитываем базовую позицию спавна
     const minDist = CONFIG.OBSTACLE.MIN_DISTANCE;
     const maxDist = CONFIG.OBSTACLE.MAX_DISTANCE;
@@ -99,18 +95,12 @@ export class ObstacleSpawner extends BaseSpawner {
       if (obstacle) {
         obstacle.activate(lane, spawnX);
         spawnedCount++;
-
-        console.log(`[ObstacleSpawner]   → Spawned at lane ${lane}, X=${spawnX.toFixed(0)}${offset > 0 ? ` (offset +${offset})` : ''}`);
       }
     }
 
     // Обновляем позицию последнего паттерна
     // Используем максимальную X координату (с учетом offset)
     this.lastPatternX = baseX + (pattern.offset || 0);
-
-    const stats = this.pool.getStats();
-    console.log(`[ObstacleSpawner] ✔️ Pattern complete: ${spawnedCount} obstacles spawned`);
-    console.log(`[ObstacleSpawner] Active obstacles: ${stats.active}/${stats.total}`);
   }
 
   /**
