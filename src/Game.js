@@ -111,14 +111,16 @@ export class Game {
     const coinTexture = this.assetLoader.getAsset('coin');
     const starTexture = this.assetLoader.getAsset('star');
     const cloudTexture = this.assetLoader.getAsset('cloud');
-    const boosterSpritesheet = this.assetLoader.getAsset('booster'); // 🆕 Теперь это спрайтшит cup.json
+    const boosterSpritesheet = this.assetLoader.getAsset('booster'); // Спрайтшит cup.json
+    const coinCollectEffectSpritesheet = this.assetLoader.getAsset('coinCollectEffect'); // 🆕 Спрайтшит coin-collect.json
 
     this.spawnSystem = new SpawnSystem(
       obstacleTextures,
       coinTexture,
       starTexture,
       cloudTexture,
-      boosterSpritesheet, // 🆕 Передаем спрайтшит с анимацией кубка
+      boosterSpritesheet,
+      coinCollectEffectSpritesheet, // 🆕 Передаем спрайтшит эффекта сбора монеты
       this.renderer.stage
     );
 
@@ -251,6 +253,10 @@ export class Game {
       const value = coin.collect();
       if (value) {
         this.progressionManager.addScore(value);
+
+        // 🆕 Эмитируем эффект сбора монеты в позиции монеты
+        const coinSprite = coin.getSprite();
+        this.spawnSystem.emitCoinCollectEffect(coinSprite.x, coinSprite.y);
 
         if (this.progressionManager.checkWinCondition()) {
           this.endGame(true);

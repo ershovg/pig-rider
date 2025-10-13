@@ -99,14 +99,19 @@ export class Booster extends Collectible {
   collect() {
     if (this.collected) return null;
     this.collected = true;
+
+    // Сохраняем текущий scale для относительного увеличения
+    const currentScale = this.sprite.scale.x;
+    const targetScale = currentScale * 1.8; // Увеличиваем в 1.8 раз от текущего
+
     gsap.to(this.sprite, {
       rotation: Math.PI * 2,
       duration: 0.3,
       ease: 'back.out'
     });
     gsap.to(this.sprite.scale, {
-      x: 1.8,
-      y: 1.8,
+      x: targetScale,
+      y: targetScale,
       duration: 0.3,
       ease: 'back.out'
     });

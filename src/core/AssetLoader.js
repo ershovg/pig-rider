@@ -27,6 +27,7 @@ export class AssetLoader {
       this.assets.obstacleLarge = await PIXI.Assets.load(ASSET_PATHS.OBSTACLE_LARGE);
       this.assets.coin = await PIXI.Assets.load(ASSET_PATHS.COIN);
       this.assets.coinStar = await PIXI.Assets.load(ASSET_PATHS.COIN_STAR);
+      this.assets.coinCollectEffect = await PIXI.Assets.load(ASSET_PATHS.COIN_COLLECT_EFFECT); // Эффект сбора монеты
       this.assets.booster = await PIXI.Assets.load(ASSET_PATHS.BOOSTER);
       this.assets.star = await PIXI.Assets.load(ASSET_PATHS.STAR);
       this.assets.cloud = await PIXI.Assets.load(ASSET_PATHS.CLOUD);

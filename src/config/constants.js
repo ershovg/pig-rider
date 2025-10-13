@@ -60,7 +60,7 @@ export const CONFIG = {
 
   // Booster (cup with animated wings)
   BOOSTER: {
-    SIZE: 65, // Размер кубка в пикселях (можно менять: 50, 65, 70...)
+    SIZE: 180, // Размер кубка в пикселях (можно менять: 50, 65, 70, 80, 90, 100, 150...)
     POOL_SIZE: 5
   },
 
@@ -106,6 +106,7 @@ export const ASSET_PATHS = {
   get OBSTACLE_LARGE() { return getAssetPath('/assets/sprites/barier_large.png'); },
   get COIN() { return getAssetPath('/assets/sprites/coin.png'); },
   get COIN_STAR() { return getAssetPath('/assets/sprites/coin_star.png'); },
+  get COIN_COLLECT_EFFECT() { return getAssetPath('/assets/sprites/coin-collect.json'); }, // Анимация сбора монеты (4 кадра)
   get BOOSTER() { return getAssetPath('/assets/sprites/cup.json'); }, // Анимированный спрайтшит кубка с крыльями
   get STAR() { return getAssetPath('/assets/sprites/star.png'); },
   get CLOUD() { return getAssetPath('/assets/sprites/cloud.png'); },

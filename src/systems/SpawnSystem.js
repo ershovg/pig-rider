@@ -12,17 +12,19 @@ import { Coin } from '../entities/Coin.js';
 import { Cloud } from '../entities/Cloud.js';
 import { Star } from '../entities/Star.js';
 import { Booster } from '../entities/Booster.js';
+import { CoinCollectEffect } from '../effects/CoinCollectEffect.js';
 import { CONFIG } from '../config/constants.js';
 
 export class SpawnSystem {
-  constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterSpritesheet, stage) {
+  constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterSpritesheet, coinCollectEffectSpritesheet, stage) {
     this.stage = stage;
     this.textures = {
       obstacles: obstacleTextures,
       coin: coinTexture,
       star: starTexture,
       cloud: cloudTexture,
-      boosterSpritesheet: boosterSpritesheet // 🆕 Теперь это спрайтшит, не просто текстура
+      boosterSpritesheet: boosterSpritesheet, // Спрайтшит анимированного кубка
+      coinCollectEffectSpritesheet: coinCollectEffectSpritesheet // 🆕 Спрайтшит эффекта сбора монеты
     };
     this.poolManager = new EntityPoolManager(stage);
     this.initializePools();
@@ -38,6 +40,8 @@ export class SpawnSystem {
     this.poolManager.registerPool('cloud', Cloud, 15, { texture: this.textures.cloud });
     // 🆕 Передаем спрайтшит в конструктор Booster
     this.poolManager.registerPool('booster', Booster, CONFIG.BOOSTER.POOL_SIZE, { texture: this.textures.boosterSpritesheet });
+    // 🆕 Пул эффектов сбора монеты (15 штук для частого использования)
+    this.poolManager.registerPool('coinCollectEffect', CoinCollectEffect, 15, { texture: this.textures.coinCollectEffectSpritesheet });
   }
 
   initializeSpawners() {
@@ -131,6 +135,18 @@ export class SpawnSystem {
 
   getActiveStars() {
     return this.starSpawner.getActiveObjects();
+  }
+
+  /**
+   * 🆕 Эмитировать эффект сбора монеты в указанной позиции
+   * @param {number} x - X координата собранной монеты
+   * @param {number} y - Y координата собранной монеты
+   */
+  emitCoinCollectEffect(x, y) {
+    const effect = this.poolManager.acquire('coinCollectEffect');
+    if (effect) {
+      effect.activate(x, y);
+    }
   }
 
   reset() {
