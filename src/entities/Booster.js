@@ -1,34 +1,26 @@
 import * as PIXI from 'pixi.js';
 import gsap from 'gsap';
 import { CONFIG } from '../config/constants.js';
+import { Collectible } from './base/Collectible.js';
 
 /**
- * Booster - интерактивный элемент (бустер/кубок)
- * При сборе дает бонусы игроку
+ * Собираемый бустер с плавающей анимацией
  */
-export class Booster {
+export class Booster extends Collectible {
   constructor(texture) {
+    super();
     this.sprite = new PIXI.Sprite(texture);
     this.sprite.anchor.set(0.5);
-
-    // Устанавливаем размер через scale для стабильного рендеринга
-    // Это предотвращает визуальное "дергание" объектов
-    const targetSize = CONFIG.COIN.SIZE * 1.2; // Чуть больше монеты
+    const targetSize = CONFIG.COIN.SIZE * 1.2;
     const scale = targetSize / texture.width;
     this.sprite.scale.set(scale);
-
     this.active = false;
     this.collected = false;
     this.lane = 0;
     this.floatTween = null;
-
-    // Скрываем спрайт при создании
     this.sprite.visible = false;
   }
 
-  /**
-   * Activate booster at specific lane and position
-   */
   activate(lane, x) {
     this.active = true;
     this.collected = false;
@@ -38,14 +30,9 @@ export class Booster {
     this.sprite.visible = true;
     this.sprite.scale.set(1);
     this.sprite.alpha = 1;
-
-    // Добавляем анимацию плавающего движения вверх-вниз
     this.startFloat();
   }
 
-  /**
-   * Deactivate booster
-   */
   deactivate() {
     this.active = false;
     this.collected = false;
@@ -53,15 +40,11 @@ export class Booster {
     this.stopFloat();
   }
 
-  /**
-   * Start floating animation (up and down)
-   */
   startFloat() {
     this.stopFloat();
-
     const originalY = this.sprite.y;
     this.floatTween = gsap.to(this.sprite, {
-      y: originalY - 15, // Поднимаем на 15px
+      y: originalY - 15,
       duration: 1,
       ease: 'sine.inOut',
       yoyo: true,
@@ -69,9 +52,6 @@ export class Booster {
     });
   }
 
-  /**
-   * Stop floating animation
-   */
   stopFloat() {
     if (this.floatTween) {
       this.floatTween.kill();
@@ -79,28 +59,20 @@ export class Booster {
     }
   }
 
-  /**
-   * Collect booster with animation
-   */
   collect() {
     if (this.collected) return null;
-
     this.collected = true;
-
-    // Анимация сбора: вращение и увеличение
     gsap.to(this.sprite, {
       rotation: Math.PI * 2,
       duration: 0.3,
       ease: 'back.out'
     });
-
     gsap.to(this.sprite.scale, {
       x: 1.8,
       y: 1.8,
       duration: 0.3,
       ease: 'back.out'
     });
-
     gsap.to(this.sprite, {
       alpha: 0,
       duration: 0.3,
@@ -109,47 +81,25 @@ export class Booster {
         this.sprite.alpha = 1;
       }
     });
-
-    // TODO: Play booster collect sound effect
-    // this.playBoosterSound();
-
     return {
       type: 'booster',
-      value: 10 // Бонусные очки
+      value: 10
     };
   }
 
-  /**
-   * Update booster position
-   */
   update(deltaTime, gameSpeed) {
     if (!this.active || this.collected) return;
-
-    // Двигаем бустер влево
-    // Math.round() предотвращает "дергание" из-за дробных координат
     this.sprite.x = Math.round(this.sprite.x - gameSpeed * deltaTime * 800);
-
-    // Обновляем Y позицию для плавающей анимации
-    if (this.floatTween) {
-      // gsap сам обновляет позицию
-    }
-
-    // Деактивируем если за экраном
     if (this.sprite.x < -100) {
       this.deactivate();
     }
   }
 
-  /**
-   * Get hitbox for collision detection
-   */
   getHitbox() {
     if (!this.active || this.collected) return null;
-
-    const scale = CONFIG.COLLISION.COIN_HITBOX_SCALE; // Используем тот же масштаб что и для монет
+    const scale = CONFIG.COLLISION.COIN_HITBOX_SCALE;
     const width = this.sprite.width * scale;
     const height = this.sprite.height * scale;
-
     return {
       x: this.sprite.x - width / 2,
       y: this.sprite.y - height / 2,
@@ -158,9 +108,6 @@ export class Booster {
     };
   }
 
-  /**
-   * Reset booster state
-   */
   reset() {
     this.deactivate();
     this.sprite.x = CONFIG.CANVAS_WIDTH + 100;
@@ -168,16 +115,10 @@ export class Booster {
     this.sprite.alpha = 1;
   }
 
-  /**
-   * Get sprite for adding to stage
-   */
   getSprite() {
     return this.sprite;
   }
 
-  /**
-   * Check if booster is active and not collected
-   */
   isActive() {
     return this.active && !this.collected;
   }

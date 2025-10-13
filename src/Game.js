@@ -1,3 +1,6 @@
+/**
+ * Главный оркестратор игры (тонкий слой координации)
+ */
 import { CONFIG } from './config/constants.js';
 import { ENV } from './config/env.js';
 import { Renderer } from './core/Renderer.js';
@@ -10,7 +13,9 @@ import { DifficultyManager } from './systems/DifficultyManager.js';
 import { UIController } from './ui/UIController.js';
 import { AIBotModal } from './ui/AIBotModal.js';
 import { ElevenLabsService } from './services/ElevenLabsService.js';
-import { EventBus } from './utils/EventBus.js';
+import { GameStateManager } from './managers/GameStateManager.js';
+import { BoosterManager } from './managers/BoosterManager.js';
+import { ProgressionManager } from './managers/ProgressionManager.js';
 import { MathUtils } from './utils/MathUtils.js';
 
 export class Game {
@@ -24,39 +29,24 @@ export class Game {
     this.collisionSystem = null;
     this.difficultyManager = null;
 
-    this.ui = null; // HTML UI Controller
-    this.aiBot = null; // AI Bot Modal
-    this.elevenLabs = null; // ElevenLabs Service
+    this.ui = null;
+    this.aiBot = null;
+    this.elevenLabs = null;
 
-    this.gameState = 'loading'; // loading, menu, playing, paused, ended
-    this.score = 0;
-    this.gameSpeed = CONFIG.GAME_SPEED;
-
-    // Booster state
-    this.isBoosterActive = false;
-    this.boosterTimeRemaining = 0;
-    this.boosterCurrentLane = 0;           // Текущая активная линия во время бустера
-    this.boosterLaneSwitchTimer = 0;       // Таймер смены линии
-    this.boosterCooldownTimer = 0;         // Cooldown после окончания бустера
-    this.preBoosterSnapshot = null;        // Snapshot состояния до бустера
+    this.stateManager = new GameStateManager();
+    this.boosterManager = null;
+    this.progressionManager = null;
 
     console.log('🎮 Game instance created');
   }
 
-  /**
-   * Initialize game
-   */
   async init() {
     try {
-      // Initialize HTML UI Controller
       this.ui = new UIController();
 
-      // Initialize ElevenLabs Service (if API key is available)
       if (ENV.ELEVENLABS_API_KEY) {
         this.elevenLabs = new ElevenLabsService(ENV.ELEVENLABS_API_KEY);
         await this.elevenLabs.init();
-
-        // Initialize AI Bot Modal
         this.aiBot = new AIBotModal(this.elevenLabs);
         await this.aiBot.init();
         this.aiBot.onComplete = () => this.startGame();
@@ -64,22 +54,16 @@ export class Game {
         console.warn('⚠️ ElevenLabs API key not found. AI bot will be disabled.');
       }
 
-      // Initialize renderer (PixiJS)
       this.renderer = new Renderer('game-canvas');
       await this.renderer.init();
 
-      // Load assets
       this.assetLoader = new AssetLoader();
       await this.assetLoader.loadAssets();
 
-      // Hide loading screen
       this.ui.hideLoading();
-
-      // Initialize UI event listeners
       this.initUI();
 
-      // Show AI Bot welcome or start screen
-      this.gameState = 'menu';
+      this.stateManager.setState('menu');
       if (this.aiBot) {
         this.aiBot.show();
       } else {
@@ -93,26 +77,19 @@ export class Game {
     }
   }
 
-  /**
-   * Initialize game systems
-   */
   initSystems() {
-    // Create player with animated spritesheet
     const playerSpritesheet = this.assetLoader.getAsset('playerAnimated');
     this.player = new Player(playerSpritesheet);
     this.renderer.addToStage(this.player.getSprite());
 
-    // Create spawn system with multiple obstacle textures for variety
     const obstacleTextures = [
       this.assetLoader.getAsset('obstacleBase'),
       this.assetLoader.getAsset('obstacleLarge')
     ];
     const coinTexture = this.assetLoader.getAsset('coin');
-
-    // Get new textures for decorative and interactive elements
-    const starTexture = this.assetLoader.getAsset('star'); // Звездочки
-    const cloudTexture = this.assetLoader.getAsset('cloud'); // Облака
-    const boosterTexture = this.assetLoader.getAsset('booster'); // Бустеры/кубки
+    const starTexture = this.assetLoader.getAsset('star');
+    const cloudTexture = this.assetLoader.getAsset('cloud');
+    const boosterTexture = this.assetLoader.getAsset('booster');
 
     this.spawnSystem = new SpawnSystem(
       obstacleTextures,
@@ -123,169 +100,95 @@ export class Game {
       this.renderer.stage
     );
 
-    // Create collision system
     this.collisionSystem = new CollisionSystem();
-
-    // Create difficulty manager
     this.difficultyManager = new DifficultyManager();
 
-    // Create game loop
+    this.progressionManager = new ProgressionManager(this.ui);
+    this.boosterManager = new BoosterManager(
+      this.spawnSystem,
+      this.difficultyManager,
+      this.ui
+    );
+
     this.gameLoop = new GameLoop(
       (dt) => this.update(dt),
       (alpha) => this.render(alpha)
     );
   }
 
-  /**
-   * Initialize UI event listeners
-   */
   initUI() {
-    // Setup HTML UI button listeners
     this.ui.setupEventListeners({
       onPlayClick: () => this.startGame(),
       onBoosterContinue: () => this.resumeGame(),
       onRetry: () => this.restartGame(),
       onBookDemo: () => {
-        // TODO: Navigate to demo booking page
         console.log('Book demo clicked');
       }
     });
   }
 
-  /**
-   * Start game
-   */
   startGame() {
-    // Initialize game systems on first start
     if (!this.player) {
       this.initSystems();
     }
 
-    this.gameState = 'playing';
-    this.score = 0;
-    this.gameSpeed = CONFIG.GAME_SPEED;
-
-    // Reset booster state
-    this.isBoosterActive = false;
-    this.boosterTimeRemaining = 0;
-    this.boosterCurrentLane = 0;
-    this.boosterLaneSwitchTimer = 0;
-    this.boosterCooldownTimer = 0;
-    this.preBoosterSnapshot = null;
-    this.ui.removeBoosterClass();
-
-    // Reset difficulty manager
+    this.stateManager.setState('playing');
+    this.progressionManager.reset();
+    this.boosterManager.reset();
     this.difficultyManager.reset();
-
     this.player.reset();
     this.spawnSystem.reset();
 
-    // Hide start screen, show HUD
     this.ui.hideStartScreen();
     this.ui.showHUD();
     this.ui.updateCoinCount(0, CONFIG.TARGET_COINS);
+    this.ui.removeBoosterClass();
 
-    // Start renderer ticker
     this.renderer.start();
-
     this.gameLoop.start();
 
     console.log('🚀 Game started');
   }
 
-  /**
-   * Resume game (after booster modal)
-   */
   resumeGame() {
     this.ui.hideBoosterModal();
-    this.gameState = 'playing';
+    this.stateManager.setState('playing');
     this.gameLoop.resume();
   }
 
-  /**
-   * Restart game
-   */
   restartGame() {
     this.startGame();
   }
 
-  /**
-   * End game
-   */
   endGame(isWin) {
-    this.gameState = 'ended';
+    this.stateManager.setState('ended');
     this.gameLoop.stop();
 
-    // Hide HUD, show end screen
     this.ui.hideHUD();
     if (isWin) {
-      this.ui.showWinScreen(this.score);
+      this.ui.showWinScreen(this.progressionManager.getScore());
     } else {
-      this.ui.showLoseScreen(this.score);
+      this.ui.showLoseScreen(this.progressionManager.getScore());
     }
 
-    console.log(`🏁 Game ended - ${isWin ? 'WIN' : 'LOSE'} - Score: ${this.score}`);
+    console.log(`🏁 Game ended - ${isWin ? 'WIN' : 'LOSE'} - Score: ${this.progressionManager.getScore()}`);
   }
 
-  /**
-   * Update game state (fixed timestep)
-   */
   update(deltaTime) {
-    if (this.gameState !== 'playing') return;
+    if (!this.stateManager.isPlaying()) return;
 
-    // Update booster cooldown timer
-    if (this.boosterCooldownTimer > 0) {
-      this.boosterCooldownTimer -= deltaTime;
-    }
+    this.boosterManager.update(deltaTime);
+    this.progressionManager.update(deltaTime);
+    this.difficultyManager.updateScore(this.progressionManager.getScore());
 
-    // Update booster timer
-    if (this.isBoosterActive) {
-      this.boosterTimeRemaining -= deltaTime;
-
-      // Update lane switch timer
-      this.boosterLaneSwitchTimer -= deltaTime;
-
-      // Switch lane every BOOSTER_LANE_SWITCH_INTERVAL seconds
-      if (this.boosterLaneSwitchTimer <= 0) {
-        this.boosterLaneSwitchTimer = CONFIG.BOOSTER_LANE_SWITCH_INTERVAL;
-        // Choose random lane (different from current)
-        const availableLanes = [0, 1, 2].filter(l => l !== this.boosterCurrentLane);
-        this.boosterCurrentLane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
-
-        // Instantly fill the new lane with coins
-        this.spawnSystem.fillLaneWithCoins(this.boosterCurrentLane);
-
-        console.log(`🔄 Booster lane switched to: ${this.boosterCurrentLane}`);
-      }
-
-      // Check if booster expired
-      if (this.boosterTimeRemaining <= 0) {
-        this.deactivateBooster();
-      }
-    }
-
-    // Increase game speed gradually
-    this.gameSpeed = Math.min(
-      this.gameSpeed + CONFIG.SPEED_INCREMENT,
-      CONFIG.MAX_SPEED
-    );
-
-    // Update player
     this.player.update(deltaTime);
 
-    // Update difficulty manager with current score
-    this.difficultyManager.updateScore(this.score);
-
-    // Update spawn system (новый API с context объектом)
-    this.spawnSystem.update(deltaTime, this.gameSpeed, {
-      isBoosterMode: this.isBoosterActive,
-      boosterActiveLane: this.boosterCurrentLane,
-      isBoosterActive: this.isBoosterActive,
-      boosterCooldown: this.boosterCooldownTimer,
+    const boosterContext = this.boosterManager.getContext();
+    this.spawnSystem.update(deltaTime, this.progressionManager.getGameSpeed(), {
+      ...boosterContext,
       difficultyManager: this.difficultyManager
     });
 
-    // Check collisions
     const obstacles = this.spawnSystem.getActiveObstacles();
     const coins = this.spawnSystem.getActiveCoins();
     const boosters = this.spawnSystem.getActiveBoosters();
@@ -295,32 +198,25 @@ export class Game {
       coins
     );
 
-    // Handle obstacle collision
     if (collisions.obstacleHit) {
       this.endGame(false);
       return;
     }
 
-    // Handle coin collection
     for (const coin of collisions.coinsCollected) {
       const value = coin.collect();
       if (value) {
-        this.score += value;
-        this.ui.updateCoinCount(this.score, CONFIG.TARGET_COINS);
-
-        // Emit sparkle effect at coin position
+        this.progressionManager.addScore(value);
         const coinSprite = coin.getSprite();
         this.spawnSystem.emitCoinSparkle(coinSprite.x, coinSprite.y);
 
-        // Check win condition
-        if (this.score >= CONFIG.TARGET_COINS) {
+        if (this.progressionManager.checkWinCondition()) {
           this.endGame(true);
           return;
         }
       }
     }
 
-    // Handle booster collection
     for (const booster of boosters) {
       if (!booster.isActive()) continue;
 
@@ -330,117 +226,48 @@ export class Game {
       if (boosterHitbox && MathUtils.checkAABB(playerHitbox, boosterHitbox)) {
         const result = booster.collect();
         if (result) {
-          this.score += result.value;
-          this.ui.updateCoinCount(this.score, CONFIG.TARGET_COINS);
+          this.progressionManager.addScore(result.value);
 
-          // Check win condition
-          if (this.score >= CONFIG.TARGET_COINS) {
+          if (this.progressionManager.checkWinCondition()) {
             this.endGame(true);
             return;
           }
 
-          // Activate booster mode (pause game, show modal)
           this.handleBoosterActivation();
         }
       }
     }
   }
 
-  /**
-   * Handle booster activation (show modal and activate)
-   */
   async handleBoosterActivation() {
-    // Pause game
     this.gameLoop.pause();
-
-    // Show booster modal and wait for user confirmation
     const confirmed = await this.ui.showBoosterModal();
 
     if (confirmed) {
-      // Save current difficulty state (snapshot)
-      this.preBoosterSnapshot = this.difficultyManager.createSnapshot();
-
-      // Activate booster
-      this.isBoosterActive = true;
-      this.boosterTimeRemaining = CONFIG.BOOSTER_DURATION;
-      this.boosterLaneSwitchTimer = CONFIG.BOOSTER_LANE_SWITCH_INTERVAL;
-
-      // Choose random starting lane for booster
-      this.boosterCurrentLane = Math.floor(Math.random() * CONFIG.LANES.TOTAL);
-
-      // Apply booster effect to difficulty manager
-      this.difficultyManager.applyBoosterEffect();
-
-      // Clear all obstacles
-      this.spawnSystem.clearAllObstacles();
-
-      // Instantly fill the starting lane with coins
-      this.spawnSystem.fillLaneWithCoins(this.boosterCurrentLane);
-
-      // Add CSS class for visual effect
-      this.ui.addBoosterClass();
-
-      console.log(`✨ Booster mode activated! Starting lane: ${this.boosterCurrentLane}`);
+      await this.boosterManager.activate();
     }
 
-    // Resume game
     this.gameLoop.resume();
   }
 
-  /**
-   * Deactivate booster mode
-   */
-  deactivateBooster() {
-    this.isBoosterActive = false;
-    this.boosterTimeRemaining = 0;
-    this.boosterLaneSwitchTimer = 0;
-
-    // Restore difficulty state from snapshot
-    if (this.preBoosterSnapshot) {
-      this.difficultyManager.restoreSnapshot(this.preBoosterSnapshot);
-      this.preBoosterSnapshot = null;
-    }
-
-    // Start cooldown timer
-    this.boosterCooldownTimer = CONFIG.BOOSTER_COOLDOWN_DURATION;
-
-    // Remove CSS class
-    this.ui.removeBoosterClass();
-
-    console.log(`⏹️ Booster mode deactivated. Cooldown: ${CONFIG.BOOSTER_COOLDOWN_DURATION}s`);
-  }
-
-  /**
-   * Render game (interpolated)
-   */
   render(alpha) {
     // Renderer automatically renders stage
-    // Alpha can be used for interpolation if needed
   }
 
-  /**
-   * Pause game
-   */
   pause() {
-    if (this.gameState === 'playing') {
-      this.gameState = 'paused';
+    if (this.stateManager.isPlaying()) {
+      this.stateManager.setState('paused');
       this.gameLoop.pause();
     }
   }
 
-  /**
-   * Resume game
-   */
   resume() {
-    if (this.gameState === 'paused') {
-      this.gameState = 'playing';
+    if (this.stateManager.isPaused()) {
+      this.stateManager.setState('playing');
       this.gameLoop.resume();
     }
   }
 
-  /**
-   * Destroy game and cleanup
-   */
   destroy() {
     if (this.gameLoop) {
       this.gameLoop.stop();
@@ -461,8 +288,6 @@ export class Game {
     if (this.renderer) {
       this.renderer.destroy();
     }
-
-    EventBus.clear();
 
     console.log('🗑️ Game destroyed');
   }

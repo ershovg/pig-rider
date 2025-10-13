@@ -1,30 +1,26 @@
 import * as PIXI from 'pixi.js';
 import gsap from 'gsap';
 import { CONFIG } from '../config/constants.js';
+import { Collectible } from './base/Collectible.js';
 
-export class Coin {
+/**
+ * Собираемая монета с анимацией
+ */
+export class Coin extends Collectible {
   constructor(texture) {
+    super();
     this.sprite = new PIXI.Sprite(texture);
     this.sprite.anchor.set(0.5);
-
-    // Устанавливаем размер через scale для стабильного рендеринга
-    // Это предотвращает визуальное "дергание" объектов
     const targetSize = CONFIG.COIN.SIZE;
     const scale = targetSize / texture.width;
     this.sprite.scale.set(scale);
-
     this.active = false;
     this.collected = false;
     this.lane = 0;
     this.rotationTween = null;
-
-    // Скрываем спрайт при создании
     this.sprite.visible = false;
   }
 
-  /**
-   * Activate coin at specific lane and position
-   */
   activate(lane, x) {
     this.active = true;
     this.collected = false;
@@ -33,14 +29,9 @@ export class Coin {
     this.sprite.y = CONFIG.LANES.Y_POSITIONS[lane];
     this.sprite.visible = true;
     this.sprite.scale.set(1);
-
-    // Add rotation animation for visual appeal
     this.startRotation();
   }
 
-  /**
-   * Deactivate coin
-   */
   deactivate() {
     this.active = false;
     this.collected = false;
@@ -48,9 +39,6 @@ export class Coin {
     this.stopRotation();
   }
 
-  /**
-   * Start rotation animation
-   */
   startRotation() {
     this.stopRotation();
     this.rotationTween = gsap.to(this.sprite, {
@@ -61,9 +49,6 @@ export class Coin {
     });
   }
 
-  /**
-   * Stop rotation animation
-   */
   stopRotation() {
     if (this.rotationTween) {
       this.rotationTween.kill();
@@ -71,22 +56,15 @@ export class Coin {
     }
   }
 
-  /**
-   * Collect coin with animation
-   */
   collect() {
     if (this.collected) return;
-
     this.collected = true;
-
-    // Scale up and fade out animation
     gsap.to(this.sprite.scale, {
       x: 1.5,
       y: 1.5,
       duration: 0.2,
       ease: 'back.out'
     });
-
     gsap.to(this.sprite, {
       alpha: 0,
       duration: 0.2,
@@ -95,39 +73,22 @@ export class Coin {
         this.sprite.alpha = 1;
       }
     });
-
-    // TODO: Play coin collect sound effect
-    // this.playCoinSound();
-
     return CONFIG.COIN.VALUE;
   }
 
-  /**
-   * Update coin position
-   */
   update(deltaTime, gameSpeed) {
     if (!this.active || this.collected) return;
-
-    // Move coin to the left
-    // Math.round() предотвращает "дергание" из-за дробных координат
     this.sprite.x = Math.round(this.sprite.x - gameSpeed * deltaTime * 800);
-
-    // Deactivate if off screen
     if (this.sprite.x < -CONFIG.COIN.SIZE) {
       this.deactivate();
     }
   }
 
-  /**
-   * Get hitbox for collision detection
-   */
   getHitbox() {
     if (!this.active || this.collected) return null;
-
     const scale = CONFIG.COLLISION.COIN_HITBOX_SCALE;
     const width = this.sprite.width * scale;
     const height = this.sprite.height * scale;
-
     return {
       x: this.sprite.x - width / 2,
       y: this.sprite.y - height / 2,
@@ -136,9 +97,6 @@ export class Coin {
     };
   }
 
-  /**
-   * Reset coin state
-   */
   reset() {
     this.deactivate();
     this.sprite.x = CONFIG.CANVAS_WIDTH + 100;
@@ -146,16 +104,10 @@ export class Coin {
     this.sprite.alpha = 1;
   }
 
-  /**
-   * Get sprite for adding to stage
-   */
   getSprite() {
     return this.sprite;
   }
 
-  /**
-   * Check if coin is active and not collected
-   */
   isActive() {
     return this.active && !this.collected;
   }
