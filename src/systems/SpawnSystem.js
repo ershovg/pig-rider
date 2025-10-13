@@ -13,10 +13,11 @@ import { Cloud } from '../entities/Cloud.js';
 import { Star } from '../entities/Star.js';
 import { Booster } from '../entities/Booster.js';
 import { CoinCollectEffect } from '../effects/CoinCollectEffect.js';
+import { CollisionEffect } from '../effects/CollisionEffect.js';
 import { CONFIG } from '../config/constants.js';
 
 export class SpawnSystem {
-  constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterSpritesheet, coinCollectEffectSpritesheet, stage) {
+  constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterSpritesheet, coinCollectEffectSpritesheet, collisionEffectSpritesheet, stage) {
     this.stage = stage;
     this.textures = {
       obstacles: obstacleTextures,
@@ -24,7 +25,8 @@ export class SpawnSystem {
       star: starTexture,
       cloud: cloudTexture,
       boosterSpritesheet: boosterSpritesheet, // Спрайтшит анимированного кубка
-      coinCollectEffectSpritesheet: coinCollectEffectSpritesheet // 🆕 Спрайтшит эффекта сбора монеты
+      coinCollectEffectSpritesheet: coinCollectEffectSpritesheet, // Спрайтшит эффекта сбора монеты
+      collisionEffectSpritesheet: collisionEffectSpritesheet // 🆕 Спрайтшит эффекта взрыва при столкновении
     };
     this.poolManager = new EntityPoolManager(stage);
     this.initializePools();
@@ -42,6 +44,8 @@ export class SpawnSystem {
     this.poolManager.registerPool('booster', Booster, CONFIG.BOOSTER.POOL_SIZE, { texture: this.textures.boosterSpritesheet });
     // 🆕 Пул эффектов сбора монеты (15 штук для частого использования)
     this.poolManager.registerPool('coinCollectEffect', CoinCollectEffect, 15, { texture: this.textures.coinCollectEffectSpritesheet });
+    // 🆕 Пул эффектов столкновения (3 штуки - обычно 1 столкновение за игру)
+    this.poolManager.registerPool('collisionEffect', CollisionEffect, 3, { texture: this.textures.collisionEffectSpritesheet });
   }
 
   initializeSpawners() {
@@ -144,6 +148,18 @@ export class SpawnSystem {
    */
   emitCoinCollectEffect(x, y) {
     const effect = this.poolManager.acquire('coinCollectEffect');
+    if (effect) {
+      effect.activate(x, y);
+    }
+  }
+
+  /**
+   * 🆕 Эмитировать эффект взрыва при столкновении с препятствием
+   * @param {number} x - X координата столкновения
+   * @param {number} y - Y координата столкновения
+   */
+  emitCollisionEffect(x, y) {
+    const effect = this.poolManager.acquire('collisionEffect');
     if (effect) {
       effect.activate(x, y);
     }

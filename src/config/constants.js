@@ -107,6 +107,7 @@ export const ASSET_PATHS = {
   get COIN() { return getAssetPath('/assets/sprites/coin.png'); },
   get COIN_STAR() { return getAssetPath('/assets/sprites/coin_star.png'); },
   get COIN_COLLECT_EFFECT() { return getAssetPath('/assets/sprites/coin-collect.json'); }, // Анимация сбора монеты (4 кадра)
+  get COLLISION_EFFECT() { return getAssetPath('/assets/sprites/boom.json'); }, // Эффект взрыва при столкновении (6 кадров)
   get BOOSTER() { return getAssetPath('/assets/sprites/cup.json'); }, // Анимированный спрайтшит кубка с крыльями
   get STAR() { return getAssetPath('/assets/sprites/star.png'); },
   get CLOUD() { return getAssetPath('/assets/sprites/cloud.png'); },

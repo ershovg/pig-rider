@@ -1,6 +1,3 @@
-/**
- * Главный оркестратор игры (тонкий слой координации)
- */
 import { CONFIG } from './config/constants.js';
 import { ENV } from './config/env.js';
 import { Renderer } from './core/Renderer.js';
@@ -18,8 +15,11 @@ import { BoosterManager } from './managers/BoosterManager.js';
 import { ProgressionManager } from './managers/ProgressionManager.js';
 import { CullingManager } from './managers/CullingManager.js';
 import { InterpolationManager } from './managers/InterpolationManager.js';
+import { CollisionHandler } from './managers/CollisionHandler.js';
+import { EffectCoordinator } from './managers/EffectCoordinator.js';
+import { GameLifecycleManager } from './managers/GameLifecycleManager.js';
+import { CullingCoordinator } from './managers/CullingCoordinator.js';
 import { PlayerPhysicsController } from './controllers/PlayerPhysicsController.js';
-import { MathUtils } from './utils/MathUtils.js';
 
 export class Game {
   constructor() {
@@ -39,9 +39,12 @@ export class Game {
     this.stateManager = new GameStateManager();
     this.boosterManager = null;
     this.progressionManager = null;
+    this.collisionHandler = null;
+    this.effectCoordinator = null;
+    this.lifecycleManager = null;
+    this.cullingCoordinator = null;
     this.isColliding = false;
 
-    // 🆕 Performance managers
     this.cullingManager = new CullingManager({
       cullThreshold: CONFIG.CULLING.THRESHOLD,
       timeBudgetMs: CONFIG.CULLING.TIME_BUDGET_MS
@@ -49,10 +52,7 @@ export class Game {
     this.interpolationManager = new InterpolationManager();
     this.playerPhysicsController = new PlayerPhysicsController(CONFIG.PLAYER.PHYSICS);
 
-    // Frame counter для periodic culling
     this.frameCount = 0;
-
-    console.log('🎮 Game instance created');
   }
 
   async init() {
@@ -84,8 +84,6 @@ export class Game {
       } else {
         this.ui.showStartScreen();
       }
-
-      console.log('✅ Game initialized successfully');
     } catch (error) {
       console.error('❌ Game initialization failed:', error);
       throw error;
@@ -111,8 +109,9 @@ export class Game {
     const coinTexture = this.assetLoader.getAsset('coin');
     const starTexture = this.assetLoader.getAsset('star');
     const cloudTexture = this.assetLoader.getAsset('cloud');
-    const boosterSpritesheet = this.assetLoader.getAsset('booster'); // Спрайтшит cup.json
-    const coinCollectEffectSpritesheet = this.assetLoader.getAsset('coinCollectEffect'); // 🆕 Спрайтшит coin-collect.json
+    const boosterSpritesheet = this.assetLoader.getAsset('booster');
+    const coinCollectEffectSpritesheet = this.assetLoader.getAsset('coinCollectEffect');
+    const collisionEffectSpritesheet = this.assetLoader.getAsset('collisionEffect');
 
     this.spawnSystem = new SpawnSystem(
       obstacleTextures,
@@ -120,7 +119,8 @@ export class Game {
       starTexture,
       cloudTexture,
       boosterSpritesheet,
-      coinCollectEffectSpritesheet, // 🆕 Передаем спрайтшит эффекта сбора монеты
+      coinCollectEffectSpritesheet,
+      collisionEffectSpritesheet,
       this.renderer.stage
     );
 
@@ -132,13 +132,29 @@ export class Game {
       this.spawnSystem,
       this.difficultyManager,
       this.ui,
-      this.player // 🆕 Передаем player для переключения анимации
+      this.player
     );
+
+    this.collisionHandler = new CollisionHandler(this.collisionSystem);
+    this.effectCoordinator = new EffectCoordinator(this.spawnSystem);
+    this.cullingCoordinator = new CullingCoordinator(this.cullingManager, this.spawnSystem);
 
     this.gameLoop = new GameLoop(
       (dt) => this.update(dt),
       (alpha) => this.render(alpha)
     );
+
+    this.lifecycleManager = new GameLifecycleManager({
+      stateManager: this.stateManager,
+      progressionManager: this.progressionManager,
+      boosterManager: this.boosterManager,
+      difficultyManager: this.difficultyManager,
+      player: this.player,
+      spawnSystem: this.spawnSystem,
+      gameLoop: this.gameLoop,
+      renderer: this.renderer,
+      ui: this.ui
+    });
   }
 
   initUI() {
@@ -146,9 +162,7 @@ export class Game {
       onPlayClick: () => this.startGame(),
       onBoosterContinue: () => this.resumeGame(),
       onRetry: () => this.restartGame(),
-      onBookDemo: () => {
-        console.log('Book demo clicked');
-      }
+      onBookDemo: () => console.log('Book demo clicked')
     });
   }
 
@@ -157,25 +171,10 @@ export class Game {
       this.initSystems();
     }
 
-    this.stateManager.setState('playing');
-    this.progressionManager.reset();
-    this.boosterManager.reset();
-    this.difficultyManager.reset();
-    this.player.reset();
-    this.spawnSystem.reset();
     this.isColliding = false;
-
     this.frameCount = 0;
 
-    this.ui.hideStartScreen();
-    this.ui.showHUD();
-    this.ui.updateCoinCount(0, CONFIG.TARGET_COINS);
-    this.ui.removeBoosterClass();
-
-    this.renderer.start();
-    this.gameLoop.start();
-
-    console.log('🚀 Game started (with interpolation & culling)');
+    this.lifecycleManager.startGame();
   }
 
   resumeGame() {
@@ -186,25 +185,6 @@ export class Game {
 
   restartGame() {
     this.startGame();
-  }
-
-  endGame(isWin) {
-    this.stateManager.setState('ended');
-    this.gameLoop.stop();
-
-    // Отключаем input игрока, чтобы не было дёрганий
-    if (this.player && this.player.inputController) {
-      this.player.inputController.disable();
-    }
-
-    this.ui.hideHUD();
-    if (isWin) {
-      this.ui.showWinScreen(this.progressionManager.getScore());
-    } else {
-      this.ui.showLoseScreen(this.progressionManager.getScore());
-    }
-
-    console.log(`🏁 Game ended - ${isWin ? 'WIN' : 'LOSE'} - Score: ${this.progressionManager.getScore()}`);
   }
 
   update(deltaTime) {
@@ -231,80 +211,48 @@ export class Game {
       difficultyManager: this.difficultyManager
     });
 
-    // 🆕 Culling - удаляем объекты за пределами viewport
-    this.performCulling();
+    this.cullingCoordinator.performCulling(this.frameCount);
 
-    const obstacles = this.spawnSystem.getActiveObstacles();
-    const coins = this.spawnSystem.getActiveCoins();
-    const boosters = this.spawnSystem.getActiveBoosters();
-    const collisions = this.collisionSystem.processCollisions(
+    const result = this.collisionHandler.processFrame(
       this.player,
-      obstacles,
-      coins
+      this.spawnSystem.getActiveObstacles(),
+      this.spawnSystem.getActiveCoins(),
+      this.spawnSystem.getActiveBoosters()
     );
 
-    if (collisions.obstacleHit && !this.isColliding) {
+    if (result.obstacleCollision && !this.isColliding) {
       this.isColliding = true;
-      this.endGame(false);
+      this.lifecycleManager.handleCollisionSequence(
+        result.obstacleCollision,
+        this.effectCoordinator,
+        () => this.lifecycleManager.endGame(false, this.progressionManager.getScore())
+      );
       return;
     }
 
-    for (const coin of collisions.coinsCollected) {
-      const value = coin.collect();
-      if (value) {
-        this.progressionManager.addScore(value);
+    for (const coin of result.collectedCoins) {
+      this.progressionManager.addScore(coin.value);
+      this.effectCoordinator.emitCoinCollectEffect(coin.x, coin.y);
 
-        // 🆕 Эмитируем эффект сбора монеты в позиции монеты
-        const coinSprite = coin.getSprite();
-        this.spawnSystem.emitCoinCollectEffect(coinSprite.x, coinSprite.y);
-
-        if (this.progressionManager.checkWinCondition()) {
-          this.endGame(true);
-          return;
-        }
+      if (this.progressionManager.checkWinCondition()) {
+        this.lifecycleManager.endGame(true, this.progressionManager.getScore());
+        return;
       }
     }
 
-    for (const booster of boosters) {
-      if (!booster.isActive()) continue;
+    if (result.collectedBooster) {
+      this.progressionManager.addScore(result.collectedBooster.value);
 
-      const playerHitbox = this.player.getHitbox();
-      const boosterHitbox = booster.getHitbox();
-
-      if (boosterHitbox && MathUtils.checkAABB(playerHitbox, boosterHitbox)) {
-        const result = booster.collect();
-        if (result) {
-          this.progressionManager.addScore(result.value);
-
-          if (this.progressionManager.checkWinCondition()) {
-            this.endGame(true);
-            return;
-          }
-
-          this.handleBoosterActivation();
-        }
+      if (this.progressionManager.checkWinCondition()) {
+        this.lifecycleManager.endGame(true, this.progressionManager.getScore());
+        return;
       }
+
+      this.lifecycleManager.handleBoosterActivation();
     }
   }
 
-  async handleBoosterActivation() {
-    this.gameLoop.pause();
-    const confirmed = await this.ui.showBoosterModal();
-
-    if (confirmed) {
-      await this.boosterManager.activate();
-    }
-
-    this.gameLoop.resume();
-  }
-
-  /**
-   * Render (вызывается на каждом RAF, до 120+ FPS)
-   *
-   * @param {number} alpha - Прогресс между physics frames (0.0 to 1.0)
-   */
   render(alpha) {
-    // 🆕 Интерполируем все движущиеся объекты для плавности 120 FPS
     if (CONFIG.INTERPOLATION.ENABLED) {
       this.interpolationManager.interpolate(alpha, [
         this.spawnSystem.getActiveObstacles(),
@@ -312,34 +260,6 @@ export class Game {
         this.spawnSystem.getActiveBoosters(),
         [this.player]
       ]);
-    }
-
-    // Renderer automatically renders stage
-  }
-
-  /**
-   * Culling объектов за пределами viewport
-   *
-   * Вызывается после physics update, но перед collision detection.
-   * Использует временной бюджет чтобы не блокировать frame.
-   */
-  performCulling() {
-    const obstacles = this.spawnSystem.getActiveObstacles();
-    const coins = this.spawnSystem.getActiveCoins();
-    const boosters = this.spawnSystem.getActiveBoosters();
-
-    // Culling критичных объектов с временным бюджетом
-    this.cullingManager.cullWithBudget(obstacles);
-    this.cullingManager.cullWithBudget(coins);
-    this.cullingManager.cullWithBudget(boosters);
-
-    // Декорации culling реже (каждые N frames) - они некритичны
-    if (this.frameCount % CONFIG.CULLING.DECORATION_INTERVAL === 0) {
-      const clouds = this.spawnSystem.getActiveClouds();
-      const stars = this.spawnSystem.getActiveStars();
-
-      this.cullingManager.cullAll(clouds);
-      this.cullingManager.cullAll(stars);
     }
   }
 
@@ -358,26 +278,10 @@ export class Game {
   }
 
   destroy() {
-    if (this.gameLoop) {
-      this.gameLoop.stop();
-    }
-
-    if (this.player) {
-      this.player.destroy();
-    }
-
-    if (this.aiBot) {
-      this.aiBot.destroy();
-    }
-
-    if (this.ui) {
-      this.ui.destroy();
-    }
-
-    if (this.renderer) {
-      this.renderer.destroy();
-    }
-
-    console.log('🗑️ Game destroyed');
+    if (this.gameLoop) this.gameLoop.stop();
+    if (this.player) this.player.destroy();
+    if (this.aiBot) this.aiBot.destroy();
+    if (this.ui) this.ui.destroy();
+    if (this.renderer) this.renderer.destroy();
   }
 }
