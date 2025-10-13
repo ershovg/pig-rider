@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npm run build:webflow",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "dev": false
+    }
+  }
+}
