@@ -17,8 +17,9 @@ import { CollisionEffect } from '../effects/CollisionEffect.js';
 import { CONFIG } from '../config/constants.js';
 
 export class SpawnSystem {
-  constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterSpritesheet, coinCollectEffectSpritesheet, collisionEffectSpritesheet, stage) {
+  constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterSpritesheet, coinCollectEffectSpritesheet, collisionEffectSpritesheet, stage, decorationLayer = null) {
     this.stage = stage;
+    this.decorationLayer = decorationLayer; // 🆕 ParticleContainer для облаков/звёзд
     this.textures = {
       obstacles: obstacleTextures,
       coin: coinTexture,
@@ -28,7 +29,7 @@ export class SpawnSystem {
       coinCollectEffectSpritesheet: coinCollectEffectSpritesheet, // Спрайтшит эффекта сбора монеты
       collisionEffectSpritesheet: collisionEffectSpritesheet // 🆕 Спрайтшит эффекта взрыва при столкновении
     };
-    this.poolManager = new EntityPoolManager(stage);
+    this.poolManager = new EntityPoolManager(stage, decorationLayer);
     this.initializePools();
     this.initializeSpawners();
   }
@@ -68,14 +69,15 @@ export class SpawnSystem {
       getIntervalModifier: (context) => 1.0
     });
 
+    // 🆕 Декорации добавляются в ParticleContainer (если доступен)
     this.cloudSpawner = new CloudSpawner({
       pool: this.poolManager.getPool('cloud'),
-      stage: this.stage
+      stage: this.decorationLayer || this.stage // Используем ParticleContainer если есть
     });
 
     this.starSpawner = new StarSpawner({
       pool: this.poolManager.getPool('star'),
-      stage: this.stage
+      stage: this.decorationLayer || this.stage // Используем ParticleContainer если есть
     });
 
     this.boosterSpawner = new BoosterSpawner({

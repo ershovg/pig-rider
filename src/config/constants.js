@@ -105,7 +105,6 @@ export const ASSET_PATHS = {
   get OBSTACLE_BASE() { return getAssetPath('/assets/sprites/barier_base.avif'); },
   get OBSTACLE_LARGE() { return getAssetPath('/assets/sprites/barier_large.avif'); },
   get COIN() { return getAssetPath('/assets/sprites/coin.avif'); },
-  get COIN_STAR() { return getAssetPath('/assets/sprites/coin_star.avif'); },
   get COIN_COLLECT_EFFECT() { return getAssetPath('/assets/sprites/coin-collect.json'); }, // Анимация сбора монеты (4 кадра)
   get COLLISION_EFFECT() { return getAssetPath('/assets/sprites/boom.json'); }, // Эффект взрыва при столкновении (6 кадров)
   get BOOSTER() { return getAssetPath('/assets/sprites/cup.json'); }, // Анимированный спрайтшит кубка с крыльями

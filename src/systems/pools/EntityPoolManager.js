@@ -17,8 +17,9 @@ import { ObjectPool } from '../../utils/ObjectPool.js';
  * const obstacle = manager.acquire('obstacle');
  */
 export class EntityPoolManager {
-  constructor(stage) {
+  constructor(stage, decorationLayer = null) {
     this.stage = stage;
+    this.decorationLayer = decorationLayer; // 🆕 ParticleContainer для декораций
     this.pools = new Map(); // Хранилище пулов: name -> ObjectPool
   }
 
@@ -36,14 +37,21 @@ export class EntityPoolManager {
       return;
     }
 
+    // 🆕 Определяем целевой контейнер для спрайтов
+    // Декорации (cloud, star) → ParticleContainer, остальное → обычный stage
+    const isDecoration = (name === 'cloud' || name === 'star');
+    const targetContainer = isDecoration && this.decorationLayer
+      ? this.decorationLayer
+      : this.stage;
+
     // Factory функция для создания объектов
     // Entities принимают texture как первый параметр
     const factory = () => {
       const entity = new EntityClass(entityConfig.texture);
 
-      // Добавляем спрайт на stage, если entity имеет метод getSprite()
+      // Добавляем спрайт в нужный контейнер, если entity имеет метод getSprite()
       if (entity.getSprite && typeof entity.getSprite === 'function') {
-        this.stage.addChild(entity.getSprite());
+        targetContainer.addChild(entity.getSprite());
       }
 
       return entity;

@@ -121,7 +121,8 @@ export class Game {
       boosterSpritesheet,
       coinCollectEffectSpritesheet,
       collisionEffectSpritesheet,
-      this.renderer.stage
+      this.renderer.stage,
+      this.renderer.decorationLayer // 🆕 Передаём ParticleContainer для декораций
     );
 
     this.collisionSystem = new CollisionSystem();
