@@ -34,6 +34,7 @@ export class ObjectPool {
 
   /**
    * Return an object to the pool
+   * 🔥 С защитой от double-release
    */
   release(obj) {
     const index = this.active.indexOf(obj);
@@ -41,6 +42,14 @@ export class ObjectPool {
       this.active.splice(index, 1);
       this.resetFn(obj);
       this.pool.push(obj);
+    } else {
+      // 🔥 SAFETY CHECK: Предотвращаем double-release
+      // Если объект не найден в active, возможно он уже в пуле
+      if (this.pool.includes(obj)) {
+        console.warn('[ObjectPool] Attempted double-release of object. Ignoring.');
+      } else {
+        console.error('[ObjectPool] Attempted to release unknown object!');
+      }
     }
   }
 

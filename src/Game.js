@@ -233,7 +233,8 @@ export class Game {
     const boosterContext = this.boosterManager.getContext();
     this.spawnSystem.update(deltaTime, this.progressionManager.getGameSpeed(), {
       ...boosterContext,
-      difficultyManager: this.difficultyManager
+      difficultyManager: this.difficultyManager,
+      cullThreshold: CONFIG.CULLING.THRESHOLD  // 🔥 ИСПРАВЛЕНО: Добавлен cullThreshold
     });
 
     this.cullingCoordinator.performCulling(this.frameCount);

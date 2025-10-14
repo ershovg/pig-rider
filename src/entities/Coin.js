@@ -7,8 +7,9 @@ import { Collectible } from './base/Collectible.js';
  * Собираемая монета с анимацией, interpolation и culling
  */
 export class Coin extends Collectible {
-  constructor(texture) {
+  constructor(texture, container = null) {
     super();
+    this.container = container; // 🔥 Ссылка на PixiJS контейнер для lifecycle
     this.sprite = new PIXI.Sprite(texture);
     this.sprite.anchor.set(0.5);
     const targetSize = CONFIG.COIN.SIZE;
@@ -28,6 +29,11 @@ export class Coin extends Collectible {
   }
 
   activate(lane, x) {
+    // 🔥 ДОБАВЛЕНО: Добавляем sprite в контейнер при активации
+    if (this.container && !this.sprite.parent) {
+      this.container.addChild(this.sprite);
+    }
+
     this.active = true;
     this.collected = false;
     this.lane = lane;
@@ -55,6 +61,11 @@ export class Coin extends Collectible {
     // Предотвращает "висящие" твины при быстром переиспользовании из пула
     gsap.killTweensOf(this.sprite);
     gsap.killTweensOf(this.sprite.scale);
+
+    // 🔥 ДОБАВЛЕНО: Удаляем sprite из контейнера для освобождения памяти
+    if (this.sprite.parent) {
+      this.sprite.parent.removeChild(this.sprite);
+    }
   }
 
   startRotation() {

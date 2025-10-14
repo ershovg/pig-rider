@@ -15,7 +15,8 @@ export class PerformanceMonitor {
 
     this.stats = {
       fps: 0,
-      drawCalls: 0,
+      stageChildren: 0,      // 🔥 Общее количество в stage.children
+      visibleObjects: 0,     // 🔥 Только visible = true
       memory: 0,
       activeObjects: 0,
       culledThisFrame: 0,
@@ -112,10 +113,26 @@ export class PerformanceMonitor {
     // FPS (из gameLoop)
     this.stats.fps = this.gameLoop ? Math.round(this.gameLoop.getCurrentFPS()) : 0;
 
-    // Draw Calls (из PixiJS renderer)
+    // 🔥 ИСПРАВЛЕНО: Считаем реальное количество детей в stage
+    // Draw Calls в PixiJS v8 недоступны через API, но показываем children count
     if (this.renderer && this.renderer.app) {
-      const info = this.renderer.app.renderer.renderingToScreen;
-      this.stats.drawCalls = info || 'N/A';
+      // Количество объектов в scene graph (stage.children.length)
+      this.stats.stageChildren = this.renderer.app.stage.children.length;
+
+      // Считаем РЕАЛЬНО видимые объекты (visible = true)
+      let visibleCount = 0;
+      const countVisible = (container) => {
+        for (const child of container.children) {
+          if (child.visible) {
+            visibleCount++;
+            if (child.children && child.children.length > 0) {
+              countVisible(child);
+            }
+          }
+        }
+      };
+      countVisible(this.renderer.app.stage);
+      this.stats.visibleObjects = visibleCount;
     }
 
     // Memory (JS heap size)
@@ -161,6 +178,13 @@ export class PerformanceMonitor {
 
     const objects = this.stats.activeObjects;
 
+    // 🔥 ИСПРАВЛЕНО: Добавлены новые метрики + color coding
+    const stageChildrenColor = this.stats.stageChildren < 150 ? '#0f0' :
+                                this.stats.stageChildren < 300 ? '#ff0' : '#f00';
+
+    const visibleColor = this.stats.visibleObjects < 100 ? '#0f0' :
+                         this.stats.visibleObjects < 200 ? '#ff0' : '#f00';
+
     this.overlay.innerHTML = `
       <div style="margin-bottom: 8px; font-weight: bold; color: #fff;">🎮 Performance Monitor</div>
 
@@ -168,12 +192,16 @@ export class PerformanceMonitor {
         FPS: <strong>${this.stats.fps}</strong>
       </div>
 
-      <div style="color: #fff; margin-top: 4px;">
-        Draw Calls: <strong>${this.stats.drawCalls}</strong>
-      </div>
-
       <div style="color: ${memoryColor}; margin-top: 4px;">
         Memory: <strong>${this.stats.memory} MB</strong>
+      </div>
+
+      <div style="color: ${stageChildrenColor}; margin-top: 8px; font-weight: bold;">
+        Stage Children: <strong>${this.stats.stageChildren}</strong>
+      </div>
+
+      <div style="color: ${visibleColor}; margin-top: 4px; font-size: 11px; margin-left: 10px;">
+        Visible: ${this.stats.visibleObjects}
       </div>
 
       <div style="color: #fff; margin-top: 8px; font-weight: bold;">
@@ -215,8 +243,9 @@ export class PerformanceMonitor {
   logStats() {
     console.table({
       FPS: this.stats.fps,
-      'Draw Calls': this.stats.drawCalls,
       'Memory (MB)': this.stats.memory,
+      'Stage Children': this.stats.stageChildren,      // 🔥 ИСПРАВЛЕНО
+      'Visible Objects': this.stats.visibleObjects,    // 🔥 ИСПРАВЛЕНО
       'Active Objects': this.stats.activeObjects.total,
       'Culled/Frame': this.stats.culledThisFrame,
       'Total Culled': this.stats.totalCulled

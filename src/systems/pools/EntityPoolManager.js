@@ -45,14 +45,15 @@ export class EntityPoolManager {
       : this.stage;
 
     // Factory функция для создания объектов
-    // Entities принимают texture как первый параметр
+    // 🔥 ИЗМЕНЕНО: НЕ добавляем sprite в контейнер при создании
+    // Вместо этого передаём контейнер в entity для управления lifecycle
     const factory = () => {
-      const entity = new EntityClass(entityConfig.texture);
+      const entity = new EntityClass(entityConfig.texture, targetContainer);
 
-      // Добавляем спрайт в нужный контейнер, если entity имеет метод getSprite()
-      if (entity.getSprite && typeof entity.getSprite === 'function') {
-        targetContainer.addChild(entity.getSprite());
-      }
+      // ❌ УБРАЛИ: addChild теперь вызывается в activate() каждого entity
+      // if (entity.getSprite && typeof entity.getSprite === 'function') {
+      //   targetContainer.addChild(entity.getSprite());
+      // }
 
       return entity;
     };
