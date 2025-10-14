@@ -20,6 +20,7 @@ import { EffectCoordinator } from './managers/EffectCoordinator.js';
 import { GameLifecycleManager } from './managers/GameLifecycleManager.js';
 import { CullingCoordinator } from './managers/CullingCoordinator.js';
 import { PlayerPhysicsController } from './controllers/PlayerPhysicsController.js';
+import { PerformanceMonitor } from './managers/PerformanceMonitor.js';
 
 export class Game {
   constructor() {
@@ -43,6 +44,7 @@ export class Game {
     this.effectCoordinator = null;
     this.lifecycleManager = null;
     this.cullingCoordinator = null;
+    this.performanceMonitor = null; // 🆕 Performance monitoring
     this.isColliding = false;
 
     this.cullingManager = new CullingManager({
@@ -53,6 +55,20 @@ export class Game {
     this.playerPhysicsController = new PlayerPhysicsController(CONFIG.PLAYER.PHYSICS);
 
     this.frameCount = 0;
+
+    // 🆕 Keyboard shortcut для Performance Monitor (Shift+P)
+    this.setupPerformanceShortcut();
+  }
+
+  setupPerformanceShortcut() {
+    document.addEventListener('keydown', (e) => {
+      // Shift+P для toggle Performance Monitor
+      if (e.shiftKey && e.key === 'P') {
+        if (this.performanceMonitor) {
+          this.performanceMonitor.toggle();
+        }
+      }
+    });
   }
 
   async init() {
@@ -156,6 +172,14 @@ export class Game {
       renderer: this.renderer,
       ui: this.ui
     });
+
+    // 🆕 Инициализируем Performance Monitor
+    this.performanceMonitor = new PerformanceMonitor(this.renderer, this.gameLoop);
+
+    // Включаем всегда (можно выключить через Shift+P)
+    this.performanceMonitor.enable();
+
+    console.log('💡 Press Shift+P to toggle Performance Monitor');
   }
 
   initUI() {
@@ -250,6 +274,14 @@ export class Game {
       }
 
       this.lifecycleManager.handleBoosterActivation();
+    }
+
+    // 🆕 Обновляем Performance Monitor
+    if (this.performanceMonitor) {
+      this.performanceMonitor.update({
+        spawnSystem: this.spawnSystem,
+        cullingCoordinator: this.cullingCoordinator
+      });
     }
   }
 

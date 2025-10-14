@@ -8,6 +8,7 @@ export class EffectCoordinator {
   }
 
   emitCoinCollectEffect(x, y) {
+    // ✅ Проигрываем spritesheet анимацию сбора монеты
     this.spawnSystem.emitCoinCollectEffect(x, y);
   }
 }

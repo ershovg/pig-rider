@@ -85,11 +85,8 @@ export class Obstacle extends Collidable {
     // Обновляем физическую позицию (НЕ sprite.x напрямую)
     this.currentX -= gameSpeed * deltaTime * 800;
 
-    // Примечание: deactivation теперь управляется через CullingManager
-    // Оставляем старую проверку для backward compatibility
-    if (this.currentX < -CONFIG.OBSTACLE.SIZE) {
-      this.deactivate();
-    }
+    // 🆕 Deactivation управляется через Cullable interface в BaseSpawner
+    // НЕ вызываем deactivate() здесь, чтобы pool.release() сработал корректно
   }
 
   getHitbox() {

@@ -13,7 +13,7 @@ export class CoinCollectEffect {
     this.sprite.anchor.set(0.5);
 
     // Настройка анимации
-    this.sprite.animationSpeed = 0.5; // 0.5 кадров за тик (60 FPS) = ~30 FPS анимация
+    this.sprite.animationSpeed = 0.7; // 0.5 кадров за тик (60 FPS) = ~30 FPS анимация
     this.sprite.loop = false;          // Проиграть один раз
 
     // Размер эффекта (кадры 100x100px)
@@ -42,7 +42,14 @@ export class CoinCollectEffect {
     this.sprite.visible = true;
     this.sprite.alpha = 1;
 
-    // Запускаем анимацию с первого кадра
+    // Сбрасываем scale перед анимацией
+    const targetSize = 80;
+    const scale = targetSize / 100;
+    this.sprite.scale.set(scale);
+
+    // 🆕 Запускаем только sprite sheet анимацию из coin-collect.json
+    // 4 кадра (CoinCollect_000 -> CoinCollect_003) @ 30 FPS = ~133ms
+    // Это красивая, профессиональная анимация "взрыва" монеты
     this.sprite.gotoAndPlay(0);
   }
 
@@ -74,5 +81,10 @@ export class CoinCollectEffect {
    */
   reset() {
     this.deactivate();
+
+    // 🆕 Сбрасываем scale (может накапливаться при переиспользовании из пула)
+    const targetSize = 80;
+    const scale = targetSize / 100;
+    this.sprite.scale.set(scale);
   }
 }

@@ -11,6 +11,11 @@ export class GameLoop {
     this.fixedDeltaTime = CONFIG.FIXED_TIMESTEP;
 
     this.rafId = null;
+
+    // 🆕 FPS tracking для Performance Monitor
+    this.frameCount = 0;
+    this.fps = 60;
+    this.fpsUpdateTime = 0;
   }
 
   /**
@@ -66,6 +71,14 @@ export class GameLoop {
     const alpha = this.accumulator / this.fixedDeltaTime;
     this.renderCallback(alpha);
 
+    // 🆕 FPS calculation
+    this.frameCount++;
+    if (currentTime - this.fpsUpdateTime >= 1000) {
+      this.fps = this.frameCount;
+      this.frameCount = 0;
+      this.fpsUpdateTime = currentTime;
+    }
+
     // Schedule next frame
     this.rafId = requestAnimationFrame((time) => this.loop(time));
   }
@@ -82,5 +95,12 @@ export class GameLoop {
    */
   resume() {
     this.start();
+  }
+
+  /**
+   * 🆕 Получить текущий FPS для Performance Monitor
+   */
+  getCurrentFPS() {
+    return this.fps;
   }
 }

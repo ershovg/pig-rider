@@ -95,22 +95,27 @@ export class SpawnSystem {
       difficultyManager = null
     } = context;
 
+    // 🆕 cullThreshold для Cullable interface
+    const cullThreshold = CONFIG.CULLING.THRESHOLD;
+
     if (!isBoosterMode) {
-      this.obstacleSpawner.update(deltaTime, gameSpeed, { difficultyManager });
+      this.obstacleSpawner.update(deltaTime, gameSpeed, { difficultyManager, cullThreshold });
     }
 
     this.coinSpawner.update(deltaTime, gameSpeed, {
       isBoosterMode,
       boosterActiveLane,
       gameSpeed,
-      difficultyManager
+      difficultyManager,
+      cullThreshold
     });
 
-    this.cloudSpawner.update(deltaTime, gameSpeed);
-    this.starSpawner.update(deltaTime, gameSpeed);
+    this.cloudSpawner.update(deltaTime, gameSpeed, { cullThreshold });
+    this.starSpawner.update(deltaTime, gameSpeed, { cullThreshold });
     this.boosterSpawner.update(deltaTime, gameSpeed, {
       isBoosterActive,
-      boosterCooldown
+      boosterCooldown,
+      cullThreshold
     });
   }
 
