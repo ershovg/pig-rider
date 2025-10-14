@@ -98,19 +98,19 @@ const getAssetPath = (path) => {
 };
 
 export const ASSET_PATHS = {
-  // PNG спрайты из Figma (@2x)
-  get PLAYER() { return getAssetPath('/assets/sprites/pig_rider.png'); },
+  // AVIF спрайты (оптимизированные, -64% размера!)
+  // Player: используем только анимированные спрайтшиты (JSON + AVIF)
   get PLAYER_ANIMATED() { return getAssetPath('/assets/sprites/hryusha-flying.json'); }, // Sprite sheet анимация свиньи (обычная)
   get PLAYER_ANIMATED_BOOST() { return getAssetPath('/assets/sprites/hryusha-boost.json'); }, // Sprite sheet анимация свиньи (бустер)
-  get OBSTACLE_BASE() { return getAssetPath('/assets/sprites/barier_base.png'); },
-  get OBSTACLE_LARGE() { return getAssetPath('/assets/sprites/barier_large.png'); },
-  get COIN() { return getAssetPath('/assets/sprites/coin.png'); },
-  get COIN_STAR() { return getAssetPath('/assets/sprites/coin_star.png'); },
+  get OBSTACLE_BASE() { return getAssetPath('/assets/sprites/barier_base.avif'); },
+  get OBSTACLE_LARGE() { return getAssetPath('/assets/sprites/barier_large.avif'); },
+  get COIN() { return getAssetPath('/assets/sprites/coin.avif'); },
+  get COIN_STAR() { return getAssetPath('/assets/sprites/coin_star.avif'); },
   get COIN_COLLECT_EFFECT() { return getAssetPath('/assets/sprites/coin-collect.json'); }, // Анимация сбора монеты (4 кадра)
   get COLLISION_EFFECT() { return getAssetPath('/assets/sprites/boom.json'); }, // Эффект взрыва при столкновении (6 кадров)
   get BOOSTER() { return getAssetPath('/assets/sprites/cup.json'); }, // Анимированный спрайтшит кубка с крыльями
-  get STAR() { return getAssetPath('/assets/sprites/star.png'); },
-  get CLOUD() { return getAssetPath('/assets/sprites/cloud.png'); },
+  get STAR() { return getAssetPath('/assets/sprites/star.avif'); },
+  get CLOUD() { return getAssetPath('/assets/sprites/cloud.avif'); },
 
   // Audio placeholders for later
   get MUSIC_BG() { return getAssetPath('/assets/audio/bg-music.mp3'); },
