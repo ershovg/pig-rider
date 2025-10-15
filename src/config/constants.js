@@ -112,8 +112,7 @@ export const ASSET_PATHS = {
   get STAR() { return getAssetPath('/assets/sprites/star.avif'); },
   get CLOUD() { return getAssetPath('/assets/sprites/cloud.avif'); },
 
-  // Audio placeholders for later
-  get MUSIC_BG() { return getAssetPath('/assets/audio/bg-music.mp3'); },
-  get SFX_COIN() { return getAssetPath('/assets/audio/coin.mp3'); },
-  get SFX_CRASH() { return getAssetPath('/assets/audio/crash.mp3'); }
+  // Audio
+  get MUSIC_MAIN() { return getAssetPath('/assets/sounds/Music level/stage-antics_main-full.wav'); },
+  get SFX_COIN() { return getAssetPath('/assets/sounds/Sounds/CoinCollect/Coin.wav'); }
 };

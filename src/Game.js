@@ -19,6 +19,8 @@ import { CullingCoordinator } from './managers/CullingCoordinator.js';
 import { PlayerPhysicsController } from './controllers/PlayerPhysicsController.js';
 import { PerformanceMonitor } from './managers/PerformanceMonitor.js';
 import { DebugOverlay } from './utils/DebugOverlay.js';
+import { SoundManager } from './managers/SoundManager.js'; // 🆕 Звуковая система
+import { ASSET_PATHS } from './config/constants.js';
 
 export class Game {
   constructor() {
@@ -34,6 +36,7 @@ export class Game {
     this.ui = null;
 
     this.stateManager = new GameStateManager();
+    this.soundManager = null; // 🆕 Управление аудио
     this.boosterManager = null;
     this.progressionManager = null;
     this.collisionHandler = null;
@@ -87,6 +90,9 @@ export class Game {
 
       await this.assetLoader.loadCriticalAssets();
 
+      // 🆕 Инициализация звуковой системы (после загрузки assets)
+      this.initSoundSystem();
+
       this.ui.hideLoading();
       this.initUI();
 
@@ -96,6 +102,25 @@ export class Game {
       console.error('❌ Game initialization failed:', error);
       throw error;
     }
+  }
+
+  /**
+   * Инициализирует звуковую систему и загружает все звуки
+   */
+  initSoundSystem() {
+    this.soundManager = new SoundManager();
+
+    // Загружаем фоновую музыку
+    this.soundManager.loadMusic('mainMusic', ASSET_PATHS.MUSIC_MAIN, {
+      volume: 0.4, // Чуть тише, чтобы не отвлекала
+    });
+
+    // Загружаем звуковые эффекты
+    this.soundManager.loadSound('coin', ASSET_PATHS.SFX_COIN, {
+      volume: 0.7,
+    });
+
+    console.log('🎵 Sound system initialized');
   }
 
   initSystems() {
@@ -144,7 +169,7 @@ export class Game {
       this.player
     );
 
-    this.collisionHandler = new CollisionHandler(this.collisionSystem);
+    this.collisionHandler = new CollisionHandler(this.collisionSystem, this.soundManager); // 🆕 Передаём SoundManager
     this.effectCoordinator = new EffectCoordinator(this.spawnSystem);
     this.cullingCoordinator = new CullingCoordinator(this.cullingManager, this.spawnSystem);
 
@@ -199,6 +224,11 @@ export class Game {
     this.frameCount = 0;
 
     this.lifecycleManager.startGame();
+
+    // 🆕 Запускаем фоновую музыку с плавным fade-in
+    if (this.soundManager) {
+      this.soundManager.playMusic('mainMusic', 1500); // 1.5s fade-in
+    }
 
     this.startPoolLogging();
   }
