@@ -27,13 +27,14 @@ export class Renderer {
 
     this.stage = this.app.stage;
 
-    // 🆕 Создаём обычный Container для декораций (облака + звёзды)
-    // ParticleContainer в PixiJS v8 имеет другой API, используем обычный Container
-    // с оптимизацией порядка рендеринга для batching
     this.decorationLayer = new PIXI.Container();
 
-    // Добавляем декорации на задний план (первыми)
     this.stage.addChild(this.decorationLayer);
+
+    this.stage.eventMode = 'passive';
+    this.stage.interactiveChildren = false;
+    this.decorationLayer.eventMode = 'none';
+    this.decorationLayer.interactiveChildren = false;
 
     // Stop ticker until game starts (prevents rendering before play button)
     this.app.ticker.stop();
