@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+  <title>Pig Rider - Local Dev</title>
+  <style>
+    /* Минимальные стили для dev режима */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    #game-root {
+      width: 100%;
+      max-width: 1200px;
+      position: relative;
+    }
+    h1 {
+      text-align: center;
+      margin: 20px 0;
+      font-size: 2rem;
+    }
+    .dev-notice {
+      text-align: center;
+      opacity: 0.8;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+    }
+  </style>
+  <script type="module" crossorigin src="/game.min.js"></script>
+</head>
+<body>
+  <!-- Минимальная структура для локальной разработки -->
+  <!-- В продакшене используется HTML из Webflow -->
+
+  <div id="game-root">
+    <h1>🐷 Pig Rider Game</h1>
+    <p class="dev-notice">Dev Mode - Game UI managed by UIController</p>
+
+    <!-- PixiJS Canvas (обязательно) -->
+    <canvas id="game-canvas"></canvas>
+  </div>
+
+  <!-- Entry point для Vite dev server -->
+</body>
+</html>
