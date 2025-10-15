@@ -19,6 +19,7 @@
   "type": "module",
   "dependencies": {
     "gsap": "^3.13.0",
+    "howler": "^2.2.4",
     "matter-js": "^0.20.0",
     "pixi-stats": "^4.2.0",
     "pixi.js": "^8.13.2"
