@@ -78,7 +78,8 @@ export const CONFIG = {
 
   // 🆕 Culling (удаление объектов за пределами viewport)
   CULLING: {
-    THRESHOLD: -50,            // 🔥 ИСПРАВЛЕНО: -50 вместо -200 (объекты шириной ~280px уходят за экран при x=0)
+    THRESHOLD: -300,           // X координата порога (px за левым краем экрана)
+                               // -300 даёт запас для объектов шириной ~280px
     TIME_BUDGET_MS: 1,         // Максимальное время на culling операцию (мс)
     DECORATION_INTERVAL: 5     // Culling декораций каждые N frames
   },

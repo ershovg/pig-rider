@@ -56,6 +56,9 @@ export class Game {
 
     this.frameCount = 0;
 
+    // 🔍 DEBUG: Интервал для логирования размеров пулов (каждые 5 секунд)
+    this.poolLogInterval = null;
+
     // 🆕 Keyboard shortcut для Performance Monitor (Shift+P)
     this.setupPerformanceShortcut();
   }
@@ -200,6 +203,9 @@ export class Game {
     this.frameCount = 0;
 
     this.lifecycleManager.startGame();
+
+    // 🔍 DEBUG: Запускаем логирование размеров пулов каждые 5 секунд
+    this.startPoolLogging();
   }
 
   resumeGame() {
@@ -311,7 +317,49 @@ export class Game {
     }
   }
 
+  // 🔍 DEBUG: Логирование размеров пулов
+  startPoolLogging() {
+    // Очищаем предыдущий интервал, если был
+    if (this.poolLogInterval) {
+      clearInterval(this.poolLogInterval);
+    }
+
+    // Логируем каждые 5 секунд
+    this.poolLogInterval = setInterval(() => {
+      if (!this.spawnSystem) return;
+
+      const obstaclePool = this.spawnSystem.obstacleSpawner?.pool;
+      const coinPool = this.spawnSystem.coinSpawner?.pool;
+      const boosterPool = this.spawnSystem.boosterSpawner?.pool;
+      const cloudPool = this.spawnSystem.cloudSpawner?.pool;
+      const starPool = this.spawnSystem.starSpawner?.pool;
+
+      // Получаем полную статистику пула
+      const obstacleStats = obstaclePool?.getStats() || { active: 0, pooled: 0, total: 0 };
+      const coinStats = coinPool?.getStats() || { active: 0, pooled: 0, total: 0 };
+      const boosterStats = boosterPool?.getStats() || { active: 0, pooled: 0, total: 0 };
+      const cloudStats = cloudPool?.getStats() || { active: 0, pooled: 0, total: 0 };
+      const starStats = starPool?.getStats() || { active: 0, pooled: 0, total: 0 };
+
+      console.log(
+        `🔍 [POOL DEBUG] Obstacles: active=${obstacleStats.active} pooled=${obstacleStats.pooled} total=${obstacleStats.total} | ` +
+        `Coins: active=${coinStats.active} pooled=${coinStats.pooled} | ` +
+        `Boosters: active=${boosterStats.active} pooled=${boosterStats.pooled} | ` +
+        `Clouds: active=${cloudStats.active} pooled=${cloudStats.pooled} | ` +
+        `Stars: active=${starStats.active} pooled=${starStats.pooled}`
+      );
+    }, 5000);
+  }
+
+  stopPoolLogging() {
+    if (this.poolLogInterval) {
+      clearInterval(this.poolLogInterval);
+      this.poolLogInterval = null;
+    }
+  }
+
   destroy() {
+    this.stopPoolLogging(); // 🔍 DEBUG: Останавливаем логирование
     if (this.gameLoop) this.gameLoop.stop();
     if (this.player) this.player.destroy();
     if (this.aiBot) this.aiBot.destroy();

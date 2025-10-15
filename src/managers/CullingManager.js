@@ -45,16 +45,17 @@ export class CullingManager {
    * может занять > 16ms и вызвать frame drop.
    *
    * @param {Cullable[]} entities - Массив cullable entities
+   * @param {ObjectPool} [pool] - Пул для возврата объектов (опционально)
    * @returns {{ culled: number, processed: number, timeMs: number }}
    *
    * @example
    * // Обрабатываем obstacles с бюджетом 1ms
-   * const result = manager.cullWithBudget(activeObstacles);
+   * const result = manager.cullWithBudget(activeObstacles, obstaclePool);
    * if (result.processed < activeObstacles.length) {
    *   console.warn('Budget exceeded, will continue next frame');
    * }
    */
-  cullWithBudget(entities) {
+  cullWithBudget(entities, pool = null) {
     const startTime = performance.now();
     let culled = 0;
     let processed = 0;
@@ -77,6 +78,12 @@ export class CullingManager {
       // Проверяем через интерфейс Cullable
       if (entity.shouldCull && entity.shouldCull(this.cullThreshold)) {
         entity.deactivate();
+
+        // 🔥 ИСПРАВЛЕНИЕ УТЕЧКИ: Возвращаем объект в пул
+        if (pool) {
+          pool.release(entity);
+        }
+
         culled++;
       }
     }
@@ -98,16 +105,17 @@ export class CullingManager {
    * где количество обычно небольшое.
    *
    * @param {Cullable[]} entities - Массив cullable entities
+   * @param {ObjectPool} [pool] - Пул для возврата объектов (опционально)
    * @returns {{ culled: number }}
    *
    * @example
    * // Culling декораций каждые 5 frames
    * if (frameCount % 5 === 0) {
-   *   manager.cullAll(clouds);
-   *   manager.cullAll(stars);
+   *   manager.cullAll(clouds, cloudPool);
+   *   manager.cullAll(stars, starPool);
    * }
    */
-  cullAll(entities) {
+  cullAll(entities, pool = null) {
     let culled = 0;
 
     for (let i = entities.length - 1; i >= 0; i--) {
@@ -115,6 +123,12 @@ export class CullingManager {
 
       if (entity.shouldCull && entity.shouldCull(this.cullThreshold)) {
         entity.deactivate();
+
+        // 🔥 ИСПРАВЛЕНИЕ УТЕЧКИ: Возвращаем объект в пул
+        if (pool) {
+          pool.release(entity);
+        }
+
         culled++;
       }
     }
@@ -130,11 +144,18 @@ export class CullingManager {
    * Проверяет один объект на culling
    *
    * @param {Cullable} entity
+   * @param {ObjectPool} [pool] - Пул для возврата объекта (опционально)
    * @returns {boolean} true если объект был culled
    */
-  cullSingle(entity) {
+  cullSingle(entity, pool = null) {
     if (entity.shouldCull && entity.shouldCull(this.cullThreshold)) {
       entity.deactivate();
+
+      // 🔥 ИСПРАВЛЕНИЕ УТЕЧКИ: Возвращаем объект в пул
+      if (pool) {
+        pool.release(entity);
+      }
+
       this.stats.totalCulled++;
       this.stats.lastCulled = 1;
       return true;

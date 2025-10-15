@@ -36,22 +36,40 @@ export class BaseSpawner {
   updateActiveObjects(deltaTime, gameSpeed, context) {
     const objects = this.pool.getActive();
     let culled = 0;
+    const cullThreshold = context?.cullThreshold ?? -200;
+
+    // 🔍 DEBUG: ВСЕГДА логируем для Obstacles
+    if (this.constructor.name === 'ObstacleSpawner') {
+      const behindThreshold = objects.filter(obj => obj.currentX < cullThreshold).length;
+      console.log(`🔍 [${this.constructor.name}] BEFORE: total=${objects.length}, behind=${behindThreshold}, threshold=${cullThreshold}`);
+    }
 
     for (let i = objects.length - 1; i >= 0; i--) {
       const obj = objects[i];
-      obj.update(deltaTime, gameSpeed);
 
-      // 🆕 Проверяем culling через Cullable interface
+      // 🔍 DEBUG: Логируем КАЖДУЮ проверку для первых 3 объектов
+      if (this.constructor.name === 'ObstacleSpawner' && i < 3) {
+        const shouldCull = this.shouldRecycle(obj, context);
+        console.log(`🔍   obj[${i}]: x=${obj.currentX?.toFixed(0)}, shouldRecycle=${shouldCull}`);
+      }
+
+      // 🔥 ИСПРАВЛЕНИЕ: Проверяем culling ПЕРЕД update для более быстрого удаления
       if (this.shouldRecycle(obj, context)) {
+        console.log(`🔥 [${this.constructor.name}] CULLING obj at x=${obj.currentX?.toFixed(0)}`);
         obj.deactivate(); // Деактивируем перед возвратом в пул
         this.pool.release(obj);
         culled++;
+        continue; // Пропускаем update для culled объектов
       }
+
+      // Обновляем только активные объекты
+      obj.update(deltaTime, gameSpeed);
     }
 
-    // 🐛 DEBUG: Логируем если culling сработал
-    if (culled > 0 && this.constructor.name === 'ObstacleSpawner') {
-      console.log(`[ObstacleSpawner] Culled ${culled} obstacles, active: ${this.pool.getActive().length}`);
+    // 🔍 DEBUG: ВСЕГДА логируем результат для Obstacles
+    if (this.constructor.name === 'ObstacleSpawner') {
+      const stats = this.pool.getStats();
+      console.log(`🔍 [${this.constructor.name}] AFTER: culled=${culled}, active=${stats.active}, pooled=${stats.pooled}, total=${stats.total}`);
     }
   }
 
