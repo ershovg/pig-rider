@@ -18,7 +18,7 @@ export class SoundManager {
 
     // Музыкальные треки (отдельно для управления)
     this.currentMusic = null;
-    this.musicVolume = 0.5; // Фоновая музыка тише
+    this.musicVolume = 0.7; // Фоновая музыка (увеличено с 0.5 до 0.7 для слышимости)
     this.sfxVolume = 0.7;   // Sound effects громче
 
     // 🆕 Unlock audio context при первом user interaction
@@ -89,17 +89,35 @@ export class SoundManager {
       volume: this.musicVolume,
       loop: true,    // Музыка всегда looped
       preload: true,
-      html5: true,   // Для больших файлов лучше использовать HTML5 Audio
+      html5: false,  // 🔧 Используем Web Audio API для обхода Mixed Content в dev режиме
     };
+
+    console.log(`🎼 Loading music: ${alias} from ${src}`);
 
     const music = new Howl({
       ...defaultOptions,
       ...options,
       src,
+      onload: () => {
+        console.log(`✅ Music loaded successfully: ${alias}`);
+      },
+      onloaderror: (_id, error) => {
+        console.error(`❌ Error loading music ${alias}:`, error);
+      },
+      onplay: () => {
+        console.log(`▶️ Music started playing: ${alias}`);
+      },
+      onplayerror: (_id, error) => {
+        console.error(`❌ Error playing music ${alias}:`, error);
+        // Пытаемся unlock и переиграть
+        music.once('unlock', () => {
+          console.log(`🔓 Retrying playback after unlock...`);
+          music.play();
+        });
+      }
     });
 
     this.sounds.set(alias, music);
-    console.log(`🎼 Music loaded: ${alias}`);
 
     return music;
   }
@@ -136,29 +154,77 @@ export class SoundManager {
    * @param {number} fadeDuration - Длительность fade-in (ms)
    */
   playMusic(alias, fadeDuration = 1000) {
+    console.log(`🎵 playMusic() called with alias: ${alias}, fadeDuration: ${fadeDuration}`);
+
     // Останавливаем текущую музыку с fade-out
     if (this.currentMusic) {
+      console.log(`⏹️ Stopping current music: ${this.currentMusic}`);
       this.stopMusic(fadeDuration);
     }
 
     if (this.isMuted) {
+      console.log(`🔇 Music muted, skipping playback`);
       return;
     }
 
     const music = this.sounds.get(alias);
     if (!music) {
       console.warn(`⚠️ Music not found: ${alias}`);
+      console.log(`Available sounds:`, Array.from(this.sounds.keys()));
       return;
     }
 
+    console.log(`✅ Music found, starting playback...`);
+    console.log(`📊 Music state: ${music.state()}, duration: ${music.duration()}`);
     this.currentMusic = alias;
 
-    // Fade-in для плавного старта
-    music.volume(0);
-    music.play();
-    music.fade(0, this.musicVolume * this.masterVolume, fadeDuration);
+    // Проверяем, загружен ли звук
+    if (music.state() === 'unloaded' || music.state() === 'loading') {
+      console.log(`⏳ Music still loading, waiting for load event...`);
 
-    console.log(`🎶 Music playing: ${alias}`);
+      // Дождемся загрузки и запустим
+      music.once('load', () => {
+        console.log(`✅ Music loaded, starting playback now!`);
+        this._startMusicPlayback(music, alias, fadeDuration);
+      });
+
+      // Если уже грузится, load не сработает - пытаемся играть сразу
+      if (music.state() === 'loading') {
+        this._startMusicPlayback(music, alias, fadeDuration);
+      }
+    } else {
+      // Звук уже загружен
+      this._startMusicPlayback(music, alias, fadeDuration);
+    }
+  }
+
+  /**
+   * Внутренний метод для запуска воспроизведения музыки
+   * @private
+   */
+  _startMusicPlayback(music, alias, fadeDuration) {
+    const targetVolume = this.musicVolume * this.masterVolume;
+
+    // Устанавливаем целевую громкость сразу (fade глючит в некоторых окружениях)
+    music.volume(targetVolume);
+    const playId = music.play();
+    console.log(`🎵 Play ID: ${playId}, State: ${music.state()}`);
+
+    if (playId !== null && playId !== undefined) {
+      // 🔧 Пробуем fade, но если не сработает - громкость уже установлена выше
+      try {
+        if (fadeDuration > 0) {
+          music.volume(0);
+          music.fade(0, targetVolume, fadeDuration);
+        }
+      } catch (e) {
+        console.warn('⚠️ Fade failed, using instant volume:', e);
+        music.volume(targetVolume); // Fallback
+      }
+      console.log(`🎶 Music playing: ${alias} (target volume: ${targetVolume})`);
+    } else {
+      console.error(`❌ Failed to play music ${alias} - playId is null`);
+    }
   }
 
   /**

@@ -113,6 +113,6 @@ export const ASSET_PATHS = {
   get CLOUD() { return getAssetPath('/assets/sprites/cloud.avif'); },
 
   // Audio
-  get MUSIC_MAIN() { return getAssetPath('/assets/sounds/Music level/stage-antics_main-full.wav'); },
+  get MUSIC_MAIN() { return getAssetPath('/assets/sounds/Music%20level/stage-antics_main-full.wav'); },
   get SFX_COIN() { return getAssetPath('/assets/sounds/Sounds/CoinCollect/Coin.wav'); }
 };

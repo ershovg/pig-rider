@@ -203,6 +203,12 @@ export class Game {
 
     console.log('💡 Press Shift+P to toggle Performance Monitor');
     console.log('💡 Press D to toggle Culling Debug Overlay');
+
+    // 🔊 Debug: Expose sound manager to window for testing
+    if (typeof window !== 'undefined') {
+      window.soundManager = this.soundManager;
+      console.log('🔊 Debug: Type window.soundManager.playMusic("mainMusic", 100) to test music');
+    }
   }
 
   initUI() {
@@ -226,8 +232,10 @@ export class Game {
     this.lifecycleManager.startGame();
 
     // 🆕 Запускаем фоновую музыку с плавным fade-in
+    // ВАЖНО: Это происходит ПОСЛЕ user interaction (клик на "Play")
     if (this.soundManager) {
-      this.soundManager.playMusic('mainMusic', 1500); // 1.5s fade-in
+      console.log('🎶 Attempting to play music...');
+      this.soundManager.playMusic('mainMusic', 500); // 0.5s fade-in (быстрее, чтобы услышать до первого столкновения)
     }
 
     this.startPoolLogging();
