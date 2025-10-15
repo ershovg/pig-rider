@@ -48,6 +48,9 @@ export class ObstacleSpawner extends BaseSpawner {
 
     // 🆕 Текстуры для рандомизации препятствий
     this.textures = config.textures || [];
+
+    // 🆕 Первое препятствие спавнится через 500ms вместо полного интервала (~800-1400ms)
+    this.timer = -300; // Сокращаем ожидание первого спавна на 0.3 сек
   }
 
   /**

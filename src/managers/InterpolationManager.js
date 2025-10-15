@@ -1,71 +1,27 @@
 /**
- * Управляет interpolation для всех движущихся объектов
+ * Координирует interpolation для плавного рендеринга на высоких частотах обновления.
  *
- * Зачем: На 120Hz мониторе рендер вызывается 2 раза между physics updates (60 UPS).
- * Без interpolation объекты визуально "прыгают" между дискретными позициями.
- * Interpolation создает плавное движение между physics frames.
+ * Создает плавное движение между physics updates (60 UPS) и render frames (120+ FPS).
+ * Работает с любыми объектами, реализующими Interpolatable интерфейс.
  *
- * Принципы SOLID:
- * - SRP: Только координация interpolation, не знает о конкретных entity типах
- * - OCP: Работает с любыми Interpolatable entities через интерфейс
- * - DIP: Зависит от абстракции (Interpolatable), а не конкретных классов
- *
- * @example
- * const manager = new InterpolationManager();
- *
- * // В physics update (60 UPS):
- * manager.saveStates([obstacles, coins, [player]]);
- * // ... обновляем физику ...
- *
- * // В render (120+ FPS):
- * manager.interpolate(alpha, [obstacles, coins, [player]]);
+ * Interpolatable интерфейс:
+ * - saveState(): void - сохранить текущую позицию
+ * - interpolate(alpha: number): void - интерполировать с альфой [0, 1]
+ * - isActive?(): boolean - опциональная проверка активности
  */
 export class InterpolationManager {
-  constructor() {
-    // Статистика для дебага
-    this.stats = {
-      totalInterpolated: 0,
-      lastInterpolated: 0,
-      lastAlpha: 0
-    };
-
-    this.enabled = true;
-  }
-
   /**
-   * Сохраняет состояние всех entities перед physics update
+   * Сохраняет текущие позиции entities перед physics update.
+   * Вызывается ПЕРЕД обновлением физики в каждом physics frame.
    *
-   * Вызывается В НАЧАЛЕ каждого physics update (60 UPS), перед изменением позиций.
-   * Сохраняет текущие позиции как "предыдущие" для последующей интерполяции.
-   *
-   * @param {Interpolatable[][]} entityGroups - Группы entities (obstacles, coins, etc)
-   *
-   * @example
-   * update(deltaTime) {
-   *   // Сохраняем состояние ДО изменения позиций
-   *   this.interpolationManager.saveStates([
-   *     this.spawnSystem.getActiveObstacles(),
-   *     this.spawnSystem.getActiveCoins(),
-   *     [this.player]
-   *   ]);
-   *
-   *   // Теперь обновляем физику
-   *   this.player.update(deltaTime);
-   *   this.spawnSystem.update(deltaTime, ...);
-   * }
+   * @param {Array<Array<Interpolatable>>} entityGroups - Группы entities для обработки
    */
   saveStates(entityGroups) {
-    if (!this.enabled) return;
-
     for (const group of entityGroups) {
-      if (!group || !Array.isArray(group)) continue;
+      if (!Array.isArray(group)) continue;
 
       for (const entity of group) {
-        // Проверяем, что entity активен и имеет метод saveState
-        if (entity && entity.saveState) {
-          // Для entities с isActive() проверяем активность
-          if (entity.isActive && !entity.isActive()) continue;
-
+        if (entity?.saveState && (!entity.isActive || entity.isActive())) {
           entity.saveState();
         }
       }
@@ -73,101 +29,21 @@ export class InterpolationManager {
   }
 
   /**
-   * Интерполирует позиции всех entities при рендере
+   * Интерполирует визуальные позиции между physics frames.
+   * Вызывается при каждом render с прогрессом текущего physics frame.
    *
-   * Вызывается при каждом render (120+ FPS) с alpha = прогресс между physics frames.
-   *
-   * @param {number} alpha - 0.0 (начало physics frame) до 1.0 (конец)
-   * @param {Interpolatable[][]} entityGroups - Группы entities
-   *
-   * @example
-   * render(alpha) {
-   *   // alpha = 0.0 → показываем previous позиции
-   *   // alpha = 0.5 → показываем середину между previous и current
-   *   // alpha = 1.0 → показываем current позиции
-   *
-   *   this.interpolationManager.interpolate(alpha, [
-   *     this.spawnSystem.getActiveObstacles(),
-   *     this.spawnSystem.getActiveCoins(),
-   *     [this.player]
-   *   ]);
-   * }
+   * @param {number} alpha - Прогресс между physics frames [0.0 = старт, 1.0 = конец]
+   * @param {Array<Array<Interpolatable>>} entityGroups - Группы entities для обработки
    */
   interpolate(alpha, entityGroups) {
-    if (!this.enabled) return;
-
-    let interpolated = 0;
-
     for (const group of entityGroups) {
-      if (!group || !Array.isArray(group)) continue;
+      if (!Array.isArray(group)) continue;
 
       for (const entity of group) {
-        // Проверяем, что entity активен и имеет метод interpolate
-        if (entity && entity.interpolate) {
-          // Для entities с isActive() проверяем активность
-          if (entity.isActive && !entity.isActive()) continue;
-
+        if (entity?.interpolate && (!entity.isActive || entity.isActive())) {
           entity.interpolate(alpha);
-          interpolated++;
         }
       }
     }
-
-    // Обновляем статистику
-    this.stats.totalInterpolated += interpolated;
-    this.stats.lastInterpolated = interpolated;
-    this.stats.lastAlpha = alpha;
-  }
-
-  /**
-   * Сохраняет состояние И интерполирует одним вызовом
-   *
-   * Удобный метод для специальных случаев, где нужны обе операции.
-   * Обычно не используется, т.к. saveStates и interpolate вызываются в разных местах.
-   *
-   * @param {number} alpha
-   * @param {Interpolatable[][]} entityGroups
-   */
-  saveAndInterpolate(alpha, entityGroups) {
-    this.saveStates(entityGroups);
-    this.interpolate(alpha, entityGroups);
-  }
-
-  /**
-   * Включить/выключить interpolation
-   *
-   * Полезно для дебага: выключить interpolation чтобы увидеть "чистые" physics позиции.
-   *
-   * @param {boolean} enabled
-   */
-  setEnabled(enabled) {
-    this.enabled = enabled;
-  }
-
-  /**
-   * Проверить, включена ли interpolation
-   *
-   * @returns {boolean}
-   */
-  isEnabled() {
-    return this.enabled;
-  }
-
-  /**
-   * Получить статистику interpolation
-   *
-   * @returns {{ totalInterpolated: number, lastInterpolated: number, lastAlpha: number }}
-   */
-  getStats() {
-    return { ...this.stats };
-  }
-
-  /**
-   * Сбросить статистику
-   */
-  resetStats() {
-    this.stats.totalInterpolated = 0;
-    this.stats.lastInterpolated = 0;
-    this.stats.lastAlpha = 0;
   }
 }

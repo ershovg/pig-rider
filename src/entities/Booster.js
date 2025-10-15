@@ -8,8 +8,10 @@ import { Collectible } from './base/Collectible.js';
  * плавающей анимацией, interpolation и culling
  */
 export class Booster extends Collectible {
-  constructor(spritesheet) {
+  constructor(spritesheet, container = null) {
     super();
+
+    this.container = container; // 🔥 Ссылка на PixiJS контейнер для lifecycle
 
     // 🆕 Создаем AnimatedSprite из спрайтшита cup.json
     // Анимация "Cup" содержит все 38 кадров (Cup_000.png -> Cup_037.png)
@@ -41,6 +43,11 @@ export class Booster extends Collectible {
   }
 
   activate(lane, x) {
+    // 🔥 ДОБАВЛЕНО: Добавляем sprite в контейнер при активации
+    if (this.container && !this.sprite.parent) {
+      this.container.addChild(this.sprite);
+    }
+
     this.active = true;
     this.collected = false;
     this.lane = lane;
@@ -75,6 +82,11 @@ export class Booster extends Collectible {
     this.sprite.stop();
 
     this.stopFloat();
+
+    // 🔥 ДОБАВЛЕНО: Удаляем sprite из контейнера для освобождения памяти
+    if (this.sprite.parent) {
+      this.sprite.parent.removeChild(this.sprite);
+    }
   }
 
   startFloat() {
@@ -99,14 +111,19 @@ export class Booster extends Collectible {
   collect() {
     if (this.collected) return null;
     this.collected = true;
+
+    // Сохраняем текущий scale для относительного увеличения
+    const currentScale = this.sprite.scale.x;
+    const targetScale = currentScale * 1.8; // Увеличиваем в 1.8 раз от текущего
+
     gsap.to(this.sprite, {
       rotation: Math.PI * 2,
       duration: 0.3,
       ease: 'back.out'
     });
     gsap.to(this.sprite.scale, {
-      x: 1.8,
-      y: 1.8,
+      x: targetScale,
+      y: targetScale,
       duration: 0.3,
       ease: 'back.out'
     });

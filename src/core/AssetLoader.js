@@ -5,42 +5,90 @@ export class AssetLoader {
   constructor() {
     this.assets = {};
     this.loaded = false;
+    this.bundlesInitialized = false;
   }
 
   /**
-   * Load all game assets
-   * @returns {Promise} Resolves when all assets are loaded
+   * Инициализация bundles (вызывать ПЕРЕД загрузкой)
+   */
+  initBundles() {
+    if (this.bundlesInitialized) return;
+
+    // TIER 1: Critical assets (минимум для First Meaningful Paint)
+    PIXI.Assets.addBundle('critical', {
+      playerAnimated: ASSET_PATHS.PLAYER_ANIMATED,
+      obstacleBase: ASSET_PATHS.OBSTACLE_BASE,
+      coin: ASSET_PATHS.COIN,
+      star: ASSET_PATHS.STAR,
+      cloud: ASSET_PATHS.CLOUD,
+      coinCollectEffect: ASSET_PATHS.COIN_COLLECT_EFFECT
+    });
+
+    // TIER 2: Gameplay assets (фоновая загрузка, готовы до старта игры)
+    PIXI.Assets.addBundle('gameplay', {
+      obstacleLarge: ASSET_PATHS.OBSTACLE_LARGE,
+      booster: ASSET_PATHS.BOOSTER,
+      collisionEffect: ASSET_PATHS.COLLISION_EFFECT,
+      playerAnimatedBoost: ASSET_PATHS.PLAYER_ANIMATED_BOOST
+    });
+
+    this.bundlesInitialized = true;
+    console.log('📦 Bundles initialized');
+  }
+
+  /**
+   * TIER 1: Загрузить критичные ассеты (блокирующе)
+   * Возвращает Promise, позволяет показать UI сразу после загрузки
+   */
+  async loadCriticalAssets() {
+    console.log('🚀 Loading critical assets...');
+
+    const criticalAssets = await PIXI.Assets.loadBundle('critical', (progress) => {
+      console.log(`Critical: ${Math.round(progress * 100)}%`);
+    });
+
+    // Сохраняем в this.assets для обратной совместимости
+    Object.assign(this.assets, criticalAssets);
+
+    // Для совместимости со старым кодом
+    this.assets.obstacle = this.assets.obstacleBase;
+
+    console.log('✅ Critical assets ready (First Meaningful Paint!)');
+    return criticalAssets;
+  }
+
+  /**
+   * TIER 2: Загрузить gameplay ассеты (фоновая загрузка)
+   * Не блокирует UI, грузится параллельно
+   */
+  async loadGameplayAssets() {
+    console.log('🎮 Loading gameplay assets in background...');
+
+    const gameplayAssets = await PIXI.Assets.loadBundle('gameplay', (progress) => {
+      console.log(`Gameplay: ${Math.round(progress * 100)}%`);
+    });
+
+    Object.assign(this.assets, gameplayAssets);
+
+    this.loaded = true;
+    console.log('✅ All assets loaded successfully');
+    return gameplayAssets;
+  }
+
+  /**
+   * Главный метод загрузки (совместимость со старым API)
+   * Загружает critical блокирующе, gameplay параллельно
    */
   async loadAssets() {
     try {
-      console.log('📦 Loading assets...');
+      this.initBundles();
 
-      // Load PNG sprites from Figma
-      this.assets.player = await PIXI.Assets.load(ASSET_PATHS.PLAYER);
+      // TIER 1: блокирующая загрузка критичных ассетов
+      await this.loadCriticalAssets();
 
-      // Load animated player sprite sheets
-      // PixiJS автоматически распарсит JSON и создаст текстуры для всех кадров
-      this.assets.playerAnimated = await PIXI.Assets.load(ASSET_PATHS.PLAYER_ANIMATED);
-      this.assets.playerAnimatedBoost = await PIXI.Assets.load(ASSET_PATHS.PLAYER_ANIMATED_BOOST);
+      // TIER 2: параллельная загрузка gameplay ассетов (не ждём)
+      this.loadGameplayAssets(); // без await — грузится в фоне
 
-      this.assets.obstacleBase = await PIXI.Assets.load(ASSET_PATHS.OBSTACLE_BASE);
-      this.assets.obstacleLarge = await PIXI.Assets.load(ASSET_PATHS.OBSTACLE_LARGE);
-      this.assets.coin = await PIXI.Assets.load(ASSET_PATHS.COIN);
-      this.assets.coinStar = await PIXI.Assets.load(ASSET_PATHS.COIN_STAR);
-      this.assets.booster = await PIXI.Assets.load(ASSET_PATHS.BOOSTER);
-      this.assets.star = await PIXI.Assets.load(ASSET_PATHS.STAR);
-      this.assets.cloud = await PIXI.Assets.load(ASSET_PATHS.CLOUD);
-
-      // Для совместимости со старым кодом
-      this.assets.obstacle = this.assets.obstacleBase;
-
-      // Audio loading placeholder (will be implemented later)
-      // this.assets.bgMusic = await this.loadAudio(ASSET_PATHS.MUSIC_BG);
-      // this.assets.coinSfx = await this.loadAudio(ASSET_PATHS.SFX_COIN);
-      // this.assets.crashSfx = await this.loadAudio(ASSET_PATHS.SFX_CRASH);
-
-      this.loaded = true;
-      console.log('✅ All assets loaded successfully');
       return this.assets;
     } catch (error) {
       console.error('❌ Error loading assets:', error);

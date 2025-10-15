@@ -87,7 +87,8 @@ export class CullingManager {
     this.stats.totalCulled += culled;
     this.stats.lastCulled = culled;
 
-    return { culled, processed, timeMs };
+    // 🆕 Возвращаем количество culled для Performance Monitor
+    return culled;
   }
 
   /**
@@ -121,7 +122,8 @@ export class CullingManager {
     this.stats.totalCulled += culled;
     this.stats.lastCulled = culled;
 
-    return { culled };
+    // 🆕 Возвращаем количество culled для Performance Monitor
+    return culled;
   }
 
   /**

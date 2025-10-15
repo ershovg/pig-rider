@@ -7,8 +7,9 @@ import { Renderable } from './base/Renderable.js';
  * Декоративная звезда с мерцанием
  */
 export class Star extends Renderable {
-  constructor(texture) {
+  constructor(texture, container = null) {
     super();
+    this.container = container; // 🔥 Ссылка на PixiJS контейнер для lifecycle
     this.sprite = new PIXI.Sprite(texture);
     this.sprite.anchor.set(0.5);
     this.active = false;
@@ -18,6 +19,11 @@ export class Star extends Renderable {
   }
 
   activate(lane, x) {
+    // 🔥 ДОБАВЛЕНО: Добавляем sprite в контейнер при активации
+    if (this.container && !this.sprite.parent) {
+      this.container.addChild(this.sprite);
+    }
+
     this.active = true;
     this.lane = lane;
     this.sprite.x = x;
@@ -32,6 +38,11 @@ export class Star extends Renderable {
     this.active = false;
     this.sprite.visible = false;
     this.stopTwinkle();
+
+    // 🔥 ДОБАВЛЕНО: Удаляем sprite из контейнера для освобождения памяти
+    if (this.sprite.parent) {
+      this.sprite.parent.removeChild(this.sprite);
+    }
   }
 
   startTwinkle() {

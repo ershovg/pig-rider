@@ -12,19 +12,24 @@ import { Coin } from '../entities/Coin.js';
 import { Cloud } from '../entities/Cloud.js';
 import { Star } from '../entities/Star.js';
 import { Booster } from '../entities/Booster.js';
+import { CoinCollectEffect } from '../effects/CoinCollectEffect.js';
+import { CollisionEffect } from '../effects/CollisionEffect.js';
 import { CONFIG } from '../config/constants.js';
 
 export class SpawnSystem {
-  constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterSpritesheet, stage) {
+  constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterSpritesheet, coinCollectEffectSpritesheet, collisionEffectSpritesheet, stage, decorationLayer = null) {
     this.stage = stage;
+    this.decorationLayer = decorationLayer; // 🆕 ParticleContainer для облаков/звёзд
     this.textures = {
       obstacles: obstacleTextures,
       coin: coinTexture,
       star: starTexture,
       cloud: cloudTexture,
-      boosterSpritesheet: boosterSpritesheet // 🆕 Теперь это спрайтшит, не просто текстура
+      boosterSpritesheet: boosterSpritesheet, // Спрайтшит анимированного кубка
+      coinCollectEffectSpritesheet: coinCollectEffectSpritesheet, // Спрайтшит эффекта сбора монеты
+      collisionEffectSpritesheet: collisionEffectSpritesheet // 🆕 Спрайтшит эффекта взрыва при столкновении
     };
-    this.poolManager = new EntityPoolManager(stage);
+    this.poolManager = new EntityPoolManager(stage, decorationLayer);
     this.initializePools();
     this.initializeSpawners();
   }
@@ -38,6 +43,10 @@ export class SpawnSystem {
     this.poolManager.registerPool('cloud', Cloud, 15, { texture: this.textures.cloud });
     // 🆕 Передаем спрайтшит в конструктор Booster
     this.poolManager.registerPool('booster', Booster, CONFIG.BOOSTER.POOL_SIZE, { texture: this.textures.boosterSpritesheet });
+    // 🆕 Пул эффектов сбора монеты (15 штук для частого использования)
+    this.poolManager.registerPool('coinCollectEffect', CoinCollectEffect, 15, { texture: this.textures.coinCollectEffectSpritesheet });
+    // 🆕 Пул эффектов столкновения (3 штуки - обычно 1 столкновение за игру)
+    this.poolManager.registerPool('collisionEffect', CollisionEffect, 3, { texture: this.textures.collisionEffectSpritesheet });
   }
 
   initializeSpawners() {
@@ -60,14 +69,15 @@ export class SpawnSystem {
       getIntervalModifier: (context) => 1.0
     });
 
+    // 🆕 Декорации добавляются в ParticleContainer (если доступен)
     this.cloudSpawner = new CloudSpawner({
       pool: this.poolManager.getPool('cloud'),
-      stage: this.stage
+      stage: this.decorationLayer || this.stage // Используем ParticleContainer если есть
     });
 
     this.starSpawner = new StarSpawner({
       pool: this.poolManager.getPool('star'),
-      stage: this.stage
+      stage: this.decorationLayer || this.stage // Используем ParticleContainer если есть
     });
 
     this.boosterSpawner = new BoosterSpawner({
@@ -85,22 +95,27 @@ export class SpawnSystem {
       difficultyManager = null
     } = context;
 
+    // 🆕 cullThreshold для Cullable interface
+    const cullThreshold = CONFIG.CULLING.THRESHOLD;
+
     if (!isBoosterMode) {
-      this.obstacleSpawner.update(deltaTime, gameSpeed, { difficultyManager });
+      this.obstacleSpawner.update(deltaTime, gameSpeed, { difficultyManager, cullThreshold });
     }
 
     this.coinSpawner.update(deltaTime, gameSpeed, {
       isBoosterMode,
       boosterActiveLane,
       gameSpeed,
-      difficultyManager
+      difficultyManager,
+      cullThreshold
     });
 
-    this.cloudSpawner.update(deltaTime, gameSpeed);
-    this.starSpawner.update(deltaTime, gameSpeed);
+    this.cloudSpawner.update(deltaTime, gameSpeed, { cullThreshold });
+    this.starSpawner.update(deltaTime, gameSpeed, { cullThreshold });
     this.boosterSpawner.update(deltaTime, gameSpeed, {
       isBoosterActive,
-      boosterCooldown
+      boosterCooldown,
+      cullThreshold
     });
   }
 
@@ -131,6 +146,30 @@ export class SpawnSystem {
 
   getActiveStars() {
     return this.starSpawner.getActiveObjects();
+  }
+
+  /**
+   * 🆕 Эмитировать эффект сбора монеты в указанной позиции
+   * @param {number} x - X координата собранной монеты
+   * @param {number} y - Y координата собранной монеты
+   */
+  emitCoinCollectEffect(x, y) {
+    const effect = this.poolManager.acquire('coinCollectEffect');
+    if (effect) {
+      effect.activate(x, y);
+    }
+  }
+
+  /**
+   * 🆕 Эмитировать эффект взрыва при столкновении с препятствием
+   * @param {number} x - X координата столкновения
+   * @param {number} y - Y координата столкновения
+   */
+  emitCollisionEffect(x, y) {
+    const effect = this.poolManager.acquire('collisionEffect');
+    if (effect) {
+      effect.activate(x, y);
+    }
   }
 
   reset() {

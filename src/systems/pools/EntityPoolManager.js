@@ -17,8 +17,9 @@ import { ObjectPool } from '../../utils/ObjectPool.js';
  * const obstacle = manager.acquire('obstacle');
  */
 export class EntityPoolManager {
-  constructor(stage) {
+  constructor(stage, decorationLayer = null) {
     this.stage = stage;
+    this.decorationLayer = decorationLayer; // 🆕 ParticleContainer для декораций
     this.pools = new Map(); // Хранилище пулов: name -> ObjectPool
   }
 
@@ -36,15 +37,23 @@ export class EntityPoolManager {
       return;
     }
 
-    // Factory функция для создания объектов
-    // Entities принимают texture как первый параметр
-    const factory = () => {
-      const entity = new EntityClass(entityConfig.texture);
+    // 🆕 Определяем целевой контейнер для спрайтов
+    // Декорации (cloud, star) → ParticleContainer, остальное → обычный stage
+    const isDecoration = (name === 'cloud' || name === 'star');
+    const targetContainer = isDecoration && this.decorationLayer
+      ? this.decorationLayer
+      : this.stage;
 
-      // Добавляем спрайт на stage, если entity имеет метод getSprite()
-      if (entity.getSprite && typeof entity.getSprite === 'function') {
-        this.stage.addChild(entity.getSprite());
-      }
+    // Factory функция для создания объектов
+    // 🔥 ИЗМЕНЕНО: НЕ добавляем sprite в контейнер при создании
+    // Вместо этого передаём контейнер в entity для управления lifecycle
+    const factory = () => {
+      const entity = new EntityClass(entityConfig.texture, targetContainer);
+
+      // ❌ УБРАЛИ: addChild теперь вызывается в activate() каждого entity
+      // if (entity.getSprite && typeof entity.getSprite === 'function') {
+      //   targetContainer.addChild(entity.getSprite());
+      // }
 
       return entity;
     };

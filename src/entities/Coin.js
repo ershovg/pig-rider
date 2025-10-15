@@ -7,8 +7,9 @@ import { Collectible } from './base/Collectible.js';
  * Собираемая монета с анимацией, interpolation и culling
  */
 export class Coin extends Collectible {
-  constructor(texture) {
+  constructor(texture, container = null) {
     super();
+    this.container = container; // 🔥 Ссылка на PixiJS контейнер для lifecycle
     this.sprite = new PIXI.Sprite(texture);
     this.sprite.anchor.set(0.5);
     const targetSize = CONFIG.COIN.SIZE;
@@ -28,6 +29,11 @@ export class Coin extends Collectible {
   }
 
   activate(lane, x) {
+    // 🔥 ДОБАВЛЕНО: Добавляем sprite в контейнер при активации
+    if (this.container && !this.sprite.parent) {
+      this.container.addChild(this.sprite);
+    }
+
     this.active = true;
     this.collected = false;
     this.lane = lane;
@@ -50,6 +56,16 @@ export class Coin extends Collectible {
     this.collected = false;
     this.sprite.visible = false;
     this.stopRotation();
+
+    // 🆕 Убиваем все GSAP анимации на sprite и sprite.scale
+    // Предотвращает "висящие" твины при быстром переиспользовании из пула
+    gsap.killTweensOf(this.sprite);
+    gsap.killTweensOf(this.sprite.scale);
+
+    // 🔥 ДОБАВЛЕНО: Удаляем sprite из контейнера для освобождения памяти
+    if (this.sprite.parent) {
+      this.sprite.parent.removeChild(this.sprite);
+    }
   }
 
   startRotation() {
@@ -72,20 +88,23 @@ export class Coin extends Collectible {
   collect() {
     if (this.collected) return;
     this.collected = true;
+
+    // 🆕 Останавливаем вращение перед анимацией сбора
+    this.stopRotation();
+
+    // 🆕 Анимация "всасывания" монеты - уменьшение до 0
+    // Монета быстро уменьшается с самого начала (эффект магнитного притяжения)
     gsap.to(this.sprite.scale, {
-      x: 1.5,
-      y: 1.5,
-      duration: 0.2,
-      ease: 'back.out'
-    });
-    gsap.to(this.sprite, {
-      alpha: 0,
-      duration: 0.2,
+      x: 0,
+      y: 0,
+      duration: 0.2, // 200ms - чуть дольше для заметности
+      ease: 'power2.out', // ✅ Быстрое начало, замедление к концу (настоящее "всасывание")
       onComplete: () => {
+        // После анимации деактивируем монету
         this.deactivate();
-        this.sprite.alpha = 1;
       }
     });
+
     return CONFIG.COIN.VALUE;
   }
 
@@ -122,6 +141,11 @@ export class Coin extends Collectible {
     this.sprite.x = this.currentX;
     this.sprite.rotation = 0;
     this.sprite.alpha = 1;
+
+    // 🆕 Восстанавливаем scale после анимации collect()
+    // Важно: возвращаем к значению 1, а не к исходному targetSize/texture.width
+    // потому что в activate() мы устанавливаем scale.set(1)
+    this.sprite.scale.set(1);
   }
 
   getSprite() {

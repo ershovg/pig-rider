@@ -13,8 +13,10 @@ import { Cullable } from './interfaces/Cullable.js';
  * - Cullable: автоматическое удаление за viewport
  */
 export class Obstacle extends Collidable {
-  constructor(texture) {
+  constructor(texture, container = null) {
     super();
+
+    this.container = container; // 🔥 Ссылка на PixiJS контейнер для lifecycle
 
     // Sprite setup
     this.sprite = new PIXI.Sprite(texture);
@@ -48,6 +50,11 @@ export class Obstacle extends Collidable {
   }
 
   activate(lane, x, texture = null) {
+    // 🔥 ДОБАВЛЕНО: Добавляем sprite в контейнер при активации
+    if (this.container && !this.sprite.parent) {
+      this.container.addChild(this.sprite);
+    }
+
     this.active = true;
     this.lane = lane;
 
@@ -74,6 +81,11 @@ export class Obstacle extends Collidable {
   deactivate() {
     this.active = false;
     this.sprite.visible = false;
+
+    // 🔥 ДОБАВЛЕНО: Удаляем sprite из контейнера для освобождения памяти
+    if (this.sprite.parent) {
+      this.sprite.parent.removeChild(this.sprite);
+    }
   }
 
   update(deltaTime, gameSpeed) {
@@ -85,8 +97,8 @@ export class Obstacle extends Collidable {
     // Обновляем физическую позицию (НЕ sprite.x напрямую)
     this.currentX -= gameSpeed * deltaTime * 800;
 
-    // Примечание: deactivation теперь управляется через CullingManager
-    // Оставляем старую проверку для backward compatibility
+    // 🔥 ИСПРАВЛЕНО: Fallback deactivation когда объект ушёл за экран
+    // Аналогично Coin и Booster - гарантирует что объект вернётся в pool
     if (this.currentX < -CONFIG.OBSTACLE.SIZE) {
       this.deactivate();
     }
