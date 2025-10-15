@@ -81,7 +81,11 @@ export class Game {
       await this.renderer.init();
 
       this.assetLoader = new AssetLoader();
-      await this.assetLoader.loadAssets();
+      await this.assetLoader.init();
+
+      this.assetLoader.startBackgroundLoading();
+
+      await this.assetLoader.loadCriticalAssets();
 
       this.ui.hideLoading();
       this.initUI();
@@ -185,8 +189,9 @@ export class Game {
     });
   }
 
-  startGame() {
+  async startGame() {
     if (!this.player) {
+      await this.assetLoader.ensureGameplayAssetsReady();
       this.initSystems();
     }
 
@@ -195,7 +200,6 @@ export class Game {
 
     this.lifecycleManager.startGame();
 
-    // 🔍 DEBUG: Запускаем логирование размеров пулов каждые 5 секунд
     this.startPoolLogging();
   }
 

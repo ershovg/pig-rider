@@ -107,7 +107,7 @@ src/
 │   └── constants.js      # Все константы (TARGET_COINS, скорости, размеры)
 │
 ├── core/                # PixiJS engine
-│   ├── AssetLoader.js   # Загрузка assets
+│   ├── AssetLoader.js   # Background asset loading (PixiJS manifest)
 │   ├── Renderer.js      # PixiJS renderer setup
 │   └── GameLoop.js      # Fixed timestep (60 FPS)
 │
@@ -246,6 +246,30 @@ Fixed timestep loop (60 FPS) с поддержкой interpolation:
 - Render: переменная частота с alpha для интерполяции
 - Pause/resume без drift
 
+### 6. AssetLoader
+
+**Файл:** `src/core/AssetLoader.js`
+
+**Паттерн:** Background Loading (PixiJS v8 best practices)
+
+**Flow:**
+1. `init()` - регистрация manifest с двумя бандлами (critical, gameplay)
+2. `startBackgroundLoading()` - запуск фоновой загрузки gameplay assets (non-blocking)
+3. `loadCriticalAssets()` - загрузка минимума для показа Start Screen
+4. `ensureGameplayAssetsReady()` - проверка готовности перед стартом игры
+
+**Бандлы:**
+- **critical** - player, obstacle, coin, star, cloud, coin effect (для UI)
+- **gameplay** - large obstacles, booster, collision effect, boost animation
+
+**Почему это быстрее:**
+```
+Traditional:  [Load All Assets] → [Show UI]  (2s blocking)
+Background:   [Load Critical]   → [Show UI]  (1s blocking)
+                    ↓
+              [Load Gameplay in background] (1s parallel)
+```
+
 ---
 
 ## Webflow Integration
@@ -329,6 +353,7 @@ npm run build:webflow
 
 ## Performance Notes
 
+- **Background asset loading** (PixiJS manifest + backgroundLoadBundle) для быстрого First Paint
 - **Object pooling** предотвращает GC паузы (пулы в SpawnSystem)
 - **Fixed timestep** предотвращает физические проблемы при разных FPS
 - **AABB collision** с пространственной оптимизацией
@@ -346,9 +371,11 @@ TARGET_COINS: 500 // вместо 200
 ```
 
 **Добавить новый asset:**
-1. Добавь PNG в `public/assets/sprites/`
-2. Добавь путь в `ASSET_PATHS` в `src/config/constants.js`
-3. Загрузи в `src/core/AssetLoader.js`
+1. Добавь файл в `public/assets/sprites/`
+2. Добавь путь в `ASSET_PATHS` (`src/config/constants.js`)
+3. Добавь в соответствующий бандл в `AssetLoader.js` manifest:
+   - **critical** - если нужен для Start Screen
+   - **gameplay** - если нужен только во время игры
 
 **Отладка коллизий:**
 Добавь визуализацию hitbox'ов в collision system. Hitbox'ы масштабированы: player (0.7x), obstacles (0.8x), coins (0.6x).
