@@ -16,32 +16,33 @@ export class CullingCoordinator {
     // Сбрасываем счётчик для текущего frame
     this.stats.lastFrameCulled = 0;
 
-    this.cullGameplayObjects();
+    // 🔥 ИЗМЕНЕНИЕ: BaseSpawner уже делает culling для gameplay объектов!
+    // Убираем дублирование - оставляем только декорации
+    // this.cullGameplayObjects(); // ← УДАЛЕНО
 
     if (frameCount % CONFIG.CULLING.DECORATION_INTERVAL === 0) {
       this.cullDecorations();
     }
   }
 
+  // 🔥 DEPRECATED: BaseSpawner.updateActiveObjects() уже делает culling
+  // Оставляем метод для возможного будущего использования
   cullGameplayObjects() {
-    const obstacles = this.spawnSystem.getActiveObstacles();
-    const coins = this.spawnSystem.getActiveCoins();
-    const boosters = this.spawnSystem.getActiveBoosters();
-
-    this.stats.lastFrameCulled += this.cullingManager.cullWithBudget(obstacles);
-    this.stats.lastFrameCulled += this.cullingManager.cullWithBudget(coins);
-    this.stats.lastFrameCulled += this.cullingManager.cullWithBudget(boosters);
-
-    this.stats.totalCulled += this.stats.lastFrameCulled;
+    // NOOP - culling теперь делается в BaseSpawner
+    //
+    // Причина удаления дублирования:
+    // 1. BaseSpawner уже вызывает pool.release() в updateActiveObjects()
+    // 2. Двойной culling создаёт гонку: CullingManager пытается release
+    //    объекты, которые уже были released в BaseSpawner
+    // 3. Результат: предупреждения double-release и некорректная статистика
   }
 
+  // 🔥 DEPRECATED: BaseSpawner.updateActiveObjects() уже делает culling для декораций
   cullDecorations() {
-    const clouds = this.spawnSystem.getActiveClouds();
-    const stars = this.spawnSystem.getActiveStars();
-
-    const culled = this.cullingManager.cullAll(clouds) + this.cullingManager.cullAll(stars);
-    this.stats.lastFrameCulled += culled;
-    this.stats.totalCulled += culled;
+    // NOOP - culling теперь делается в BaseSpawner для ВСЕХ типов объектов
+    //
+    // CloudSpawner и StarSpawner наследуют BaseSpawner,
+    // который уже вызывает pool.release() в updateActiveObjects()
   }
 
   /**

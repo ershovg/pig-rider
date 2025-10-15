@@ -5,41 +5,42 @@ export class AssetLoader {
   constructor() {
     this.assets = {};
     this.loaded = false;
-    this.bundlesInitialized = false;
+    this.manifestInitialized = false;
   }
 
-  /**
-   * Инициализация bundles (вызывать ПЕРЕД загрузкой)
-   */
-  initBundles() {
-    if (this.bundlesInitialized) return;
+  async init() {
+    if (this.manifestInitialized) return;
 
-    // TIER 1: Critical assets (минимум для First Meaningful Paint)
-    PIXI.Assets.addBundle('critical', {
-      playerAnimated: ASSET_PATHS.PLAYER_ANIMATED,
-      obstacleBase: ASSET_PATHS.OBSTACLE_BASE,
-      coin: ASSET_PATHS.COIN,
-      star: ASSET_PATHS.STAR,
-      cloud: ASSET_PATHS.CLOUD,
-      coinCollectEffect: ASSET_PATHS.COIN_COLLECT_EFFECT
-    });
+    const manifest = {
+      bundles: [
+        {
+          name: 'critical',
+          assets: [
+            { alias: 'playerAnimated', src: ASSET_PATHS.PLAYER_ANIMATED },
+            { alias: 'obstacleBase', src: ASSET_PATHS.OBSTACLE_BASE },
+            { alias: 'coin', src: ASSET_PATHS.COIN },
+            { alias: 'star', src: ASSET_PATHS.STAR },
+            { alias: 'cloud', src: ASSET_PATHS.CLOUD },
+            { alias: 'coinCollectEffect', src: ASSET_PATHS.COIN_COLLECT_EFFECT }
+          ]
+        },
+        {
+          name: 'gameplay',
+          assets: [
+            { alias: 'obstacleLarge', src: ASSET_PATHS.OBSTACLE_LARGE },
+            { alias: 'booster', src: ASSET_PATHS.BOOSTER },
+            { alias: 'collisionEffect', src: ASSET_PATHS.COLLISION_EFFECT },
+            { alias: 'playerAnimatedBoost', src: ASSET_PATHS.PLAYER_ANIMATED_BOOST }
+          ]
+        }
+      ]
+    };
 
-    // TIER 2: Gameplay assets (фоновая загрузка, готовы до старта игры)
-    PIXI.Assets.addBundle('gameplay', {
-      obstacleLarge: ASSET_PATHS.OBSTACLE_LARGE,
-      booster: ASSET_PATHS.BOOSTER,
-      collisionEffect: ASSET_PATHS.COLLISION_EFFECT,
-      playerAnimatedBoost: ASSET_PATHS.PLAYER_ANIMATED_BOOST
-    });
-
-    this.bundlesInitialized = true;
-    console.log('📦 Bundles initialized');
+    await PIXI.Assets.init({ manifest });
+    this.manifestInitialized = true;
+    console.log('📦 Asset manifest initialized');
   }
 
-  /**
-   * TIER 1: Загрузить критичные ассеты (блокирующе)
-   * Возвращает Promise, позволяет показать UI сразу после загрузки
-   */
   async loadCriticalAssets() {
     console.log('🚀 Loading critical assets...');
 
@@ -47,47 +48,37 @@ export class AssetLoader {
       console.log(`Critical: ${Math.round(progress * 100)}%`);
     });
 
-    // Сохраняем в this.assets для обратной совместимости
     Object.assign(this.assets, criticalAssets);
-
-    // Для совместимости со старым кодом
     this.assets.obstacle = this.assets.obstacleBase;
 
-    console.log('✅ Critical assets ready (First Meaningful Paint!)');
+    console.log('✅ Critical assets ready');
     return criticalAssets;
   }
 
-  /**
-   * TIER 2: Загрузить gameplay ассеты (фоновая загрузка)
-   * Не блокирует UI, грузится параллельно
-   */
-  async loadGameplayAssets() {
-    console.log('🎮 Loading gameplay assets in background...');
+  startBackgroundLoading() {
+    console.log('🎮 Starting background loading for gameplay assets...');
+    PIXI.Assets.backgroundLoadBundle(['gameplay']);
+  }
 
-    const gameplayAssets = await PIXI.Assets.loadBundle('gameplay', (progress) => {
-      console.log(`Gameplay: ${Math.round(progress * 100)}%`);
-    });
+  async ensureGameplayAssetsReady() {
+    console.log('⏳ Ensuring gameplay assets are ready...');
 
+    const gameplayAssets = await PIXI.Assets.loadBundle('gameplay');
     Object.assign(this.assets, gameplayAssets);
 
     this.loaded = true;
-    console.log('✅ All assets loaded successfully');
+    console.log('✅ All assets loaded');
     return gameplayAssets;
   }
 
-  /**
-   * Главный метод загрузки (совместимость со старым API)
-   * Загружает critical блокирующе, gameplay параллельно
-   */
   async loadAssets() {
     try {
-      this.initBundles();
+      await this.init();
 
-      // TIER 1: блокирующая загрузка критичных ассетов
+      this.startBackgroundLoading();
+
       await this.loadCriticalAssets();
-
-      // TIER 2: параллельная загрузка gameplay ассетов (не ждём)
-      this.loadGameplayAssets(); // без await — грузится в фоне
+      await this.ensureGameplayAssetsReady();
 
       return this.assets;
     } catch (error) {
@@ -96,17 +87,6 @@ export class AssetLoader {
     }
   }
 
-  /**
-   * Placeholder for audio loading (to be implemented later)
-   */
-  async loadAudio(path) {
-    // TODO: Implement audio loading with Howler.js or Web Audio API
-    return null;
-  }
-
-  /**
-   * Get loaded asset by key
-   */
   getAsset(key) {
     return this.assets[key];
   }

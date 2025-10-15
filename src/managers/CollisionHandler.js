@@ -1,8 +1,9 @@
 import { MathUtils } from '../utils/MathUtils.js';
 
 export class CollisionHandler {
-  constructor(collisionSystem) {
+  constructor(collisionSystem, soundManager = null) {
     this.collisionSystem = collisionSystem;
+    this.soundManager = soundManager; // 🆕 Опциональная зависимость для звуков
   }
 
   processFrame(player, obstacles, coins, boosters) {
@@ -35,6 +36,11 @@ export class CollisionHandler {
       if (value) {
         const sprite = coin.getSprite();
         collected.push({ value, x: sprite.x, y: sprite.y });
+
+        // 🆕 Воспроизводим звук сбора монеты
+        if (this.soundManager) {
+          this.soundManager.play('coin');
+        }
       }
     }
 

@@ -15,6 +15,7 @@ export class Coin extends Collectible {
     const targetSize = CONFIG.COIN.SIZE;
     const scale = targetSize / texture.width;
     this.sprite.scale.set(scale);
+
     this.active = false;
     this.collected = false;
     this.lane = 0;

@@ -35,35 +35,19 @@ export class BaseSpawner {
 
   updateActiveObjects(deltaTime, gameSpeed, context) {
     const objects = this.pool.getActive();
-    let culled = 0;
 
     for (let i = objects.length - 1; i >= 0; i--) {
       const obj = objects[i];
+
+      // Обновляем объект
       obj.update(deltaTime, gameSpeed);
 
-      // 🆕 Проверяем culling через Cullable interface
-      if (this.shouldRecycle(obj, context)) {
-        obj.deactivate(); // Деактивируем перед возвратом в пул
+      // ПОСЛЕ update проверяем, не деактивировался ли объект
+      // (может деактивироваться внутри своего update() при выходе за экран)
+      if (!obj.isActive()) {
         this.pool.release(obj);
-        culled++;
       }
     }
-
-    // 🐛 DEBUG: Логируем если culling сработал
-    if (culled > 0 && this.constructor.name === 'ObstacleSpawner') {
-      console.log(`[ObstacleSpawner] Culled ${culled} obstacles, active: ${this.pool.getActive().length}`);
-    }
-  }
-
-  shouldRecycle(obj, context) {
-    // Проверяем через Cullable interface (если есть)
-    if (obj.shouldCull && typeof obj.shouldCull === 'function') {
-      const cullThreshold = context.cullThreshold || -200;
-      return obj.shouldCull(cullThreshold);
-    }
-
-    // Fallback: проверка isActive (старый способ)
-    return !obj.isActive();
   }
 
   spawn(gameSpeed, context) {

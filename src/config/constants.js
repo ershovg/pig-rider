@@ -78,7 +78,8 @@ export const CONFIG = {
 
   // 🆕 Culling (удаление объектов за пределами viewport)
   CULLING: {
-    THRESHOLD: -50,            // 🔥 ИСПРАВЛЕНО: -50 вместо -200 (объекты шириной ~280px уходят за экран при x=0)
+    LEFT_MULTIPLIER: 0.08,     // Левая граница: 8% ширины канваса за левым краем (оптимально для маленьких окон)
+    RIGHT_MULTIPLIER: 1.15,    // Правая граница: 115% ширины канваса (15% за правым)
     TIME_BUDGET_MS: 1,         // Максимальное время на culling операцию (мс)
     DECORATION_INTERVAL: 5     // Culling декораций каждые N frames
   },
@@ -111,8 +112,7 @@ export const ASSET_PATHS = {
   get STAR() { return getAssetPath('/assets/sprites/star.avif'); },
   get CLOUD() { return getAssetPath('/assets/sprites/cloud.avif'); },
 
-  // Audio placeholders for later
-  get MUSIC_BG() { return getAssetPath('/assets/audio/bg-music.mp3'); },
-  get SFX_COIN() { return getAssetPath('/assets/audio/coin.mp3'); },
-  get SFX_CRASH() { return getAssetPath('/assets/audio/crash.mp3'); }
+  // Audio
+  get MUSIC_MAIN() { return getAssetPath('/assets/sounds/Music%20level/stage-antics_main-full.wav'); },
+  get SFX_COIN() { return getAssetPath('/assets/sounds/Sounds/CoinCollect/Coin.wav'); }
 };

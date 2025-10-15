@@ -117,6 +117,9 @@ export class SpawnSystem {
       boosterCooldown,
       cullThreshold
     });
+
+    // Освобождаем завершившиеся эффекты
+    this.releaseInactiveEffects();
   }
 
   fillLaneWithCoins(lane) {
@@ -186,5 +189,27 @@ export class SpawnSystem {
 
   logStats() {
     this.poolManager.logStats();
+  }
+
+  releaseInactiveEffects() {
+    const coinEffectPool = this.poolManager.getPool('coinCollectEffect');
+    const activeCoinEffects = coinEffectPool.getActive();
+    for (let i = activeCoinEffects.length - 1; i >= 0; i--) {
+      const eff = activeCoinEffects[i];
+      if (!eff.isActive || !eff.isActive()) {
+        coinEffectPool.release(eff);
+      }
+    }
+
+    if (this.poolManager.hasPool('collisionEffect')) {
+      const collisionPool = this.poolManager.getPool('collisionEffect');
+      const activeCollision = collisionPool.getActive();
+      for (let i = activeCollision.length - 1; i >= 0; i--) {
+        const eff = activeCollision[i];
+        if (eff.isActive && !eff.isActive()) {
+          collisionPool.release(eff);
+        }
+      }
+    }
   }
 }

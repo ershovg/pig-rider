@@ -155,7 +155,6 @@ class MyEntity {
 
 **Файлы:**
 - `UIController.js` - управление HTML экранами (start, HUD, end screens)
-- `AIBotModal.js` - ElevenLabs AI bot (опционально)
 
 **Hybrid Rendering:**
 - PixiJS рендерит игровые объекты (WebGL)
