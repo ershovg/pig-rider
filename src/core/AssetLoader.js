@@ -86,8 +86,9 @@ export class AssetLoader {
       // TIER 1: блокирующая загрузка критичных ассетов
       await this.loadCriticalAssets();
 
-      // TIER 2: параллельная загрузка gameplay ассетов (не ждём)
-      this.loadGameplayAssets(); // без await — грузится в фоне
+      // TIER 2: загрузка gameplay ассетов (ожидаем)
+      // Необходима, так как пулы создают объекты, которым требуются эти ассеты
+      await this.loadGameplayAssets();
 
       return this.assets;
     } catch (error) {

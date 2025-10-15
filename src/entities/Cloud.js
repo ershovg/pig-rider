@@ -11,6 +11,7 @@ export class Cloud extends Renderable {
     this.container = container; // 🔥 Ссылка на PixiJS контейнер для lifecycle
     this.sprite = new PIXI.Sprite(texture);
     this.sprite.anchor.set(0.5);
+
     this.active = false;
     this.lane = 0;
     this.speedMultiplier = 1;

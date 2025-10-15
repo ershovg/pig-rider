@@ -23,11 +23,21 @@
 export class CullingManager {
   /**
    * @param {Object} config - Конфигурация
-   * @param {number} config.cullThreshold - X координата порога (px за левым краем)
+   * @param {number} config.cullThreshold - X координата порога (px за левым краем) [DEPRECATED]
+   * @param {number} config.leftMultiplier - Множитель для левой границы (0.15 = 15% за экраном)
+   * @param {number} config.rightMultiplier - Множитель для правой границы (1.15 = 115% ширины)
+   * @param {number} config.rendererWidth - Ширина renderer (для динамических границ)
    * @param {number} config.timeBudgetMs - Максимальное время на операцию (мс)
    */
   constructor(config = {}) {
-    this.cullThreshold = config.cullThreshold ?? -200;
+    // Динамические boundaries (приоритет)
+    this.leftMultiplier = config.leftMultiplier ?? 0.15;
+    this.rightMultiplier = config.rightMultiplier ?? 1.15;
+    this.rendererWidth = config.rendererWidth ?? 1920;
+
+    // Вычисляем threshold на основе multiplier
+    this.cullThreshold = -this.leftMultiplier * this.rendererWidth;
+
     this.timeBudgetMs = config.timeBudgetMs ?? 1;
 
     // Статистика для дебага
@@ -35,6 +45,35 @@ export class CullingManager {
       totalCulled: 0,
       lastCulled: 0,
       budgetExceeded: 0
+    };
+  }
+
+  /**
+   * Установить динамические границы на основе размера renderer
+   *
+   * @param {number} rendererWidth - Ширина канваса
+   * @param {number} [leftMultiplier] - Опциональный новый multiplier
+   * @param {number} [rightMultiplier] - Опциональный новый multiplier
+   */
+  setBoundaries(rendererWidth, leftMultiplier, rightMultiplier) {
+    this.rendererWidth = rendererWidth;
+    if (leftMultiplier !== undefined) this.leftMultiplier = leftMultiplier;
+    if (rightMultiplier !== undefined) this.rightMultiplier = rightMultiplier;
+
+    // Пересчитываем threshold
+    this.cullThreshold = -this.leftMultiplier * this.rendererWidth;
+  }
+
+  /**
+   * Получить текущие границы
+   *
+   * @returns {{ left: number, right: number, width: number }}
+   */
+  getBoundaries() {
+    return {
+      left: -this.leftMultiplier * this.rendererWidth,
+      right: this.rightMultiplier * this.rendererWidth,
+      width: this.rendererWidth
     };
   }
 

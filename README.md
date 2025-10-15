@@ -26,11 +26,7 @@ pig-rider-game/
 │   │   └── CollisionSystem.js # Collision detection
 │   │
 │   ├── ui/                  # UI controller (Webflow)
-│   │   ├── UIController.js  # HTML element management
-│   │   └── AIBotModal.js    # AI bot (optional)
-│   │
-│   ├── services/            # External services
-│   │   └── ElevenLabsService.js # AI voice (optional)
+│   │   └── UIController.js  # HTML element management
 │   │
 │   ├── utils/               # Utilities
 │   │   ├── EventBus.js

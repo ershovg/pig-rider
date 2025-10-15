@@ -1,5 +1,4 @@
 import { CONFIG } from './config/constants.js';
-import { ENV } from './config/env.js';
 import { Renderer } from './core/Renderer.js';
 import { GameLoop } from './core/GameLoop.js';
 import { AssetLoader } from './core/AssetLoader.js';
@@ -8,8 +7,6 @@ import { SpawnSystem } from './systems/SpawnSystem.js';
 import { CollisionSystem } from './systems/CollisionSystem.js';
 import { DifficultyManager } from './systems/DifficultyManager.js';
 import { UIController } from './ui/UIController.js';
-import { AIBotModal } from './ui/AIBotModal.js';
-import { ElevenLabsService } from './services/ElevenLabsService.js';
 import { GameStateManager } from './managers/GameStateManager.js';
 import { BoosterManager } from './managers/BoosterManager.js';
 import { ProgressionManager } from './managers/ProgressionManager.js';
@@ -21,6 +18,7 @@ import { GameLifecycleManager } from './managers/GameLifecycleManager.js';
 import { CullingCoordinator } from './managers/CullingCoordinator.js';
 import { PlayerPhysicsController } from './controllers/PlayerPhysicsController.js';
 import { PerformanceMonitor } from './managers/PerformanceMonitor.js';
+import { DebugOverlay } from './utils/DebugOverlay.js';
 
 export class Game {
   constructor() {
@@ -34,8 +32,6 @@ export class Game {
     this.difficultyManager = null;
 
     this.ui = null;
-    this.aiBot = null;
-    this.elevenLabs = null;
 
     this.stateManager = new GameStateManager();
     this.boosterManager = null;
@@ -44,11 +40,14 @@ export class Game {
     this.effectCoordinator = null;
     this.lifecycleManager = null;
     this.cullingCoordinator = null;
-    this.performanceMonitor = null; // 🆕 Performance monitoring
+    this.performanceMonitor = null;
+    this.debugOverlay = null;
     this.isColliding = false;
 
     this.cullingManager = new CullingManager({
-      cullThreshold: CONFIG.CULLING.THRESHOLD,
+      leftMultiplier: CONFIG.CULLING.LEFT_MULTIPLIER,
+      rightMultiplier: CONFIG.CULLING.RIGHT_MULTIPLIER,
+      rendererWidth: CONFIG.CANVAS_WIDTH,
       timeBudgetMs: CONFIG.CULLING.TIME_BUDGET_MS
     });
     this.interpolationManager = new InterpolationManager();
@@ -78,16 +77,6 @@ export class Game {
     try {
       this.ui = new UIController();
 
-      if (ENV.ELEVENLABS_API_KEY) {
-        this.elevenLabs = new ElevenLabsService(ENV.ELEVENLABS_API_KEY);
-        await this.elevenLabs.init();
-        this.aiBot = new AIBotModal(this.elevenLabs);
-        await this.aiBot.init();
-        this.aiBot.onComplete = () => this.startGame();
-      } else {
-        console.warn('⚠️ ElevenLabs API key not found. AI bot will be disabled.');
-      }
-
       this.renderer = new Renderer('game-canvas');
       await this.renderer.init();
 
@@ -98,11 +87,7 @@ export class Game {
       this.initUI();
 
       this.stateManager.setState('menu');
-      if (this.aiBot) {
-        this.aiBot.show();
-      } else {
-        this.ui.showStartScreen();
-      }
+      this.ui.showStartScreen();
     } catch (error) {
       console.error('❌ Game initialization failed:', error);
       throw error;
@@ -178,11 +163,17 @@ export class Game {
 
     // 🆕 Инициализируем Performance Monitor
     this.performanceMonitor = new PerformanceMonitor(this.renderer, this.gameLoop);
-
-    // Включаем всегда (можно выключить через Shift+P)
     this.performanceMonitor.enable();
 
+    // 🆕 Инициализируем Debug Overlay для culling boundaries
+    this.debugOverlay = new DebugOverlay(this.renderer, this.cullingManager);
+
+    // Устанавливаем динамические boundaries на основе реального размера канваса
+    const rendererWidth = this.renderer.app?.screen?.width || CONFIG.CANVAS_WIDTH;
+    this.cullingManager.setBoundaries(rendererWidth);
+
     console.log('💡 Press Shift+P to toggle Performance Monitor');
+    console.log('💡 Press D to toggle Culling Debug Overlay');
   }
 
   initUI() {
@@ -240,7 +231,7 @@ export class Game {
     this.spawnSystem.update(deltaTime, this.progressionManager.getGameSpeed(), {
       ...boosterContext,
       difficultyManager: this.difficultyManager,
-      cullThreshold: CONFIG.CULLING.THRESHOLD  // 🔥 ИСПРАВЛЕНО: Добавлен cullThreshold
+      cullThreshold: this.cullingManager.cullThreshold
     });
 
     this.cullingCoordinator.performCulling(this.frameCount);
@@ -359,10 +350,10 @@ export class Game {
   }
 
   destroy() {
-    this.stopPoolLogging(); // 🔍 DEBUG: Останавливаем логирование
+    this.stopPoolLogging();
+    if (this.debugOverlay) this.debugOverlay.destroy();
     if (this.gameLoop) this.gameLoop.stop();
     if (this.player) this.player.destroy();
-    if (this.aiBot) this.aiBot.destroy();
     if (this.ui) this.ui.destroy();
     if (this.renderer) this.renderer.destroy();
   }

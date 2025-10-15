@@ -72,13 +72,34 @@ export class ObjectPool {
   }
 
   /**
+   * Active objects count
+   */
+  getActiveCount() {
+    return this.active.length;
+  }
+
+  /**
+   * Pooled (available) objects count
+   */
+  getPooledCount() {
+    return this.pool.length;
+  }
+
+  /**
+   * Total managed objects count
+   */
+  getTotalCount() {
+    return this.pool.length + this.active.length;
+  }
+
+  /**
    * Get pool stats
    */
   getStats() {
     return {
-      pooled: this.pool.length,
-      active: this.active.length,
-      total: this.pool.length + this.active.length
+      pooled: this.getPooledCount(),
+      active: this.getActiveCount(),
+      total: this.getTotalCount()
     };
   }
 }

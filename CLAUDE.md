@@ -104,8 +104,7 @@ npm run preview          # Preview production build
 ```
 src/
 ├── config/
-│   ├── constants.js      # Все константы (TARGET_COINS, скорости, размеры)
-│   └── env.js           # Env переменные (API keys)
+│   └── constants.js      # Все константы (TARGET_COINS, скорости, размеры)
 │
 ├── core/                # PixiJS engine
 │   ├── AssetLoader.js   # Загрузка assets
@@ -141,11 +140,9 @@ src/
 │       └── LaneSafetyService.js # Гарантирует безопасный проход
 │
 ├── ui/
-│   ├── UIController.js  # Управление HTML экранами
-│   └── AIBotModal.js    # ElevenLabs AI bot (опционально)
+│   └── UIController.js  # Управление HTML экранами
 │
 ├── animations/          # GSAP анимации (clouds, stars, buttons)
-├── services/            # ElevenLabsService (опционально)
 ├── utils/               # EventBus, MathUtils, ObjectPool
 │
 ├── Game.js              # Главный оркестратор
@@ -364,9 +361,3 @@ TARGET_COINS: 500 // вместо 200
 - **Webflow build:** `dist/game.bundle.js` (ожидает PixiJS CDN)
 - Source maps включены в обоих режимах для дебага
 - Console logs сохранены в Webflow builds для production debugging
-
----
-
-## ElevenLabs Integration (Optional)
-
-Если `ELEVENLABS_API_KEY` установлен в `.env`, AI bot modal активируется при старте игры. Эта функция опциональна и отключается gracefully при отсутствии API key.
