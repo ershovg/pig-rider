@@ -5,7 +5,9 @@ import * as PIXI from 'pixi.js';
  * Проигрывается один раз при сборе монеты и автоматически деактивируется
  */
 export class CoinCollectEffect {
-  constructor(spritesheet) {
+  constructor(spritesheet, container) {
+    this.container = container; // ✅ Сохраняем ссылку на stage для lifecycle управления
+
     // Создаем AnimatedSprite из спрайтшита coin-collect.json
     // Анимация "CoinCollect" содержит 4 кадра (CoinCollect_000 -> CoinCollect_003)
     const frames = spritesheet.animations['CoinCollect'];
@@ -13,16 +15,23 @@ export class CoinCollectEffect {
     this.sprite.anchor.set(0.5);
 
     // Настройка анимации
-    this.sprite.animationSpeed = 0.7; // 0.5 кадров за тик (60 FPS) = ~30 FPS анимация
-    this.sprite.loop = false;          // Проиграть один раз
+    // animationSpeed = кадров за тик (60 FPS game loop)
+    // 0.25 = 4 кадра × (1/0.25) = 16 тиков = ~267ms общая длительность
+    this.sprite.animationSpeed = 0.25; // Медленнее для заметности
+    this.sprite.loop = false;           // Проиграть один раз
 
     // Размер эффекта (кадры 100x100px)
-    const targetSize = 80; // Эффект чуть больше монеты (60px)
+    const targetSize = 120; // Больше размер = заметнее (было 80)
     const scale = targetSize / 100;
     this.sprite.scale.set(scale);
 
     this.active = false;
     this.sprite.visible = false;
+
+    // ✅ Добавляем спрайт в контейнер сразу (будет скрыт до активации)
+    if (this.container) {
+      this.container.addChild(this.sprite);
+    }
 
     // Callback для автоматической деактивации после окончания
     this.sprite.onComplete = () => {
@@ -43,7 +52,7 @@ export class CoinCollectEffect {
     this.sprite.alpha = 1;
 
     // Сбрасываем scale перед анимацией
-    const targetSize = 80;
+    const targetSize = 120; // Синхронизировано с конструктором
     const scale = targetSize / 100;
     this.sprite.scale.set(scale);
 
@@ -83,7 +92,7 @@ export class CoinCollectEffect {
     this.deactivate();
 
     // 🆕 Сбрасываем scale (может накапливаться при переиспользовании из пула)
-    const targetSize = 80;
+    const targetSize = 120; // Синхронизировано с конструктором
     const scale = targetSize / 100;
     this.sprite.scale.set(scale);
   }

@@ -5,7 +5,9 @@ import * as PIXI from 'pixi.js';
  * Проигрывается один раз и остается на последнем кадре
  */
 export class CollisionEffect {
-  constructor(spritesheet) {
+  constructor(spritesheet, container) {
+    this.container = container; // ✅ Сохраняем ссылку на stage для lifecycle управления
+
     // Создаем AnimatedSprite из спрайтшита boom.json
     // Анимация "Booom" содержит 6 кадров (Booom_000 -> Booom_005)
     const frames = spritesheet.animations['Booom'];
@@ -23,6 +25,11 @@ export class CollisionEffect {
 
     this.active = false;
     this.sprite.visible = false;
+
+    // ✅ Добавляем спрайт в контейнер сразу (будет скрыт до активации)
+    if (this.container) {
+      this.container.addChild(this.sprite);
+    }
 
     // Callback после окончания анимации - НЕ деактивируем, оставляем на последнем кадре
     this.sprite.onComplete = () => {
