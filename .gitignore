@@ -3,6 +3,4 @@ node_modules/
 *.log
 .vscode/
 draft/
-
-# Keep dist for Webflow CDN
-# dist/
+dist/
