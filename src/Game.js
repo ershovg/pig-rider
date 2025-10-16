@@ -18,8 +18,7 @@ import { GameLifecycleManager } from './managers/GameLifecycleManager.js';
 import { CullingCoordinator } from './managers/CullingCoordinator.js';
 import { PlayerPhysicsController } from './controllers/PlayerPhysicsController.js';
 import { PerformanceMonitor } from './managers/PerformanceMonitor.js';
-import { DebugOverlay } from './utils/DebugOverlay.js';
-import { SoundManager } from './managers/SoundManager.js'; // 🆕 Звуковая система
+import { SoundManager } from './managers/SoundManager.js';
 import { ASSET_PATHS } from './config/constants.js';
 
 export class Game {
@@ -193,9 +192,6 @@ export class Game {
     // 🆕 Инициализируем Performance Monitor
     this.performanceMonitor = new PerformanceMonitor(this.renderer, this.gameLoop);
     this.performanceMonitor.enable();
-
-    // 🆕 Инициализируем Debug Overlay для culling boundaries
-    this.debugOverlay = new DebugOverlay(this.renderer, this.cullingManager);
 
     // Устанавливаем динамические boundaries на основе реального размера канваса
     const rendererWidth = this.renderer.app?.screen?.width || CONFIG.CANVAS_WIDTH;
