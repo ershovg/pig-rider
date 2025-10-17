@@ -45,10 +45,11 @@ export default defineConfig(({ command, mode }) => {
       },
       rollupOptions: {
         // Пушим PixiJS отдельно, загружается через CDN
-        external: ['pixi.js'],
+        external: ['pixi.js', 'gsap'],
         output: {
           globals: {
-            'pixi.js': 'PIXI'
+            'pixi.js': 'PIXI',
+            'gsap': 'gsap'
           }
         }
       }
