@@ -18,7 +18,7 @@ import { GameLifecycleManager } from './managers/GameLifecycleManager.js';
 import { CullingCoordinator } from './managers/CullingCoordinator.js';
 import { PlayerPhysicsController } from './controllers/PlayerPhysicsController.js';
 import { PerformanceMonitor } from './managers/PerformanceMonitor.js';
-import { SoundManager } from './managers/SoundManager.js';
+import { SoundManager } from './managers/sound/SoundManager.js';
 import { ASSET_PATHS } from './config/constants.js';
 
 export class Game {
@@ -107,9 +107,13 @@ export class Game {
    * Инициализирует звуковую систему и загружает все звуки
    */
   initSoundSystem() {
-    this.soundManager = new SoundManager();
+    this.soundManager = new SoundManager({
+      masterVolume: 1.0,
+      musicVolume: 0.6,
+      sfxVolume: 0.7,
+    });
 
-    // 🎵 Единая громкость для всей музыки - плавный переход без испуга
+    // 🎵 Единая громкость для всей музыки
     const MUSIC_VOLUME = 0.6;
 
     // Загружаем музыку
@@ -123,10 +127,22 @@ export class Game {
 
     // Загружаем звуковые эффекты
     this.soundManager.loadSound('coin', ASSET_PATHS.SFX_COIN, {
-      volume: 0.15, // Едва слышен на фоне
+      volume: 0.05, // 🔧 Уменьшено в 3 раза: 0.15 → 0.05
     });
 
-    console.log('🎵 Sound system initialized');
+    // 🆕 Инициализируем музыкальные состояния
+    this.soundManager.initMusicStates({
+      bpm: 130,              // BPM треков (измерь в DAW)
+      beatsPerBar: 4,        // 4/4 time signature
+      beatSync: true,        // Переходы на бит
+      gameplayBaseVolume: 0.6,
+      gameplayIntensityVolume: 0.6,
+      boosterIntensityVolume: 0.6,
+      boosterFadeOut: 500,
+      boosterFadeIn: 500,
+    });
+
+    console.log('🎵 Sound system initialized (modular architecture)');
   }
 
   initSystems() {

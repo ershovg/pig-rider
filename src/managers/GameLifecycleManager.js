@@ -27,15 +27,11 @@ export class GameLifecycleManager {
     this.ui.updateCoinCount(0, CONFIG.TARGET_COINS);
     this.ui.removeBoosterClass();
 
-    // 🎵 Запускаем layered music систему при старте игры
-    // Оба трека начинают играть одновременно (bonusMusic беззвучно)
+    // 🎵 Переключаем на gameplay музыкальное состояние
+    // Это запустит vertical layering систему
     if (this.soundManager) {
-      this.soundManager.initLayeredMusic('mainMusic', 'bonusMusic', {
-        baseVolume: 0.6,      // Громкость спокойной музыки
-        intensityVolume: 0.6, // Громкость энергичной музыки
-        sync: true,           // Синхронизировать треки по времени
-      });
-      console.log('🎵 Layered music system started');
+      this.soundManager.setMusicState('gameplay');
+      console.log('🎵 Music state: gameplay');
     }
 
     this.renderer.start();
@@ -50,18 +46,21 @@ export class GameLifecycleManager {
       this.player.inputController.disable();
     }
 
-    // 🎵 Останавливаем layered music систему с fade-out
+    // 🎵 Переключаем на victory/defeat состояние (TODO: когда будут треки)
+    // Пока просто останавливаем музыку
     if (this.soundManager) {
-      this.soundManager.stopLayeredMusic(1000);
-      console.log('🎵 Layered music stopped on game end');
+      this.soundManager.stopAll();
+      console.log('🎵 Music stopped on game end');
     }
 
     this.ui.hideHUD();
 
     if (isWin) {
       this.ui.showWinScreen(score);
+      // TODO: this.soundManager.setMusicState('victory');
     } else {
       this.ui.showLoseScreen(score);
+      // TODO: this.soundManager.setMusicState('defeat');
     }
   }
 
