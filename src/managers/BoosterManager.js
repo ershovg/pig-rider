@@ -63,25 +63,11 @@ export class BoosterManager {
       this.player.switchAnimation(true);
     }
 
-    // 🎵 Простое переключение музыки
+    // 🎵 Плавный переход к intensity layer (1.5 секунды)
+    // Base music уменьшается до 30%, intensity увеличивается до 100%
     if (this.soundManager) {
-      // Сохраняем позицию
-      const mainMusic = this.soundManager.sounds.get('mainMusic');
-      if (mainMusic && mainMusic.playing()) {
-        this.soundManager.currentMusicPosition = mainMusic.seek();
-      }
-
-      // Stop → Play
-      this.soundManager.stopMusic(200);
-
-      setTimeout(() => {
-        const bonusMusic = this.soundManager.sounds.get('bonusMusic');
-        if (bonusMusic) {
-          bonusMusic.play();
-          this.soundManager.currentMusic = 'bonusMusic';
-          console.log('🎵 Bonus music playing');
-        }
-      }, 250);
+      this.soundManager.transitionToIntensity(1500);
+      console.log('🎵 Transitioning to intensity music (1.5s)');
     }
 
     console.log(`✨ Booster activated! Lane: ${this.currentLane}`);
@@ -105,27 +91,11 @@ export class BoosterManager {
       this.player.switchAnimation(false);
     }
 
-    // 🎵 Возврат к основной музыке
+    // 🎵 Плавный возврат к base layer (2 секунды)
+    // Intensity music затухает до 0%, base возвращается к 100%
     if (this.soundManager) {
-      const bonusMusic = this.soundManager.sounds.get('bonusMusic');
-      if (bonusMusic && bonusMusic.playing()) {
-        bonusMusic.stop();
-      }
-
-      setTimeout(() => {
-        const mainMusic = this.soundManager.sounds.get('mainMusic');
-        if (mainMusic) {
-          const savedPosition = this.soundManager.currentMusicPosition || 0;
-          const id = mainMusic.play(); // Громкость уже восстановлена в stopMusic()
-
-          if (savedPosition > 0) {
-            mainMusic.seek(savedPosition, id);
-          }
-
-          this.soundManager.currentMusic = 'mainMusic';
-          console.log('🎵 Main music resumed');
-        }
-      }, 100);
+      this.soundManager.transitionToBase(2000);
+      console.log('🎵 Transitioning back to base music (2s)');
     }
 
     console.log(`⏹️ Booster deactivated. Cooldown: ${CONFIG.BOOSTER_COOLDOWN_DURATION}s`);

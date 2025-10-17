@@ -578,6 +578,217 @@ export class SoundManager {
   }
 
   /**
+   * 🆕 VERTICAL LAYERING SYSTEM
+   * Профессиональная техника из AAA игр (DOOM, Celeste, Subway Surfers)
+   *
+   * Два трека играют одновременно, меняется только громкость слоев.
+   * Это обеспечивает seamless transitions без разрыва ритма.
+   */
+
+  /**
+   * Инициализирует систему layered music
+   * @param {string} baseAlias - Alias базового слоя (mainMusic)
+   * @param {string} intensityAlias - Alias интенсивного слоя (bonusMusic)
+   * @param {object} options - Опции
+   */
+  initLayeredMusic(baseAlias, intensityAlias, options = {}) {
+    const {
+      baseVolume = 0.6,      // Громкость base layer в нормальном режиме
+      intensityVolume = 0.6, // Громкость intensity layer при бустере
+      sync = true,           // Синхронизировать треки по времени
+    } = options;
+
+    this.layeredMusic = {
+      baseAlias,
+      intensityAlias,
+      baseVolume,
+      intensityVolume,
+      isActive: false, // Активна ли система
+    };
+
+    const baseTrack = this.sounds.get(baseAlias);
+    const intensityTrack = this.sounds.get(intensityAlias);
+
+    if (!baseTrack || !intensityTrack) {
+      console.error('❌ Layered music tracks not found');
+      console.log('Available sounds:', Array.from(this.sounds.keys()));
+      return;
+    }
+
+    console.log(`🎵 Starting layered music system...`);
+    console.log(`   Base: ${baseAlias} (volume: ${baseVolume})`);
+    console.log(`   Intensity: ${intensityAlias} (volume: ${intensityVolume})`);
+
+    // Устанавливаем начальные громкости
+    baseTrack.volume(baseVolume * this.masterVolume);
+    intensityTrack.volume(0); // Intensity слой изначально выключен
+
+    // Запускаем оба трека одновременно
+    const baseId = baseTrack.play();
+    const intensityId = intensityTrack.play();
+
+    console.log(`🎵 Base track playing: ID ${baseId}`);
+    console.log(`🎵 Intensity track playing (silent): ID ${intensityId}`);
+
+    // 🎯 Синхронизация треков (если композитор создал их с одинаковым BPM)
+    if (sync && baseId !== null && intensityId !== null) {
+      const baseSeek = baseTrack.seek();
+      intensityTrack.seek(baseSeek, intensityId);
+      console.log(`🔄 Tracks synced at position: ${baseSeek}s`);
+    }
+
+    this.layeredMusic.isActive = true;
+    this.currentMusic = baseAlias; // Для совместимости
+
+    console.log(`✅ Layered music initialized successfully`);
+  }
+
+  /**
+   * Переключает на intensity layer (при активации бустера)
+   * @param {number} transitionDuration - Длительность перехода (ms)
+   */
+  transitionToIntensity(transitionDuration = 1500) {
+    if (!this.layeredMusic || !this.layeredMusic.isActive) {
+      console.warn('⚠️ Layered music not initialized');
+      return;
+    }
+
+    const { baseAlias, intensityAlias, baseVolume, intensityVolume } = this.layeredMusic;
+    const baseTrack = this.sounds.get(baseAlias);
+    const intensityTrack = this.sounds.get(intensityAlias);
+
+    if (!baseTrack || !intensityTrack) {
+      console.error('❌ Layered tracks not found');
+      return;
+    }
+
+    console.log(`🚀 Transition to INTENSITY mode (${transitionDuration}ms)`);
+    console.log(`   Base: ${baseVolume} → ${baseVolume * 0.3} (fade down 70%)`);
+    console.log(`   Intensity: 0 → ${intensityVolume} (fade in 100%)`);
+
+    // Base layer уменьшаем до 30% (остается слышен, но тише)
+    const targetBaseVolume = baseVolume * 0.3 * this.masterVolume;
+    baseTrack.fade(
+      baseTrack.volume(),
+      targetBaseVolume,
+      transitionDuration
+    );
+
+    // Intensity layer повышаем до 100%
+    const targetIntensityVolume = intensityVolume * this.masterVolume;
+    intensityTrack.fade(
+      intensityTrack.volume(),
+      targetIntensityVolume,
+      transitionDuration
+    );
+
+    console.log(`🎵 Intensity transition started`);
+  }
+
+  /**
+   * Возвращает к base layer (при окончании бустера)
+   * @param {number} transitionDuration - Длительность перехода (ms)
+   */
+  transitionToBase(transitionDuration = 2000) {
+    if (!this.layeredMusic || !this.layeredMusic.isActive) {
+      console.warn('⚠️ Layered music not initialized');
+      return;
+    }
+
+    const { baseAlias, intensityAlias, baseVolume } = this.layeredMusic;
+    const baseTrack = this.sounds.get(baseAlias);
+    const intensityTrack = this.sounds.get(intensityAlias);
+
+    if (!baseTrack || !intensityTrack) {
+      console.error('❌ Layered tracks not found');
+      return;
+    }
+
+    console.log(`🎵 Transition to BASE mode (${transitionDuration}ms)`);
+    console.log(`   Base: current → ${baseVolume} (fade up to 100%)`);
+    console.log(`   Intensity: current → 0 (fade out)`);
+
+    // Base layer возвращаем к 100%
+    const targetBaseVolume = baseVolume * this.masterVolume;
+    baseTrack.fade(
+      baseTrack.volume(),
+      targetBaseVolume,
+      transitionDuration
+    );
+
+    // Intensity layer понижаем до 0%
+    intensityTrack.fade(
+      intensityTrack.volume(),
+      0,
+      transitionDuration
+    );
+
+    console.log(`🎵 Base transition started`);
+  }
+
+  /**
+   * Останавливает layered music систему
+   * @param {number} fadeDuration - Длительность fade-out (ms)
+   */
+  stopLayeredMusic(fadeDuration = 1000) {
+    if (!this.layeredMusic || !this.layeredMusic.isActive) return;
+
+    const { baseAlias, intensityAlias } = this.layeredMusic;
+    const baseTrack = this.sounds.get(baseAlias);
+    const intensityTrack = this.sounds.get(intensityAlias);
+
+    console.log(`⏹️ Stopping layered music`);
+
+    // Fade-out обоих треков
+    if (baseTrack) {
+      baseTrack.fade(baseTrack.volume(), 0, fadeDuration);
+    }
+    if (intensityTrack) {
+      intensityTrack.fade(intensityTrack.volume(), 0, fadeDuration);
+    }
+
+    setTimeout(() => {
+      if (baseTrack) baseTrack.stop();
+      if (intensityTrack) intensityTrack.stop();
+      this.layeredMusic.isActive = false;
+      this.currentMusic = null;
+      console.log(`✅ Layered music stopped`);
+    }, fadeDuration);
+  }
+
+  /**
+   * Пауза layered music
+   */
+  pauseLayeredMusic() {
+    if (!this.layeredMusic || !this.layeredMusic.isActive) return;
+
+    const { baseAlias, intensityAlias } = this.layeredMusic;
+    const baseTrack = this.sounds.get(baseAlias);
+    const intensityTrack = this.sounds.get(intensityAlias);
+
+    if (baseTrack) baseTrack.pause();
+    if (intensityTrack) intensityTrack.pause();
+
+    console.log(`⏸️ Layered music paused`);
+  }
+
+  /**
+   * Возобновление layered music
+   */
+  resumeLayeredMusic() {
+    if (!this.layeredMusic || !this.layeredMusic.isActive) return;
+
+    const { baseAlias, intensityAlias } = this.layeredMusic;
+    const baseTrack = this.sounds.get(baseAlias);
+    const intensityTrack = this.sounds.get(intensityAlias);
+
+    if (baseTrack) baseTrack.play();
+    if (intensityTrack) intensityTrack.play();
+
+    console.log(`▶️ Layered music resumed`);
+  }
+
+  /**
    * Очистка ресурсов (при destroy игры)
    */
   destroy() {
@@ -587,6 +798,11 @@ export class SoundManager {
     if (this.crossfadeTimeout) {
       clearTimeout(this.crossfadeTimeout);
       this.crossfadeTimeout = null;
+    }
+
+    // Очищаем layered music
+    if (this.layeredMusic) {
+      this.layeredMusic = null;
     }
 
     // Выгружаем все Howl instances

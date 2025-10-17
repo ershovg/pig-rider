@@ -27,11 +27,15 @@ export class GameLifecycleManager {
     this.ui.updateCoinCount(0, CONFIG.TARGET_COINS);
     this.ui.removeBoosterClass();
 
-    // 🎵 Запускаем музыку СРАЗУ при старте игры
-    // 500ms fade-in для быстрого начала (после клика пользователя)
+    // 🎵 Запускаем layered music систему при старте игры
+    // Оба трека начинают играть одновременно (bonusMusic беззвучно)
     if (this.soundManager) {
-      this.soundManager.playMusic('mainMusic', 500);
-      console.log('🎵 Main music started on game start');
+      this.soundManager.initLayeredMusic('mainMusic', 'bonusMusic', {
+        baseVolume: 0.6,      // Громкость спокойной музыки
+        intensityVolume: 0.6, // Громкость энергичной музыки
+        sync: true,           // Синхронизировать треки по времени
+      });
+      console.log('🎵 Layered music system started');
     }
 
     this.renderer.start();
@@ -44,6 +48,12 @@ export class GameLifecycleManager {
 
     if (this.player?.inputController) {
       this.player.inputController.disable();
+    }
+
+    // 🎵 Останавливаем layered music систему с fade-out
+    if (this.soundManager) {
+      this.soundManager.stopLayeredMusic(1000);
+      console.log('🎵 Layered music stopped on game end');
     }
 
     this.ui.hideHUD();
