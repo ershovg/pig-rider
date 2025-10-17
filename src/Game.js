@@ -109,14 +109,21 @@ export class Game {
   initSoundSystem() {
     this.soundManager = new SoundManager();
 
-    // Загружаем фоновую музыку
+    // 🎵 Единая громкость для всей музыки - плавный переход без испуга
+    const MUSIC_VOLUME = 0.6;
+
+    // Загружаем музыку
     this.soundManager.loadMusic('mainMusic', ASSET_PATHS.MUSIC_MAIN, {
-      volume: 0.4, // Чуть тише, чтобы не отвлекала
+      volume: MUSIC_VOLUME,
+    });
+
+    this.soundManager.loadMusic('bonusMusic', ASSET_PATHS.MUSIC_BONUS, {
+      volume: MUSIC_VOLUME,
     });
 
     // Загружаем звуковые эффекты
     this.soundManager.loadSound('coin', ASSET_PATHS.SFX_COIN, {
-      volume: 0.7,
+      volume: 0.15, // Едва слышен на фоне
     });
 
     console.log('🎵 Sound system initialized');
@@ -165,7 +172,8 @@ export class Game {
       this.spawnSystem,
       this.difficultyManager,
       this.ui,
-      this.player
+      this.player,
+      this.soundManager // 🆕 Dependency Injection для управления музыкой в бустере
     );
 
     this.collisionHandler = new CollisionHandler(this.collisionSystem, this.soundManager); // 🆕 Передаём SoundManager
@@ -186,7 +194,8 @@ export class Game {
       spawnSystem: this.spawnSystem,
       gameLoop: this.gameLoop,
       renderer: this.renderer,
-      ui: this.ui
+      ui: this.ui,
+      soundManager: this.soundManager // 🆕 Для запуска музыки при старте
     });
 
     // 🆕 Инициализируем Performance Monitor
@@ -225,14 +234,8 @@ export class Game {
     this.isColliding = false;
     this.frameCount = 0;
 
+    // 🎵 Музыка запускается внутри lifecycleManager.startGame()
     this.lifecycleManager.startGame();
-
-    // 🆕 Запускаем фоновую музыку с плавным fade-in
-    // ВАЖНО: Это происходит ПОСЛЕ user interaction (клик на "Play")
-    if (this.soundManager) {
-      console.log('🎶 Attempting to play music...');
-      this.soundManager.playMusic('mainMusic', 500); // 0.5s fade-in (быстрее, чтобы услышать до первого столкновения)
-    }
 
     this.startPoolLogging();
   }

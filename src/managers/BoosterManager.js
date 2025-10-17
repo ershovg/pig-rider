@@ -4,11 +4,12 @@
 import { CONFIG } from '../config/constants.js';
 
 export class BoosterManager {
-  constructor(spawnSystem, difficultyManager, ui, player) {
+  constructor(spawnSystem, difficultyManager, ui, player, soundManager = null) {
     this.spawnSystem = spawnSystem;
     this.difficultyManager = difficultyManager;
     this.ui = ui;
     this.player = player; // 🆕 Для переключения анимации
+    this.soundManager = soundManager; // 🆕 Для управления музыкой (Dependency Injection)
 
     this.isActive = false;
     this.timeRemaining = 0;
@@ -62,6 +63,27 @@ export class BoosterManager {
       this.player.switchAnimation(true);
     }
 
+    // 🎵 Простое переключение музыки
+    if (this.soundManager) {
+      // Сохраняем позицию
+      const mainMusic = this.soundManager.sounds.get('mainMusic');
+      if (mainMusic && mainMusic.playing()) {
+        this.soundManager.currentMusicPosition = mainMusic.seek();
+      }
+
+      // Stop → Play
+      this.soundManager.stopMusic(200);
+
+      setTimeout(() => {
+        const bonusMusic = this.soundManager.sounds.get('bonusMusic');
+        if (bonusMusic) {
+          bonusMusic.play();
+          this.soundManager.currentMusic = 'bonusMusic';
+          console.log('🎵 Bonus music playing');
+        }
+      }, 250);
+    }
+
     console.log(`✨ Booster activated! Lane: ${this.currentLane}`);
   }
 
@@ -81,6 +103,29 @@ export class BoosterManager {
     // 🆕 Возвращаем обычную анимацию
     if (this.player) {
       this.player.switchAnimation(false);
+    }
+
+    // 🎵 Возврат к основной музыке
+    if (this.soundManager) {
+      const bonusMusic = this.soundManager.sounds.get('bonusMusic');
+      if (bonusMusic && bonusMusic.playing()) {
+        bonusMusic.stop();
+      }
+
+      setTimeout(() => {
+        const mainMusic = this.soundManager.sounds.get('mainMusic');
+        if (mainMusic) {
+          const savedPosition = this.soundManager.currentMusicPosition || 0;
+          const id = mainMusic.play(); // Громкость уже восстановлена в stopMusic()
+
+          if (savedPosition > 0) {
+            mainMusic.seek(savedPosition, id);
+          }
+
+          this.soundManager.currentMusic = 'mainMusic';
+          console.log('🎵 Main music resumed');
+        }
+      }, 100);
     }
 
     console.log(`⏹️ Booster deactivated. Cooldown: ${CONFIG.BOOSTER_COOLDOWN_DURATION}s`);

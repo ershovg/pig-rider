@@ -99,7 +99,7 @@ const getAssetPath = (path) => {
 };
 
 export const ASSET_PATHS = {
-  // AVIF спрайты (оптимизированные, -64% размера!)
+  // AVIF спрайты
   // Player: используем только анимированные спрайтшиты (JSON + AVIF)
   get PLAYER_ANIMATED() { return getAssetPath('/assets/sprites/hryusha-flying.json'); }, // Sprite sheet анимация свиньи (обычная)
   get PLAYER_ANIMATED_BOOST() { return getAssetPath('/assets/sprites/hryusha-boost.json'); }, // Sprite sheet анимация свиньи (бустер)
@@ -112,7 +112,8 @@ export const ASSET_PATHS = {
   get STAR() { return getAssetPath('/assets/sprites/star.avif'); },
   get CLOUD() { return getAssetPath('/assets/sprites/cloud.avif'); },
 
-  // Audio
-  get MUSIC_MAIN() { return getAssetPath('/assets/sounds/Music%20level/stage-antics_main-full.wav'); },
-  get SFX_COIN() { return getAssetPath('/assets/sounds/Sounds/CoinCollect/Coin.wav'); }
+  // Audio - Оптимизированные OGG форматы
+  get MUSIC_MAIN() { return getAssetPath('/assets/sounds/Music level/Just Funky.ogg'); },
+  get MUSIC_BONUS() { return getAssetPath('/assets/sounds/Music Bonus/MusicBonus.ogg'); },
+  get SFX_COIN() { return getAssetPath('/assets/sounds/Sounds/CoinCollect/Coin.ogg'); }
 };

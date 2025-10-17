@@ -18,8 +18,13 @@ export class SoundManager {
 
     // Музыкальные треки (отдельно для управления)
     this.currentMusic = null;
+    this.currentMusicPosition = 0; // 🆕 Сохраняем позицию для resume
     this.musicVolume = 0.7; // Фоновая музыка (увеличено с 0.5 до 0.7 для слышимости)
     this.sfxVolume = 0.7;   // Sound effects громче
+
+    // 🆕 Crossfade управление
+    this.isCrossfading = false;
+    this.crossfadeTimeout = null;
 
     // 🆕 Unlock audio context при первом user interaction
     this.setupAudioUnlock();
@@ -236,16 +241,193 @@ export class SoundManager {
 
     const music = this.sounds.get(this.currentMusic);
     if (music) {
+      const originalVolume = music._volume; // Сохраняем оригинальную громкость
       music.fade(music.volume(), 0, fadeDuration);
 
-      // Останавливаем после fade-out
+      // Останавливаем после fade-out И восстанавливаем громкость
       setTimeout(() => {
         music.stop();
+        music.volume(originalVolume); // 🔧 ВОССТАНАВЛИВАЕМ для следующего play()
       }, fadeDuration);
     }
 
     console.log(`⏹️ Music stopped: ${this.currentMusic}`);
     this.currentMusic = null;
+  }
+
+  /**
+   * 🆕 Профессиональный crossfade между двумя треками
+   * Используется AAA-игровой подход: плавное перекрытие треков
+   * @param {string} newAlias - Имя нового музыкального трека
+   * @param {number} crossfadeDuration - Длительность crossfade (ms)
+   * @param {boolean} savePosition - Сохранить позицию текущего трека для resume
+   */
+  crossfadeToMusic(newAlias, crossfadeDuration = 2000, savePosition = false) {
+    console.log(`🎵 Crossfade to: ${newAlias}, duration: ${crossfadeDuration}ms, savePosition: ${savePosition}`);
+
+    // Если уже идет crossfade, отменяем предыдущий
+    if (this.isCrossfading && this.crossfadeTimeout) {
+      clearTimeout(this.crossfadeTimeout);
+    }
+
+    this.isCrossfading = true;
+
+    const oldMusicAlias = this.currentMusic; // 🔧 Сохраняем алиас для логов
+    const oldMusic = this.currentMusic ? this.sounds.get(this.currentMusic) : null;
+    const newMusic = this.sounds.get(newAlias);
+
+    if (!newMusic) {
+      console.warn(`⚠️ New music not found: ${newAlias}`);
+      console.log(`Available sounds:`, Array.from(this.sounds.keys()));
+      this.isCrossfading = false;
+      return;
+    }
+
+    // 🎯 Сохраняем позицию текущего трека (для resume после бустера)
+    if (savePosition && oldMusic && oldMusic.playing()) {
+      this.currentMusicPosition = oldMusic.seek();
+      console.log(`💾 Saved music position: ${this.currentMusicPosition}s`);
+    }
+
+    // 🔧 ИСПРАВЛЕНО: Используем индивидуальную громкость трека, а не глобальную
+    // Каждый трек может иметь свою громкость (mainMusic: 0.4, bonusMusic: 0.9)
+    const trackBaseVolume = newMusic._volume; // Оригинальная громкость трека
+    const targetVolume = trackBaseVolume * this.masterVolume;
+    console.log(`🔊 Track base volume: ${trackBaseVolume}, Master: ${this.masterVolume}, Target: ${targetVolume}`);
+
+    // ✅ Шаг 1: Fade-out старого трека (если есть)
+    if (oldMusic && oldMusic.playing()) {
+      const currentVolume = oldMusic.volume();
+      console.log(`🔉 Fading out ${oldMusicAlias} from ${currentVolume} to 0`);
+      oldMusic.fade(currentVolume, 0, crossfadeDuration);
+    }
+
+    // 🆕 ВАЖНО: Обновляем currentMusic ДО запуска нового трека
+    this.currentMusic = newAlias;
+
+    // ✅ Шаг 2: Загружаем и fade-in нового трека
+    console.log(`🔊 Fading in ${newAlias} from 0 to ${targetVolume}`);
+    console.log(`📊 New music state: ${newMusic.state()}, loaded: ${newMusic._src}`);
+
+    if (newMusic.state() === 'loaded') {
+      this._startCrossfadePlayback(newMusic, newAlias, targetVolume, crossfadeDuration);
+    } else {
+      // Ждем загрузки
+      console.log(`⏳ Waiting for ${newAlias} to load...`);
+      newMusic.once('load', () => {
+        console.log(`✅ ${newAlias} loaded, starting playback`);
+        this._startCrossfadePlayback(newMusic, newAlias, targetVolume, crossfadeDuration);
+      });
+    }
+
+    // ✅ Шаг 3: Останавливаем старый трек после fade-out
+    this.crossfadeTimeout = setTimeout(() => {
+      if (oldMusic) {
+        oldMusic.stop();
+        console.log(`⏹️ Old music stopped: ${oldMusicAlias}`);
+      }
+      this.isCrossfading = false;
+    }, crossfadeDuration);
+  }
+
+  /**
+   * Внутренний метод для запуска нового трека при crossfade
+   * @private
+   */
+  _startCrossfadePlayback(music, alias, targetVolume, fadeDuration) {
+    console.log(`🔊 [_startCrossfadePlayback] Starting ${alias}, targetVol: ${targetVolume}, fade: ${fadeDuration}ms`);
+
+    music.volume(0); // Начинаем с нулевой громкости
+    console.log(`🔊 [_startCrossfadePlayback] Volume set to 0, calling play()...`);
+
+    const playId = music.play();
+    console.log(`🔊 [_startCrossfadePlayback] play() returned ID: ${playId}`);
+
+    if (playId !== null && playId !== undefined) {
+      music.fade(0, targetVolume, fadeDuration);
+      console.log(`🎶 Crossfade playing: ${alias} (target volume: ${targetVolume})`);
+      console.log(`🎶 Music now playing: ${music.playing()}, seek: ${music.seek()}`);
+    } else {
+      console.error(`❌ Failed to play music ${alias} during crossfade - playId is null/undefined`);
+    }
+  }
+
+  /**
+   * 🆕 Возобновляет предыдущий трек с сохраненной позиции
+   * Используется после окончания бустера для seamless transition
+   * @param {string} alias - Имя трека для возобновления
+   * @param {number} crossfadeDuration - Длительность crossfade (ms)
+   */
+  resumeMusicFromPosition(alias, crossfadeDuration = 2000) {
+    console.log(`🔄 Resume music: ${alias} from position ${this.currentMusicPosition}s`);
+
+    const oldMusicAlias = this.currentMusic; // 🔧 Сохраняем для логов
+
+    // Останавливаем текущую музыку с fade-out
+    if (this.currentMusic && this.currentMusic !== alias) {
+      const currentTrack = this.sounds.get(this.currentMusic);
+      if (currentTrack && currentTrack.playing()) {
+        console.log(`🔉 Fading out ${this.currentMusic} before resume`);
+        currentTrack.fade(currentTrack.volume(), 0, crossfadeDuration);
+        setTimeout(() => {
+          currentTrack.stop();
+          console.log(`⏹️ Stopped ${oldMusicAlias} after fade-out`);
+        }, crossfadeDuration);
+      }
+    }
+
+    const music = this.sounds.get(alias);
+    if (!music) {
+      console.warn(`⚠️ Music not found for resume: ${alias}`);
+      console.log(`Available sounds:`, Array.from(this.sounds.keys()));
+      return;
+    }
+
+    // 🆕 ВАЖНО: Обновляем currentMusic ДО запуска
+    this.currentMusic = alias;
+
+    // 🔧 ИСПРАВЛЕНО: Используем индивидуальную громкость трека
+    const trackBaseVolume = music._volume;
+    const targetVolume = trackBaseVolume * this.masterVolume;
+
+    console.log(`📊 Resume music state: ${music.state()}, base vol: ${trackBaseVolume}, target: ${targetVolume}`);
+
+    // Загружаем трек и устанавливаем позицию
+    if (music.state() === 'loaded') {
+      this._startResumePlayback(music, alias, targetVolume, crossfadeDuration);
+    } else {
+      console.log(`⏳ Waiting for ${alias} to load for resume...`);
+      music.once('load', () => {
+        console.log(`✅ ${alias} loaded, resuming playback`);
+        this._startResumePlayback(music, alias, targetVolume, crossfadeDuration);
+      });
+    }
+  }
+
+  /**
+   * Внутренний метод для запуска трека с сохраненной позиции
+   * @private
+   */
+  _startResumePlayback(music, alias, targetVolume, fadeDuration) {
+    music.volume(0);
+    const playId = music.play();
+
+    if (playId !== null && playId !== undefined) {
+      // Устанавливаем сохраненную позицию
+      if (this.currentMusicPosition > 0) {
+        music.seek(this.currentMusicPosition, playId);
+        console.log(`⏩ Resumed from ${this.currentMusicPosition}s`);
+      }
+
+      // Fade-in с новой позиции
+      music.fade(0, targetVolume, fadeDuration);
+      console.log(`🎶 Music resumed: ${alias}`);
+
+      // Сбрасываем сохраненную позицию
+      this.currentMusicPosition = 0;
+    } else {
+      console.error(`❌ Failed to resume music ${alias}`);
+    }
   }
 
   /**
@@ -401,6 +583,12 @@ export class SoundManager {
   destroy() {
     this.stopAll();
 
+    // Очищаем crossfade timeout
+    if (this.crossfadeTimeout) {
+      clearTimeout(this.crossfadeTimeout);
+      this.crossfadeTimeout = null;
+    }
+
     // Выгружаем все Howl instances
     this.sounds.forEach((sound) => {
       sound.unload();
@@ -408,6 +596,8 @@ export class SoundManager {
 
     this.sounds.clear();
     this.currentMusic = null;
+    this.currentMusicPosition = 0;
+    this.isCrossfading = false;
 
     console.log('🗑️ SoundManager destroyed');
   }

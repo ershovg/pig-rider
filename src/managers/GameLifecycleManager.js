@@ -11,6 +11,7 @@ export class GameLifecycleManager {
     this.gameLoop = dependencies.gameLoop;
     this.renderer = dependencies.renderer;
     this.ui = dependencies.ui;
+    this.soundManager = dependencies.soundManager; // 🆕 Для запуска музыки
   }
 
   startGame() {
@@ -25,6 +26,13 @@ export class GameLifecycleManager {
     this.ui.showHUD();
     this.ui.updateCoinCount(0, CONFIG.TARGET_COINS);
     this.ui.removeBoosterClass();
+
+    // 🎵 Запускаем музыку СРАЗУ при старте игры
+    // 500ms fade-in для быстрого начала (после клика пользователя)
+    if (this.soundManager) {
+      this.soundManager.playMusic('mainMusic', 500);
+      console.log('🎵 Main music started on game start');
+    }
 
     this.renderer.start();
     this.gameLoop.start();
