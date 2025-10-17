@@ -63,11 +63,11 @@ export class BoosterManager {
       this.player.switchAnimation(true);
     }
 
-    // 🎵 Плавный переход к intensity layer (1.5 секунды)
-    // Base music уменьшается до 30%, intensity увеличивается до 100%
+    // 🎵 Gap crossfade к intensity layer (500ms fade-out + 500ms fade-in)
+    // Base затухает → Intensity появляется с начала трека (0s)
     if (this.soundManager) {
-      this.soundManager.transitionToIntensity(1500);
-      console.log('🎵 Transitioning to intensity music (1.5s)');
+      this.soundManager.transitionToIntensity(); // Использует дефолт: 500ms, 500ms
+      console.log('🎵 Gap crossfade to intensity music (500ms+500ms)');
     }
 
     console.log(`✨ Booster activated! Lane: ${this.currentLane}`);
@@ -91,11 +91,11 @@ export class BoosterManager {
       this.player.switchAnimation(false);
     }
 
-    // 🎵 Плавный возврат к base layer (2 секунды)
-    // Intensity music затухает до 0%, base возвращается к 100%
+    // 🎵 Gap crossfade обратно к base layer (500ms fade-out + 500ms fade-in)
+    // Intensity затухает → Base возвращается
     if (this.soundManager) {
-      this.soundManager.transitionToBase(2000);
-      console.log('🎵 Transitioning back to base music (2s)');
+      this.soundManager.transitionToBase(); // Использует дефолт: 500ms, 500ms
+      console.log('🎵 Gap crossfade back to base music (500ms+500ms)');
     }
 
     console.log(`⏹️ Booster deactivated. Cooldown: ${CONFIG.BOOSTER_COOLDOWN_DURATION}s`);

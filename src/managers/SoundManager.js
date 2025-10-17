@@ -645,9 +645,15 @@ export class SoundManager {
 
   /**
    * Переключает на intensity layer (при активации бустера)
-   * @param {number} transitionDuration - Длительность перехода (ms)
+   * Использует GAP CROSSFADE технику для чистого перехода:
+   * 1. Base затухает до 5% за 500ms
+   * 2. Intensity сбрасывается на начало трека (0 секунда)
+   * 3. Intensity появляется с 5% до 100% за 500ms
+   *
+   * @param {number} fadeOutDuration - Длительность затухания base (ms)
+   * @param {number} fadeInDuration - Длительность появления intensity (ms)
    */
-  transitionToIntensity(transitionDuration = 1500) {
+  transitionToIntensity(fadeOutDuration = 500, fadeInDuration = 500) {
     if (!this.layeredMusic || !this.layeredMusic.isActive) {
       console.warn('⚠️ Layered music not initialized');
       return;
@@ -662,34 +668,54 @@ export class SoundManager {
       return;
     }
 
-    console.log(`🚀 Transition to INTENSITY mode (${transitionDuration}ms)`);
-    console.log(`   Base: ${baseVolume} → ${baseVolume * 0.3} (fade down 70%)`);
-    console.log(`   Intensity: 0 → ${intensityVolume} (fade in 100%)`);
+    console.log(`🚀 GAP CROSSFADE to INTENSITY mode`);
+    console.log(`   Phase 1: Base fade out ${baseVolume} → 0 (${fadeOutDuration}ms)`);
+    console.log(`   Phase 2: Intensity fade in 0 → ${intensityVolume} (${fadeInDuration}ms)`);
 
-    // Base layer уменьшаем до 30% (остается слышен, но тише)
-    const targetBaseVolume = baseVolume * 0.3 * this.masterVolume;
+    // ✅ ШАГ 1: Base layer быстро затухает до 0
+    const currentBaseVolume = baseTrack.volume();
     baseTrack.fade(
-      baseTrack.volume(),
-      targetBaseVolume,
-      transitionDuration
+      currentBaseVolume,
+      0,
+      fadeOutDuration
     );
 
-    // Intensity layer повышаем до 100%
-    const targetIntensityVolume = intensityVolume * this.masterVolume;
-    intensityTrack.fade(
-      intensityTrack.volume(),
-      targetIntensityVolume,
-      transitionDuration
-    );
+    // ✅ ШАГ 2: Сбрасываем intensity track на начало (0 секунда)
+    // Это критически важно, чтобы каждый раз играл начальный клевый момент!
+    intensityTrack.seek(0);
+    console.log(`🔄 Intensity track reset to 0s (always start from beginning)`);
 
-    console.log(`🎵 Intensity transition started`);
+    // ✅ ШАГ 3: Когда base почти затих (~5-10%), начинаем fade-in intensity
+    // Небольшая задержка для "gap" эффекта (чистый переход)
+    setTimeout(() => {
+      const targetIntensityVolume = intensityVolume * this.masterVolume;
+
+      // Устанавливаем начальную громкость intensity (очень тихо)
+      intensityTrack.volume(0);
+
+      // Fade-in до полной громкости
+      intensityTrack.fade(
+        0,
+        targetIntensityVolume,
+        fadeInDuration
+      );
+
+      console.log(`🎵 Intensity fade-in started (0 → ${targetIntensityVolume})`);
+    }, fadeOutDuration * 0.8); // Начинаем fade-in когда base ~20% (почти тишина)
+
+    console.log(`✅ Gap crossfade initiated (total: ${fadeOutDuration + fadeInDuration}ms)`);
   }
 
   /**
    * Возвращает к base layer (при окончании бустера)
-   * @param {number} transitionDuration - Длительность перехода (ms)
+   * Использует GAP CROSSFADE технику для чистого перехода:
+   * 1. Intensity затухает до 0 за 500ms
+   * 2. Base появляется с 0 до 100% за 500ms (с небольшой задержкой)
+   *
+   * @param {number} fadeOutDuration - Длительность затухания intensity (ms)
+   * @param {number} fadeInDuration - Длительность появления base (ms)
    */
-  transitionToBase(transitionDuration = 2000) {
+  transitionToBase(fadeOutDuration = 500, fadeInDuration = 500) {
     if (!this.layeredMusic || !this.layeredMusic.isActive) {
       console.warn('⚠️ Layered music not initialized');
       return;
@@ -704,26 +730,36 @@ export class SoundManager {
       return;
     }
 
-    console.log(`🎵 Transition to BASE mode (${transitionDuration}ms)`);
-    console.log(`   Base: current → ${baseVolume} (fade up to 100%)`);
-    console.log(`   Intensity: current → 0 (fade out)`);
+    console.log(`🎵 GAP CROSSFADE to BASE mode`);
+    console.log(`   Phase 1: Intensity fade out → 0 (${fadeOutDuration}ms)`);
+    console.log(`   Phase 2: Base fade in → ${baseVolume} (${fadeInDuration}ms)`);
 
-    // Base layer возвращаем к 100%
-    const targetBaseVolume = baseVolume * this.masterVolume;
-    baseTrack.fade(
-      baseTrack.volume(),
-      targetBaseVolume,
-      transitionDuration
-    );
-
-    // Intensity layer понижаем до 0%
+    // ✅ ШАГ 1: Intensity layer быстро затухает до 0
+    const currentIntensityVolume = intensityTrack.volume();
     intensityTrack.fade(
-      intensityTrack.volume(),
+      currentIntensityVolume,
       0,
-      transitionDuration
+      fadeOutDuration
     );
 
-    console.log(`🎵 Base transition started`);
+    // ✅ ШАГ 2: Когда intensity почти затих (~5-10%), начинаем fade-in base
+    setTimeout(() => {
+      const targetBaseVolume = baseVolume * this.masterVolume;
+
+      // Устанавливаем начальную громкость base (очень тихо)
+      baseTrack.volume(0);
+
+      // Fade-in до полной громкости
+      baseTrack.fade(
+        0,
+        targetBaseVolume,
+        fadeInDuration
+      );
+
+      console.log(`🎵 Base fade-in started (0 → ${targetBaseVolume})`);
+    }, fadeOutDuration * 0.8); // Начинаем fade-in когда intensity ~20% (почти тишина)
+
+    console.log(`✅ Gap crossfade initiated (total: ${fadeOutDuration + fadeInDuration}ms)`);
   }
 
   /**
