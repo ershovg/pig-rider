@@ -82,11 +82,17 @@ export class GameLifecycleManager {
     if (this.soundManager && this.boosterManager.isFirstBooster()) {
       console.log('🎓 First booster! Pausing music for tutorial modal...');
       volumeRestore = this.soundManager.pauseForModal(0.3); // До 30%
+
+      // TODO: Когда будет custom UI модал (вместо alert):
+      // - Убрать alert() из UIController.showBoosterModal()
+      // - Создать красивый HTML модал с анимацией
+      // - Передавать isFirstTime флаг для показа/скрытия обучающего текста
+      // - Fade будет работать параллельно с показом модала (без задержек)
     } else {
       console.log('🚀 Subsequent booster, skipping music pause');
     }
 
-    // Показываем модал (alert сейчас, custom UI в будущем)
+    // Показываем модал (сейчас alert, в будущем custom UI)
     const confirmed = await this.ui.showBoosterModal();
 
     // 🔊 Восстанавливаем громкость (если приглушали)
