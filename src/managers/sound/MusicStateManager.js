@@ -194,6 +194,68 @@ export class MusicStateManager {
   }
 
   /**
+   * 🆕 Context-Aware Pausing (Умная Пауза)
+   * Плавно приглушает музыку (например, для показа модала)
+   *
+   * @param {number} targetVolume - Целевая громкость (0.0-1.0), например 0.3 = 30%
+   * @param {number} fadeDuration - Длительность затухания (ms)
+   * @returns {object} - Объект с методом restore() для восстановления
+   */
+  pauseSmooth(targetVolume = 0.3, fadeDuration = 300) {
+    if (!this.currentState) {
+      console.warn('⚠️ No active music state to pause');
+      return { restore: () => {} };
+    }
+
+    console.log(`⏸️ Context-aware pause: fading to ${targetVolume * 100}% (${fadeDuration}ms)`);
+
+    // Сохраняем текущие громкости для восстановления
+    const savedVolumes = new Map();
+
+    // Приглушаем все активные треки
+    this.sounds.forEach((sound, alias) => {
+      if (sound.playing()) {
+        const currentVol = sound.volume();
+        savedVolumes.set(alias, currentVol);
+
+        // Fade к target volume
+        const targetVol = currentVol * targetVolume;
+        sound.fade(currentVol, targetVol, fadeDuration);
+
+        console.log(`   ${alias}: ${currentVol.toFixed(2)} → ${targetVol.toFixed(2)}`);
+      }
+    });
+
+    // Возвращаем функцию для восстановления громкости
+    return {
+      /**
+       * Восстанавливает оригинальную громкость
+       * @param {number} fadeDuration - Длительность восстановления (ms)
+       */
+      restore: (restoreDuration = 300) => {
+        console.log(`▶️ Restoring volumes (${restoreDuration}ms)`);
+
+        savedVolumes.forEach((originalVol, alias) => {
+          const sound = this.sounds.get(alias);
+          if (sound && sound.playing()) {
+            const currentVol = sound.volume();
+            sound.fade(currentVol, originalVol, restoreDuration);
+
+            console.log(`   ${alias}: ${currentVol.toFixed(2)} → ${originalVol.toFixed(2)}`);
+          }
+        });
+      }
+    };
+  }
+
+  /**
+   * 🆕 Быстрый alias для pauseSmooth (для модалов)
+   */
+  pauseForModal(targetVolume = 0.3) {
+    return this.pauseSmooth(targetVolume, 300);
+  }
+
+  /**
    * Обновляет BPM (если музыка меняется)
    */
   setBPM(newBpm) {

@@ -17,6 +17,27 @@ export class BoosterManager {
     this.laneSwitchTimer = 0;
     this.cooldownTimer = 0;
     this.preBoosterSnapshot = null;
+
+    // 🆕 Флаг первого бустера (для Context-Aware Pausing)
+    // Используется чтобы приглушить музыку только при ПЕРВОМ получении бустера
+    // (когда показывается обучающий модал с описанием что такое бустер)
+    this.isFirstBoosterEver = true;
+  }
+
+  /**
+   * Проверяет, первый ли раз игрок получает бустер
+   * @returns {boolean}
+   */
+  isFirstBooster() {
+    return this.isFirstBoosterEver;
+  }
+
+  /**
+   * Помечает, что первый бустер был использован
+   */
+  markFirstBoosterUsed() {
+    this.isFirstBoosterEver = false;
+    console.log('✅ First booster used, future boosters will skip tutorial modal');
   }
 
   update(deltaTime) {
@@ -108,6 +129,9 @@ export class BoosterManager {
     this.laneSwitchTimer = 0;
     this.cooldownTimer = 0;
     this.preBoosterSnapshot = null;
+
+    // 🔧 НЕ сбрасываем isFirstBoosterEver при reset()
+    // Это флаг для всей сессии игры, должен сохраняться между рестартами
   }
 
   getContext() {

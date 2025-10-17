@@ -74,9 +74,32 @@ export class GameLifecycleManager {
 
   async handleBoosterActivation(onConfirm) {
     this.gameLoop.pause();
+
+    // 🔇 Context-Aware Pausing (Умная Пауза)
+    // Приглушаем музыку только при ПЕРВОМ бустере (для обучающего модала)
+    let volumeRestore = null;
+
+    if (this.soundManager && this.boosterManager.isFirstBooster()) {
+      console.log('🎓 First booster! Pausing music for tutorial modal...');
+      volumeRestore = this.soundManager.pauseForModal(0.3); // До 30%
+    } else {
+      console.log('🚀 Subsequent booster, skipping music pause');
+    }
+
+    // Показываем модал (alert сейчас, custom UI в будущем)
     const confirmed = await this.ui.showBoosterModal();
 
+    // 🔊 Восстанавливаем громкость (если приглушали)
+    if (volumeRestore) {
+      volumeRestore.restore(300); // 300ms fade-in обратно
+    }
+
     if (confirmed) {
+      // Помечаем, что первый бустер использован
+      if (this.boosterManager.isFirstBooster()) {
+        this.boosterManager.markFirstBoosterUsed();
+      }
+
       await this.boosterManager.activate();
       onConfirm?.();
     }

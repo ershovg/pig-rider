@@ -157,6 +157,30 @@ export class SoundManager {
   }
 
   /**
+   * 🆕 Context-Aware Pausing (Умная Пауза)
+   * Плавно приглушает музыку для модалов/UI элементов
+   *
+   * @param {number} targetVolume - Целевая громкость (0.0-1.0)
+   * @param {number} fadeDuration - Длительность fade (ms)
+   * @returns {object} - Объект с методом restore()
+   */
+  pauseSmooth(targetVolume = 0.3, fadeDuration = 300) {
+    if (!this.musicStateManager) {
+      console.warn('⚠️ Music state manager not initialized');
+      return { restore: () => {} };
+    }
+
+    return this.musicStateManager.pauseSmooth(targetVolume, fadeDuration);
+  }
+
+  /**
+   * 🆕 Alias для модалов
+   */
+  pauseForModal(targetVolume = 0.3) {
+    return this.pauseSmooth(targetVolume, 300);
+  }
+
+  /**
    * Останавливает все звуки
    */
   stopAll() {
