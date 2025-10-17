@@ -1,113 +1,63 @@
-import { CONFIG } from '../config/constants.js';
-
 /**
- * Управляет физикой движения игрока между полосами
- *
- * Зачем: Отделение физики от рендеринга и input handling.
- * Physics-based движение создает более естественный game feel, чем time-based tweens (GSAP).
- *
- * Преимущества над GSAP:
- * - Синхронизация с physics loop (60 UPS)
- * - Мгновенная реакция на смену направления (нет блокировки)
- * - Плавное торможение при приближении к цели
- * - Полный контроль через параметры (acceleration, friction)
- * - Меньше CPU (1 calculation/frame vs GSAP ticker)
- *
- * Принципы SOLID:
- * - SRP: Только physics calculations, без рендера и input handling
- * - OCP: Параметры настраиваются через config, легко менять behavior
- * - LSP: Может быть заменен другими physics моделями (spring, easing, etc)
- *
- * @example
- * const physics = new PlayerPhysicsController(CONFIG.PLAYER.PHYSICS);
- *
- * // Input controller:
- * physics.setTarget(CONFIG.LANES.Y_POSITIONS[1]);
- *
- * // В game loop (60 UPS):
- * const result = physics.update(deltaTime);
- * player.currentY = result.y;
- * if (!result.isMoving) { console.log('Reached target!'); }
+ * Управляет физикой плавного движения игрока между полосами.
+ * Использует физическую модель с ускорением, торможением и ease-out эффектом.
  */
 export class PlayerPhysicsController {
   /**
    * @param {Object} config - Конфигурация физики
-   * @param {number} config.maxSpeed - Максимальная скорость (px/s)
-   * @param {number} config.acceleration - Ускорение (px/s²)
-   * @param {number} config.friction - Коэффициент торможения (0-1)
-   * @param {number} config.brakeDistance - Дистанция начала торможения (px)
+   * @param {number} [config.maxSpeed=3000] - Максимальная скорость (px/s)
+   * @param {number} [config.acceleration=12000] - Ускорение (px/s²)
+   * @param {number} [config.friction=0.85] - Коэффициент торможения (0-1)
+   * @param {number} [config.brakeDistance=50] - Дистанция начала торможения (px)
+   * @param {number} [config.directionChangeDamping=0.5] - Гашение скорости при смене направления (0-1)
+   * @param {number} [config.minBrakeFactor=0.5] - Минимальный коэффициент торможения у цели (0-1)
+   * @param {number} [config.maxDeltaTime=0.05] - Максимальный deltaTime для стабильности (секунды)
    */
-  constructor(config) {
-    // Параметры физики
+  constructor(config = {}) {
+    // Физические константы
     this.maxSpeed = config.maxSpeed || 3000;
     this.acceleration = config.acceleration || 12000;
     this.friction = config.friction || 0.85;
     this.brakeDistance = config.brakeDistance || 50;
+    this.directionChangeDamping = config.directionChangeDamping || 0.5;
+    this.minBrakeFactor = config.minBrakeFactor || 0.5;
+    this.maxDeltaTime = config.maxDeltaTime || 0.05; // Защита от lag spikes
 
-    // Текущее состояние
+    // Состояние движения
     this.currentY = 0;
     this.velocityY = 0;
-    this.targetY = null;
-
-    // Порог "достижения цели" (px) - меньше = точнее, но может дрожать
+    this.targetY = null; // null = нет активной цели (стоим на месте)
     this.arrivalThreshold = 1;
   }
 
   /**
-   * Устанавливает новую целевую позицию
-   *
-   * Можно вызывать в любой момент, даже во время движения.
-   * Направление изменится мгновенно без блокировки.
-   *
-   * @param {number} targetY - Целевая Y координата
-   *
-   * @example
-   * // Игрок нажал "вверх" во время движения вниз
-   * physics.setTarget(CONFIG.LANES.Y_POSITIONS[0]);
-   * // Направление изменится на следующем update()
+   * Установить новую целевую позицию (Y-координата полосы)
+   * @param {number} targetY - Целевая Y-координата
    */
   setTarget(targetY) {
     this.targetY = targetY;
 
-    // Если новая цель в противоположном направлении, сбрасываем velocity
-    // для более резкого отклика (опционально)
+    // Гасим скорость при смене направления для плавного разворота
     const currentDirection = Math.sign(this.velocityY);
     const newDirection = Math.sign(targetY - this.currentY);
 
     if (currentDirection !== 0 && newDirection !== 0 && currentDirection !== newDirection) {
-      // Уменьшаем velocity для более быстрого разворота
-      this.velocityY *= 0.5;
+      this.velocityY *= this.directionChangeDamping;
     }
   }
 
   /**
-   * Обновляет физику движения
-   *
-   * Вызывается в каждом physics update (60 UPS).
-   * Возвращает новую Y позицию и статус движения.
-   *
-   * @param {number} deltaTime - Время с прошлого update (секунды)
-   * @returns {{ y: number, isMoving: boolean, distance: number }}
-   *
-   * @example
-   * update(deltaTime) {
-   *   const result = this.physicsController.update(deltaTime);
-   *   this.currentY = result.y;
-   *
-   *   if (!result.isMoving) {
-   *     console.log('Player reached target lane');
-   *   }
-   * }
+   * Обновить физику движения (вызывается каждый кадр)
+   * @param {number} deltaTime - Время с предыдущего кадра (секунды)
+   * @returns {{y: number, isMoving: boolean, distance: number}} Текущее состояние
    */
   update(deltaTime) {
-    // Нет цели = не двигаемся
     if (this.targetY === null) {
-      return {
-        y: this.currentY,
-        isMoving: false,
-        distance: 0
-      };
+      return { y: this.currentY, isMoving: false, distance: 0 };
     }
+
+    // Защита от lag spikes (ограничиваем deltaTime)
+    const safeDeltaTime = Math.min(deltaTime, this.maxDeltaTime);
 
     const distance = this.targetY - this.currentY;
     const absDistance = Math.abs(distance);
@@ -117,61 +67,44 @@ export class PlayerPhysicsController {
       this.currentY = this.targetY;
       this.targetY = null;
       this.velocityY = 0;
-
-      return {
-        y: this.currentY,
-        isMoving: false,
-        distance: 0
-      };
+      return { y: this.currentY, isMoving: false, distance: 0 };
     }
 
-    // Направление движения (-1 = вверх, +1 = вниз)
-    const direction = Math.sign(distance);
+    const direction = Math.sign(distance); // -1 = вверх, +1 = вниз
 
-    // Применяем ускорение
-    const accelerationDelta = direction * this.acceleration * deltaTime;
-    this.velocityY += accelerationDelta;
+    // Ускорение
+    this.velocityY += direction * this.acceleration * safeDeltaTime;
 
-    // Ограничиваем максимальную скорость
-    const maxSpeedDelta = this.maxSpeed * deltaTime;
+    // Ограничение максимальной скорости
+    const maxSpeedDelta = this.maxSpeed * safeDeltaTime;
     this.velocityY = Math.max(-maxSpeedDelta, Math.min(maxSpeedDelta, this.velocityY));
 
-    // Торможение при приближении к цели (для плавной остановки)
+    // Торможение при приближении к цели (ease-out эффект)
     if (absDistance < this.brakeDistance) {
-      const brakeFactor = absDistance / this.brakeDistance; // 0.0 to 1.0
-      this.velocityY *= this.friction * (0.5 + brakeFactor * 0.5); // Прогрессивное торможение
+      const brakeFactor = absDistance / this.brakeDistance; // 0.0 (у цели) → 1.0 (далеко)
+      const dampingCurve = this.minBrakeFactor + brakeFactor * (1 - this.minBrakeFactor);
+      this.velocityY *= this.friction * dampingCurve;
     }
 
-    // Обновляем позицию
+    // Обновление позиции
     this.currentY += this.velocityY;
 
-    // Предотвращаем проскакивание цели
-    const overshot = (direction > 0 && this.currentY > this.targetY) ||
-                     (direction < 0 && this.currentY < this.targetY);
+    // Защита от проскакивания цели
+    const overshot = Math.sign(this.currentY - this.targetY) === direction;
 
     if (overshot) {
       this.currentY = this.targetY;
       this.targetY = null;
       this.velocityY = 0;
-
-      return {
-        y: this.currentY,
-        isMoving: false,
-        distance: 0
-      };
+      return { y: this.currentY, isMoving: false, distance: 0 };
     }
 
-    return {
-      y: this.currentY,
-      isMoving: true,
-      distance: absDistance
-    };
+    return { y: this.currentY, isMoving: true, distance: absDistance };
   }
 
   /**
-   * Сброс состояния физики
-   *
-   * @param {number} initialY - Начальная Y позиция
+   * Сбросить состояние контроллера
+   * @param {number} initialY - Начальная позиция
    */
   reset(initialY) {
     this.currentY = initialY;
@@ -180,8 +113,7 @@ export class PlayerPhysicsController {
   }
 
   /**
-   * Проверить, движется ли игрок
-   *
+   * Проверить, движется ли сейчас
    * @returns {boolean}
    */
   isMoving() {
@@ -190,7 +122,6 @@ export class PlayerPhysicsController {
 
   /**
    * Получить текущую позицию
-   *
    * @returns {number}
    */
   getPosition() {
@@ -199,7 +130,6 @@ export class PlayerPhysicsController {
 
   /**
    * Получить текущую скорость
-   *
    * @returns {number}
    */
   getVelocity() {
@@ -208,7 +138,6 @@ export class PlayerPhysicsController {
 
   /**
    * Получить целевую позицию
-   *
    * @returns {number|null}
    */
   getTarget() {
@@ -216,11 +145,8 @@ export class PlayerPhysicsController {
   }
 
   /**
-   * Мгновенная телепортация (без физики)
-   *
-   * Используется для reset или специальных механик.
-   *
-   * @param {number} y - Новая Y позиция
+   * Мгновенно переместить в позицию (без анимации)
+   * @param {number} y - Целевая позиция
    */
   teleport(y) {
     this.currentY = y;
@@ -229,16 +155,64 @@ export class PlayerPhysicsController {
   }
 
   /**
-   * Обновить параметры физики на лету
-   *
-   * Полезно для power-ups или изменения game feel.
-   *
-   * @param {Object} params - Новые параметры
+   * Обновить параметры физики в runtime
+   * @param {Object} params - Новые параметры (частичные)
    */
   updateParams(params) {
-    if (params.maxSpeed !== undefined) this.maxSpeed = params.maxSpeed;
-    if (params.acceleration !== undefined) this.acceleration = params.acceleration;
-    if (params.friction !== undefined) this.friction = params.friction;
-    if (params.brakeDistance !== undefined) this.brakeDistance = params.brakeDistance;
+    if (params.maxSpeed !== undefined) {
+      if (params.maxSpeed <= 0) {
+        console.warn('[PlayerPhysicsController] maxSpeed должен быть > 0, игнорируется');
+      } else {
+        this.maxSpeed = params.maxSpeed;
+      }
+    }
+
+    if (params.acceleration !== undefined) {
+      if (params.acceleration <= 0) {
+        console.warn('[PlayerPhysicsController] acceleration должен быть > 0, игнорируется');
+      } else {
+        this.acceleration = params.acceleration;
+      }
+    }
+
+    if (params.friction !== undefined) {
+      if (params.friction < 0 || params.friction > 1) {
+        console.warn('[PlayerPhysicsController] friction должен быть 0-1, игнорируется');
+      } else {
+        this.friction = params.friction;
+      }
+    }
+
+    if (params.brakeDistance !== undefined) {
+      if (params.brakeDistance < 0) {
+        console.warn('[PlayerPhysicsController] brakeDistance должен быть >= 0, игнорируется');
+      } else {
+        this.brakeDistance = params.brakeDistance;
+      }
+    }
+
+    if (params.directionChangeDamping !== undefined) {
+      if (params.directionChangeDamping < 0 || params.directionChangeDamping > 1) {
+        console.warn('[PlayerPhysicsController] directionChangeDamping должен быть 0-1, игнорируется');
+      } else {
+        this.directionChangeDamping = params.directionChangeDamping;
+      }
+    }
+
+    if (params.minBrakeFactor !== undefined) {
+      if (params.minBrakeFactor < 0 || params.minBrakeFactor > 1) {
+        console.warn('[PlayerPhysicsController] minBrakeFactor должен быть 0-1, игнорируется');
+      } else {
+        this.minBrakeFactor = params.minBrakeFactor;
+      }
+    }
+
+    if (params.maxDeltaTime !== undefined) {
+      if (params.maxDeltaTime <= 0) {
+        console.warn('[PlayerPhysicsController] maxDeltaTime должен быть > 0, игнорируется');
+      } else {
+        this.maxDeltaTime = params.maxDeltaTime;
+      }
+    }
   }
 }
