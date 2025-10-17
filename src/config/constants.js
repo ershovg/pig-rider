@@ -4,7 +4,7 @@ export const CONFIG = {
   CANVAS_WIDTH: 1920,
   CANVAS_HEIGHT: 1080,
 
-  // Game - Configurable variables (легко менять)
+  // Game - Configurable variables
   TARGET_COINS: 200,        // Целевое количество монет для победы
 
   // Booster settings
