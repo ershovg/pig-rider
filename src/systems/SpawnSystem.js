@@ -92,11 +92,9 @@ export class SpawnSystem {
       boosterActiveLane = 0,
       isBoosterActive = false,
       boosterCooldown = 0,
-      difficultyManager = null
+      difficultyManager = null,
+      cullThreshold = CONFIG.CULLING.THRESHOLD // 🆕 Используем из context (приоритет) или fallback на константу
     } = context;
-
-    // 🆕 cullThreshold для Cullable interface
-    const cullThreshold = CONFIG.CULLING.THRESHOLD;
 
     if (!isBoosterMode) {
       this.obstacleSpawner.update(deltaTime, gameSpeed, { difficultyManager, cullThreshold });

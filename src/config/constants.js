@@ -81,7 +81,8 @@ export const CONFIG = {
     LEFT_MULTIPLIER: 0.08,     // Левая граница: 8% ширины канваса за левым краем (оптимально для маленьких окон)
     RIGHT_MULTIPLIER: 1.15,    // Правая граница: 115% ширины канваса (15% за правым)
     TIME_BUDGET_MS: 1,         // Максимальное время на culling операцию (мс)
-    DECORATION_INTERVAL: 5     // Culling декораций каждые N frames
+    DECORATION_INTERVAL: 5,    // Culling декораций каждые N frames
+    THRESHOLD: -200            // Левая граница за экраном для culling (больше самого большого объекта 280px)
   },
 
   // 🆕 Interpolation (плавность на 120+ FPS)

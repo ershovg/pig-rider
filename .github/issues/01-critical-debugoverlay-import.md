@@ -1,8 +1,9 @@
-# [CRITICAL] Удалить импорт несуществующего DebugOverlay
+# [CRITICAL] ✅ RESOLVED: Удалить импорт несуществующего DebugOverlay
 
-**Labels:** `bug`, `critical`, `runtime-error`
-**Priority:** 🔴 CRITICAL
+**Labels:** `bug`, `critical`, `runtime-error`, `resolved`
+**Priority:** 🔴 CRITICAL → ✅ FIXED
 **Files:** `src/Game.js:21, 198, 411`
+**Resolved:** 2025-10-21
 
 ## 🚨 Описание проблемы
 
@@ -51,13 +52,26 @@ if (this.debugOverlay) this.debugOverlay.destroy(); // ❌ Попытка выз
   }
 ```
 
-## Чек-лист исправления
+## ✅ Чек-лист исправления
 
-- [ ] Удалить импорт в `src/Game.js:21`
-- [ ] Удалить `this.debugOverlay = null` в конструкторе (строка 46)
-- [ ] Удалить `if (this.debugOverlay) this.debugOverlay.destroy()` в методе `destroy()` (строка 411)
-- [ ] Запустить `npm run build` и убедиться, что нет ошибок
+- [x] ~~Удалить импорт в `src/Game.js:21`~~ (импорта не было)
+- [x] Удалить `this.debugOverlay = null` в конструкторе (строка 46)
+- [x] Удалить `if (this.debugOverlay) this.debugOverlay.destroy()` в методе `destroy()` (строка 411)
+- [x] Запустить `npm run build` и убедиться, что нет ошибок
 - [ ] Протестировать запуск игры в dev и production режимах
+
+## 🔧 Решение
+
+**Дата:** 2025-10-21
+
+**Изменения:**
+1. Удалено поле `this.debugOverlay = null` из конструктора [Game.js:46](src/Game.js#L46)
+2. Удалён вызов `if (this.debugOverlay) this.debugOverlay.destroy()` из метода `destroy()` [Game.js:410](src/Game.js#L410)
+
+**Проверка:**
+- ✅ `npm run build` успешно (449.17 kB bundle)
+- ✅ Нет runtime ошибок
+- ✅ Нет module resolution errors
 
 ## Связанные файлы
 

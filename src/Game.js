@@ -46,6 +46,7 @@ export class Game {
     this.isColliding = false;
 
     this.cullingManager = new CullingManager({
+      cullThreshold: CONFIG.CULLING.THRESHOLD,
       leftMultiplier: CONFIG.CULLING.LEFT_MULTIPLIER,
       rightMultiplier: CONFIG.CULLING.RIGHT_MULTIPLIER,
       rendererWidth: CONFIG.CANVAS_WIDTH,

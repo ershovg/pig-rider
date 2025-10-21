@@ -35,6 +35,15 @@ export class BaseSpawner {
 
   updateActiveObjects(deltaTime, gameSpeed, context) {
     const objects = this.pool.getActive();
+    const cullThreshold = context.cullThreshold;
+
+    // 🔥 ДИАГНОСТИКА: логируем каждый 60-й кадр (раз в секунду при 60 FPS)
+    this._frameCounter = (this._frameCounter || 0) + 1;
+    if (this._frameCounter % 60 === 0) {
+      console.log(`[BaseSpawner] Update: objects=${objects.length}, cullThreshold=${cullThreshold}`);
+    }
+
+    let culled = 0;
 
     for (let i = objects.length - 1; i >= 0; i--) {
       const obj = objects[i];
@@ -42,11 +51,26 @@ export class BaseSpawner {
       // Обновляем объект
       obj.update(deltaTime, gameSpeed);
 
-      // ПОСЛЕ update проверяем, не деактивировался ли объект
-      // (может деактивироваться внутри своего update() при выходе за экран)
+      // 🆕 Проверяем culling через Cullable interface ПЕРЕД проверкой isActive()
+      if (cullThreshold !== undefined && obj.shouldCull && obj.shouldCull(cullThreshold)) {
+        // 🔥 ДИАГНОСТИКА: логируем каждый culled объект
+        console.log(`[BaseSpawner] 🔥 CULLING object at x=${obj.currentX}, threshold=${cullThreshold}`);
+        obj.deactivate();
+        this.pool.release(obj);
+        culled++;
+        continue;
+      }
+
+      // ПОСЛЕ update проверяем, не деактивировался ли объект (fallback)
       if (!obj.isActive()) {
+        console.log(`[BaseSpawner] 📌 Fallback release (object deactivated itself)`);
         this.pool.release(obj);
       }
+    }
+
+    // 🆕 Логирование для дебага
+    if (culled > 0) {
+      console.log(`[BaseSpawner] ✅ Culled ${culled} objects (threshold: ${cullThreshold}px)`);
     }
   }
 

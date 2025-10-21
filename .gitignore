@@ -4,3 +4,6 @@ node_modules/
 .vscode/
 draft/
 dist/
+
+# Claude Code config (local settings only)
+.claude/

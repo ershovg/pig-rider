@@ -23,20 +23,29 @@
 export class CullingManager {
   /**
    * @param {Object} config - Конфигурация
-   * @param {number} config.cullThreshold - X координата порога (px за левым краем) [DEPRECATED]
-   * @param {number} config.leftMultiplier - Множитель для левой границы (0.15 = 15% за экраном)
+   * @param {number} config.cullThreshold - X координата порога (px за левым краем) - статичное значение (приоритет)
+   * @param {number} config.leftMultiplier - Множитель для левой границы (0.15 = 15% за экраном) [DEPRECATED - используется только если cullThreshold не задан]
    * @param {number} config.rightMultiplier - Множитель для правой границы (1.15 = 115% ширины)
    * @param {number} config.rendererWidth - Ширина renderer (для динамических границ)
    * @param {number} config.timeBudgetMs - Максимальное время на операцию (мс)
    */
   constructor(config = {}) {
-    // Динамические boundaries (приоритет)
+    // Динамические boundaries
     this.leftMultiplier = config.leftMultiplier ?? 0.15;
     this.rightMultiplier = config.rightMultiplier ?? 1.15;
     this.rendererWidth = config.rendererWidth ?? 1920;
 
-    // Вычисляем threshold на основе multiplier
-    this.cullThreshold = -this.leftMultiplier * this.rendererWidth;
+    // 🆕 Флаг: используем статичный threshold или динамический расчёт
+    this.useStaticThreshold = config.cullThreshold !== undefined;
+
+    // 🆕 Приоритет статичному threshold из конфига
+    // Если задан - используем его, иначе вычисляем динамически
+    if (this.useStaticThreshold) {
+      this.cullThreshold = config.cullThreshold;
+    } else {
+      // Fallback: вычисляем threshold на основе multiplier (legacy)
+      this.cullThreshold = -this.leftMultiplier * this.rendererWidth;
+    }
 
     this.timeBudgetMs = config.timeBudgetMs ?? 1;
 
@@ -46,6 +55,9 @@ export class CullingManager {
       lastCulled: 0,
       budgetExceeded: 0
     };
+
+    // 🆕 Логирование инициализации для дебага
+    console.log(`[CullingManager] Initialized with threshold: ${this.cullThreshold}px`);
   }
 
   /**
@@ -60,8 +72,10 @@ export class CullingManager {
     if (leftMultiplier !== undefined) this.leftMultiplier = leftMultiplier;
     if (rightMultiplier !== undefined) this.rightMultiplier = rightMultiplier;
 
-    // Пересчитываем threshold
-    this.cullThreshold = -this.leftMultiplier * this.rendererWidth;
+    // 🆕 Пересчитываем threshold ТОЛЬКО если НЕ используем статичный
+    if (!this.useStaticThreshold) {
+      this.cullThreshold = -this.leftMultiplier * this.rendererWidth;
+    }
   }
 
   /**
@@ -133,6 +147,11 @@ export class CullingManager {
     this.stats.totalCulled += culled;
     this.stats.lastCulled = culled;
 
+    // 🆕 Логирование для дебага
+    if (culled > 0) {
+      console.log(`[Culling] Removed ${culled} objects (threshold: ${this.cullThreshold}px, time: ${timeMs.toFixed(2)}ms)`);
+    }
+
     // 🆕 Возвращаем количество culled для Performance Monitor
     return culled;
   }
@@ -174,6 +193,11 @@ export class CullingManager {
 
     this.stats.totalCulled += culled;
     this.stats.lastCulled = culled;
+
+    // 🆕 Логирование для дебага (декорации)
+    if (culled > 0) {
+      console.log(`[Culling] Removed ${culled} decorations (threshold: ${this.cullThreshold}px)`);
+    }
 
     // 🆕 Возвращаем количество culled для Performance Monitor
     return culled;

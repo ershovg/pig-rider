@@ -23,9 +23,11 @@ export class ObjectPool {
 
     if (this.pool.length > 0) {
       obj = this.pool.pop();
+      // console.log(`[ObjectPool] ✅ Acquired from pool (pooled: ${this.pool.length}, active: ${this.active.length + 1})`);
     } else {
       // Pool is empty, create new object
       obj = this.createFn();
+      // console.log(`[ObjectPool] 🆕 Pool empty, creating new (total will be: ${this.active.length + 1})`);
     }
 
     this.active.push(obj);
@@ -42,13 +44,14 @@ export class ObjectPool {
       this.active.splice(index, 1);
       this.resetFn(obj);
       this.pool.push(obj);
+      console.log(`[ObjectPool] ✅ Released object (pooled: ${this.pool.length}, active: ${this.active.length})`);
     } else {
       // 🔥 SAFETY CHECK: Предотвращаем double-release
       // Если объект не найден в active, возможно он уже в пуле
       if (this.pool.includes(obj)) {
-        console.warn('[ObjectPool] Attempted double-release of object. Ignoring.');
+        console.warn('[ObjectPool] ⚠️ Attempted double-release of object. Ignoring.');
       } else {
-        console.error('[ObjectPool] Attempted to release unknown object!');
+        console.error('[ObjectPool] ❌ FAILED to release - object NOT in active array!');
       }
     }
   }
