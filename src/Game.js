@@ -43,7 +43,6 @@ export class Game {
     this.lifecycleManager = null;
     this.cullingCoordinator = null;
     this.performanceMonitor = null;
-    this.debugOverlay = null;
     this.isColliding = false;
 
     this.cullingManager = new CullingManager({
@@ -408,7 +407,6 @@ export class Game {
 
   destroy() {
     this.stopPoolLogging();
-    if (this.debugOverlay) this.debugOverlay.destroy();
     if (this.gameLoop) this.gameLoop.stop();
     if (this.player) this.player.destroy();
     if (this.ui) this.ui.destroy();
