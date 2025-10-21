@@ -43,10 +43,10 @@ export const CONFIG = {
 
   // Obstacles
   OBSTACLE: {
-    MIN_DISTANCE: 800,
-    MAX_DISTANCE: 1400,
+    MIN_DISTANCE: 1000,    // 🔴 Increased from 800 to reduce spawn frequency
+    MAX_DISTANCE: 1600,    // 🔴 Increased from 1400 for better spacing
     SIZE: 280, // Ширина барьера в пикселях (высота масштабируется пропорционально)
-    POOL_SIZE: 20
+    POOL_SIZE: 30          // 🔴 Increased from 20 to prevent pool exhaustion
   },
 
   // Coins
@@ -74,7 +74,8 @@ export const CONFIG = {
 
   // Performance
   FIXED_TIMESTEP: 1000 / 60, // 60 FPS physics updates (можно увеличить до 120 для еще большей плавности)
-  MAX_DELTA: 100,
+  MAX_DELTA: 67,  // 🆕 Reduced from 100ms to ~4 frames worth (67ms) to prevent extreme catch-up
+  MAX_PHYSICS_UPDATES_PER_FRAME: 4,  // 🆕 Maximum physics updates allowed per visual frame
 
   // 🆕 Culling (удаление объектов за пределами viewport)
   CULLING: {
@@ -82,7 +83,7 @@ export const CONFIG = {
     RIGHT_MULTIPLIER: 1.15,    // Правая граница: 115% ширины канваса (15% за правым)
     TIME_BUDGET_MS: 1,         // Максимальное время на culling операцию (мс)
     DECORATION_INTERVAL: 5,    // Culling декораций каждые N frames
-    THRESHOLD: -200            // Левая граница за экраном для culling (больше самого большого объекта 280px)
+    THRESHOLD: -200            // Оставляем -200 для лучшего визуального качества (объекты полностью уходят за экран)
   },
 
   // 🆕 Interpolation (плавность на 120+ FPS)

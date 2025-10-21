@@ -3,11 +3,14 @@
  * Reduces garbage collection by reusing objects
  */
 export class ObjectPool {
-  constructor(createFn, resetFn, initialSize = 10) {
+  constructor(createFn, resetFn, initialSize = 10, maxSize = null) {
     this.createFn = createFn;
     this.resetFn = resetFn;
     this.pool = [];
     this.active = [];
+    // 🔴 CRITICAL: Set max size to prevent infinite growth
+    // Default to 2x initial size if not specified
+    this.maxSize = maxSize || initialSize * 2;
 
     // Pre-populate pool
     for (let i = 0; i < initialSize; i++) {
@@ -25,9 +28,19 @@ export class ObjectPool {
       obj = this.pool.pop();
       // console.log(`[ObjectPool] ✅ Acquired from pool (pooled: ${this.pool.length}, active: ${this.active.length + 1})`);
     } else {
-      // Pool is empty, create new object
-      obj = this.createFn();
-      // console.log(`[ObjectPool] 🆕 Pool empty, creating new (total will be: ${this.active.length + 1})`);
+      // 🔴 CRITICAL FIX: Prevent infinite object creation
+      const totalObjects = this.active.length + this.pool.length;
+      if (totalObjects < this.maxSize) {
+        // Create new object only if under max size
+        obj = this.createFn();
+        if (totalObjects > this.maxSize * 0.8) {
+          console.warn(`[ObjectPool] ⚠️ Pool near capacity: ${totalObjects + 1}/${this.maxSize}`);
+        }
+      } else {
+        // Pool is at max capacity - return null to prevent memory leak
+        console.error(`[ObjectPool] ❌ POOL EXHAUSTED! Max capacity (${this.maxSize}) reached. Spawn skipped.`);
+        return null;
+      }
     }
 
     this.active.push(obj);
@@ -44,7 +57,8 @@ export class ObjectPool {
       this.active.splice(index, 1);
       this.resetFn(obj);
       this.pool.push(obj);
-      console.log(`[ObjectPool] ✅ Released object (pooled: ${this.pool.length}, active: ${this.active.length})`);
+      // Removed verbose logging to reduce console spam
+      // console.log(`[ObjectPool] ✅ Released object (pooled: ${this.pool.length}, active: ${this.active.length})`);
     } else {
       // 🔥 SAFETY CHECK: Предотвращаем double-release
       // Если объект не найден в active, возможно он уже в пуле

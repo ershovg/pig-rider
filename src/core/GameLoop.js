@@ -59,12 +59,33 @@ export class GameLoop {
       deltaTime = CONFIG.MAX_DELTA;
     }
 
+    // 🆕 Store actual frame delta for spawning systems
+    // This represents REAL time between visual frames, not physics steps
+    const frameDeltaTime = deltaTime / 1000; // Convert to seconds
+
     this.accumulator += deltaTime;
 
+    // 🆕 Track how many physics updates we're about to do
+    let physicsUpdates = 0;
+    const maxPhysicsUpdates = CONFIG.MAX_PHYSICS_UPDATES_PER_FRAME || 4;
+
     // Fixed timestep updates
-    while (this.accumulator >= this.fixedDeltaTime) {
-      this.updateCallback(this.fixedDeltaTime / 1000); // Convert to seconds
+    while (this.accumulator >= this.fixedDeltaTime && physicsUpdates < maxPhysicsUpdates) {
+      // 🆕 Pass both physics delta AND frame delta
+      // Physics delta: for deterministic physics simulation
+      // Frame delta: for time-based spawning that shouldn't accumulate
+      this.updateCallback(
+        this.fixedDeltaTime / 1000,  // Physics delta (fixed timestep)
+        frameDeltaTime                // Frame delta (actual time passed)
+      );
       this.accumulator -= this.fixedDeltaTime;
+      physicsUpdates++;
+    }
+
+    // 🆕 If we hit the limit, clamp the accumulator to prevent runaway
+    if (physicsUpdates >= maxPhysicsUpdates && this.accumulator > this.fixedDeltaTime) {
+      console.warn(`[GameLoop] Clamped ${Math.floor(this.accumulator / this.fixedDeltaTime)} pending physics updates to prevent spiral`);
+      this.accumulator = this.fixedDeltaTime * 0.9; // Keep some for next frame
     }
 
     // Render with interpolation factor

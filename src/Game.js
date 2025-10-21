@@ -266,7 +266,7 @@ export class Game {
     this.startGame();
   }
 
-  update(deltaTime) {
+  update(deltaTime, frameDeltaTime = null) {
     if (!this.stateManager.isPlaying()) return;
 
     this.frameCount++;
@@ -278,17 +278,22 @@ export class Game {
       [this.player]
     ]);
 
+    // 🆕 Use physics delta for physics-based systems
     this.boosterManager.update(deltaTime);
     this.progressionManager.update(deltaTime);
     this.difficultyManager.updateScore(this.progressionManager.getScore());
 
+    // Physics update for player movement
     this.player.update(deltaTime);
 
+    // 🆕 Pass frame delta time to spawn system for proper spawn timing
+    // This prevents spawn timer accumulation during physics catch-up
     const boosterContext = this.boosterManager.getContext();
     this.spawnSystem.update(deltaTime, this.progressionManager.getGameSpeed(), {
       ...boosterContext,
       difficultyManager: this.difficultyManager,
-      cullThreshold: this.cullingManager.cullThreshold
+      cullThreshold: this.cullingManager.cullThreshold,
+      frameDeltaTime: frameDeltaTime || deltaTime  // 🆕 Real frame time for spawn timers
     });
 
     this.cullingCoordinator.performCulling(this.frameCount);

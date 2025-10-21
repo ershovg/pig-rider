@@ -35,7 +35,7 @@ export class SpawnSystem {
   }
 
   initializePools() {
-    this.poolManager.registerPool('obstacle', Obstacle, 20, {
+    this.poolManager.registerPool('obstacle', Obstacle, CONFIG.OBSTACLE.POOL_SIZE, {
       texture: this.textures.obstacles[Math.floor(Math.random() * this.textures.obstacles.length)]
     });
     this.poolManager.registerPool('coin', Coin, 50, { texture: this.textures.coin });
@@ -93,27 +93,35 @@ export class SpawnSystem {
       isBoosterActive = false,
       boosterCooldown = 0,
       difficultyManager = null,
-      cullThreshold = CONFIG.CULLING.THRESHOLD // 🆕 Используем из context (приоритет) или fallback на константу
+      cullThreshold = CONFIG.CULLING.THRESHOLD, // 🆕 Используем из context (приоритет) или fallback на константу
+      frameDeltaTime = null  // 🆕 Real frame time for spawn timers
     } = context;
 
+    // 🆕 Create spawner context with frame delta time
+    // This prevents spawn accumulation during physics catch-up
+    const spawnerContext = {
+      difficultyManager,
+      cullThreshold,
+      frameDeltaTime: frameDeltaTime || deltaTime  // Fallback to physics time if not provided
+    };
+
     if (!isBoosterMode) {
-      this.obstacleSpawner.update(deltaTime, gameSpeed, { difficultyManager, cullThreshold });
+      this.obstacleSpawner.update(deltaTime, gameSpeed, spawnerContext);
     }
 
     this.coinSpawner.update(deltaTime, gameSpeed, {
+      ...spawnerContext,
       isBoosterMode,
       boosterActiveLane,
-      gameSpeed,
-      difficultyManager,
-      cullThreshold
+      gameSpeed
     });
 
-    this.cloudSpawner.update(deltaTime, gameSpeed, { cullThreshold });
-    this.starSpawner.update(deltaTime, gameSpeed, { cullThreshold });
+    this.cloudSpawner.update(deltaTime, gameSpeed, spawnerContext);
+    this.starSpawner.update(deltaTime, gameSpeed, spawnerContext);
     this.boosterSpawner.update(deltaTime, gameSpeed, {
+      ...spawnerContext,
       isBoosterActive,
-      boosterCooldown,
-      cullThreshold
+      boosterCooldown
     });
 
     // Освобождаем завершившиеся эффекты

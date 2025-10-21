@@ -68,11 +68,24 @@ export class EntityPoolManager {
     };
 
     // Создаем пул с фабрикой и reset функцией
-    const pool = new ObjectPool(factory, reset, initialSize);
+    // 🔴 CRITICAL: Set maxSize to prevent memory leaks
+    // Different multipliers for different entity types
+    let maxSize;
+    if (name === 'obstacle') {
+      // Obstacles need more room due to spawn patterns
+      maxSize = initialSize * 3;  // 60 for obstacles (was 30)
+    } else if (name === 'coin' || name === 'star') {
+      // Decorative items can have larger pools
+      maxSize = initialSize * 2;  // 100 for coins, 60 for stars
+    } else {
+      // Default for other entities
+      maxSize = Math.ceil(initialSize * 1.5);
+    }
+    const pool = new ObjectPool(factory, reset, initialSize, maxSize);
 
     this.pools.set(name, pool);
 
-    console.log(`[PoolManager] Registered pool "${name}" with ${initialSize} objects`);
+    console.log(`[PoolManager] Registered pool "${name}" with ${initialSize} objects (max: ${maxSize})`);
   }
 
   /**
