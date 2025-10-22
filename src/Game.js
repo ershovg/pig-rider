@@ -1,25 +1,25 @@
-import { CONFIG } from './config/constants.js';
+import { CONFIG } from './shared/config/constants.js';
 import { Renderer } from './core/Renderer.js';
 import { GameLoop } from './core/GameLoop.js';
 import { AssetLoader } from './core/AssetLoader.js';
-import { Player } from './entities/Player.js';
-import { SpawnSystem } from './systems/SpawnSystem.js';
-import { CollisionSystem } from './systems/CollisionSystem.js';
-import { DifficultyManager } from './systems/DifficultyManager.js';
-import { UIController } from './ui/UIController.js';
-import { GameStateManager } from './managers/GameStateManager.js';
-import { BoosterManager } from './managers/BoosterManager.js';
-import { ProgressionManager } from './managers/ProgressionManager.js';
-import { CullingManager } from './managers/CullingManager.js';
-import { InterpolationManager } from './managers/InterpolationManager.js';
-import { CollisionHandler } from './managers/CollisionHandler.js';
-import { EffectCoordinator } from './managers/EffectCoordinator.js';
-import { GameLifecycleManager } from './managers/GameLifecycleManager.js';
-import { CullingCoordinator } from './managers/CullingCoordinator.js';
-import { PlayerPhysicsController } from './controllers/PlayerPhysicsController.js';
-import { PerformanceMonitor } from './managers/PerformanceMonitor.js';
-import { SoundManager } from './managers/sound/SoundManager.js';
-import { ASSET_PATHS } from './config/constants.js';
+import { Player } from './features/player/entities/Player.js';
+import { SpawnSystem } from './features/spawning/SpawnSystem.js';
+import { CollisionSystem } from './features/collision/system/CollisionSystem.js';
+import { DifficultyManager } from './features/progression/manager/DifficultyManager.js';
+import { UIController } from './features/ui/UIController.js';
+import { GameStateManager } from './features/state/GameStateManager.js';
+import { BoosterManager } from './features/booster/manager/BoosterManager.js';
+import { ProgressionManager } from './features/progression/manager/ProgressionManager.js';
+import { CullingManager } from './features/rendering/culling/CullingManager.js';
+import { InterpolationManager } from './features/rendering/interpolation/InterpolationManager.js';
+import { CollisionHandler } from './features/collision/handler/CollisionHandler.js';
+import { EffectCoordinator } from './features/effects/manager/EffectCoordinator.js';
+import { GameLifecycleManager } from './features/progression/lifecycle/GameLifecycleManager.js';
+import { CullingCoordinator } from './features/rendering/culling/CullingCoordinator.js';
+import { PlayerPhysicsController } from './features/player/controllers/PlayerPhysicsController.js';
+import { PerformanceMonitor } from './features/monitoring/PerformanceMonitor.js';
+import { SoundManager } from './features/sound/manager/SoundManager.js';
+import { ASSET_PATHS } from './shared/config/constants.js';
 
 export class Game {
   constructor() {
@@ -35,7 +35,7 @@ export class Game {
     this.ui = null;
 
     this.stateManager = new GameStateManager();
-    this.soundManager = null; // 🆕 Управление аудио
+    this.soundManager = null;
     this.boosterManager = null;
     this.progressionManager = null;
     this.collisionHandler = null;
@@ -56,17 +56,12 @@ export class Game {
     this.playerPhysicsController = new PlayerPhysicsController(CONFIG.PLAYER.PHYSICS);
 
     this.frameCount = 0;
-
-    // 🔍 DEBUG: Интервал для логирования размеров пулов (каждые 5 секунд)
     this.poolLogInterval = null;
-
-    // 🆕 Keyboard shortcut для Performance Monitor (Shift+P)
     this.setupPerformanceShortcut();
   }
 
   setupPerformanceShortcut() {
     document.addEventListener('keydown', (e) => {
-      // Shift+P для toggle Performance Monitor
       if (e.shiftKey && e.key === 'P') {
         if (this.performanceMonitor) {
           this.performanceMonitor.toggle();
@@ -89,7 +84,6 @@ export class Game {
 
       await this.assetLoader.loadCriticalAssets();
 
-      // 🆕 Инициализация звуковой системы (после загрузки assets)
       this.initSoundSystem();
 
       this.ui.hideLoading();
@@ -113,10 +107,8 @@ export class Game {
       sfxVolume: 0.7,
     });
 
-    // 🎵 Единая громкость для всей музыки
     const MUSIC_VOLUME = 0.6;
 
-    // Загружаем музыку
     this.soundManager.loadMusic('mainMusic', ASSET_PATHS.MUSIC_MAIN, {
       volume: MUSIC_VOLUME,
     });
@@ -125,16 +117,14 @@ export class Game {
       volume: MUSIC_VOLUME,
     });
 
-    // Загружаем звуковые эффекты
     this.soundManager.loadSound('coin', ASSET_PATHS.SFX_COIN, {
-      volume: 0.05, // 🔧 Уменьшено в 3 раза: 0.15 → 0.05
+      volume: 0.05,
     });
 
-    // 🆕 Инициализируем музыкальные состояния
     this.soundManager.initMusicStates({
-      bpm: 130,              // BPM треков (измерь в DAW)
-      beatsPerBar: 4,        // 4/4 time signature
-      beatSync: true,        // Переходы на бит
+      bpm: 130,
+      beatsPerBar: 4,
+      beatSync: true,
       gameplayBaseVolume: 0.6,
       gameplayIntensityVolume: 0.6,
       boosterIntensityVolume: 0.6,
@@ -142,7 +132,7 @@ export class Game {
       boosterFadeIn: 500,
     });
 
-    console.log('🎵 Sound system initialized (modular architecture)');
+    console.log('Sound system initialized');
   }
 
   initSystems() {
@@ -177,7 +167,7 @@ export class Game {
       coinCollectEffectSpritesheet,
       collisionEffectSpritesheet,
       this.renderer.stage,
-      this.renderer.decorationLayer // 🆕 Передаём ParticleContainer для декораций
+      this.renderer.decorationLayer
     );
 
     this.collisionSystem = new CollisionSystem();
@@ -189,10 +179,10 @@ export class Game {
       this.difficultyManager,
       this.ui,
       this.player,
-      this.soundManager // 🆕 Dependency Injection для управления музыкой в бустере
+      this.soundManager
     );
 
-    this.collisionHandler = new CollisionHandler(this.collisionSystem, this.soundManager); // 🆕 Передаём SoundManager
+    this.collisionHandler = new CollisionHandler(this.collisionSystem, this.soundManager);
     this.effectCoordinator = new EffectCoordinator(this.spawnSystem);
     this.cullingCoordinator = new CullingCoordinator(this.cullingManager, this.spawnSystem);
 
@@ -211,24 +201,20 @@ export class Game {
       gameLoop: this.gameLoop,
       renderer: this.renderer,
       ui: this.ui,
-      soundManager: this.soundManager // 🆕 Для запуска музыки при старте
+      soundManager: this.soundManager
     });
 
-    // 🆕 Инициализируем Performance Monitor
     this.performanceMonitor = new PerformanceMonitor(this.renderer, this.gameLoop);
     this.performanceMonitor.enable();
-
-    // Устанавливаем динамические boundaries на основе реального размера канваса
     const rendererWidth = this.renderer.app?.screen?.width || CONFIG.CANVAS_WIDTH;
     this.cullingManager.setBoundaries(rendererWidth);
 
-    console.log('💡 Press Shift+P to toggle Performance Monitor');
-    console.log('💡 Press D to toggle Culling Debug Overlay');
+    console.log('Press Shift+P to toggle Performance Monitor');
+    console.log('Press D to toggle Culling Debug Overlay');
 
-    // 🔊 Debug: Expose sound manager to window for testing
     if (typeof window !== 'undefined') {
       window.soundManager = this.soundManager;
-      console.log('🔊 Debug: Type window.soundManager.playMusic("mainMusic", 100) to test music');
+      console.log('Debug: Type window.soundManager.playMusic("mainMusic", 100) to test music');
     }
   }
 
@@ -250,7 +236,6 @@ export class Game {
     this.isColliding = false;
     this.frameCount = 0;
 
-    // 🎵 Музыка запускается внутри lifecycleManager.startGame()
     this.lifecycleManager.startGame();
 
     this.startPoolLogging();
@@ -278,22 +263,18 @@ export class Game {
       [this.player]
     ]);
 
-    // 🆕 Use physics delta for physics-based systems
     this.boosterManager.update(deltaTime);
     this.progressionManager.update(deltaTime);
     this.difficultyManager.updateScore(this.progressionManager.getScore());
 
-    // Physics update for player movement
     this.player.update(deltaTime);
 
-    // 🆕 Pass frame delta time to spawn system for proper spawn timing
-    // This prevents spawn timer accumulation during physics catch-up
     const boosterContext = this.boosterManager.getContext();
     this.spawnSystem.update(deltaTime, this.progressionManager.getGameSpeed(), {
       ...boosterContext,
       difficultyManager: this.difficultyManager,
       cullThreshold: this.cullingManager.cullThreshold,
-      frameDeltaTime: frameDeltaTime || deltaTime  // 🆕 Real frame time for spawn timers
+      frameDeltaTime: frameDeltaTime || deltaTime
     });
 
     this.cullingCoordinator.performCulling(this.frameCount);
@@ -336,7 +317,6 @@ export class Game {
       this.lifecycleManager.handleBoosterActivation();
     }
 
-    // 🆕 Обновляем Performance Monitor
     if (this.performanceMonitor) {
       this.performanceMonitor.update({
         spawnSystem: this.spawnSystem,
@@ -370,14 +350,11 @@ export class Game {
     }
   }
 
-  // 🔍 DEBUG: Логирование размеров пулов
   startPoolLogging() {
-    // Очищаем предыдущий интервал, если был
     if (this.poolLogInterval) {
       clearInterval(this.poolLogInterval);
     }
 
-    // Логируем каждые 5 секунд
     this.poolLogInterval = setInterval(() => {
       if (!this.spawnSystem) return;
 
@@ -387,7 +364,6 @@ export class Game {
       const cloudPool = this.spawnSystem.cloudSpawner?.pool;
       const starPool = this.spawnSystem.starSpawner?.pool;
 
-      // Получаем полную статистику пула
       const obstacleStats = obstaclePool?.getStats() || { active: 0, pooled: 0, total: 0 };
       const coinStats = coinPool?.getStats() || { active: 0, pooled: 0, total: 0 };
       const boosterStats = boosterPool?.getStats() || { active: 0, pooled: 0, total: 0 };
@@ -395,7 +371,7 @@ export class Game {
       const starStats = starPool?.getStats() || { active: 0, pooled: 0, total: 0 };
 
       console.log(
-        `🔍 [POOL DEBUG] Obstacles: active=${obstacleStats.active} pooled=${obstacleStats.pooled} total=${obstacleStats.total} | ` +
+        `[POOL DEBUG] Obstacles: active=${obstacleStats.active} pooled=${obstacleStats.pooled} total=${obstacleStats.total} | ` +
         `Coins: active=${coinStats.active} pooled=${coinStats.pooled} | ` +
         `Boosters: active=${boosterStats.active} pooled=${boosterStats.pooled} | ` +
         `Clouds: active=${cloudStats.active} pooled=${cloudStats.pooled} | ` +
