@@ -7,3 +7,4 @@ dist/
 
 # Claude Code config (local settings only)
 .claude/
+.github/
