@@ -2,60 +2,102 @@
 
 Endless runner game built with PixiJS for Webflow integration.
 
+**Architecture:** Modular Monolith (Feature-Based) following SOLID principles.
+
+## ✨ Latest Updates
+
+- **October 2025:** Full restructure to Modular Monolith architecture
+- 14 feature modules organized by domain
+- Improved code organization and maintainability
+- All features working: music, animations, effects
+
 ## 📁 Project Structure
+
+**Modular Monolith Architecture** - organized by features (domains), not technical layers.
 
 ```
 pig-rider-game/
 ├── src/
-│   ├── config/              # Game configuration
-│   │   ├── constants.js     # Game constants (overridable)
-│   │   └── env.js           # Environment variables
+│   ├── core/                      # PixiJS Engine
+│   │   ├── Renderer.js
+│   │   ├── GameLoop.js
+│   │   └── AssetLoader.js
 │   │
-│   ├── core/                # Core game engine (PixiJS)
-│   │   ├── AssetLoader.js   # Asset loading
-│   │   ├── GameLoop.js      # Game loop
-│   │   └── Renderer.js      # PixiJS renderer
+│   ├── shared/                    # Shared utilities
+│   │   ├── config/
+│   │   │   └── constants.js       # Overridable game config
+│   │   └── utils/
+│   │       ├── EventBus.js
+│   │       ├── MathUtils.js
+│   │       └── ObjectPool.js
 │   │
-│   ├── entities/            # Game entities
-│   │   ├── Player.js        # Pig character
-│   │   ├── Obstacle.js      # Obstacles
-│   │   └── Coin.js          # Collectible coins
+│   ├── features/                  # 🎯 Feature Modules (14 domains)
+│   │   ├── player/               # Player mechanics
+│   │   │   ├── entities/
+│   │   │   └── controllers/
+│   │   │
+│   │   ├── booster/              # Power-ups
+│   │   │   ├── entities/
+│   │   │   ├── manager/
+│   │   │   └── spawner/
+│   │   │
+│   │   ├── obstacles/            # Obstacles
+│   │   │   ├── entities/
+│   │   │   ├── spawner/
+│   │   │   └── patterns/
+│   │   │
+│   │   ├── coins/                # Coin collection
+│   │   │   ├── entities/
+│   │   │   ├── spawner/
+│   │   │   └── effects/
+│   │   │
+│   │   ├── collision/            # Collision detection
+│   │   │   ├── system/
+│   │   │   ├── handler/
+│   │   │   └── effects/
+│   │   │
+│   │   ├── sound/                # Audio system
+│   │   │   ├── manager/
+│   │   │   ├── core/
+│   │   │   └── states/
+│   │   │
+│   │   ├── spawning/             # Spawn orchestration
+│   │   ├── progression/          # Difficulty & lifecycle
+│   │   ├── rendering/            # Culling & interpolation
+│   │   ├── effects/              # Visual effects
+│   │   ├── decoration/           # Clouds & stars
+│   │   ├── monitoring/           # Performance
+│   │   ├── state/                # State management
+│   │   └── ui/                   # HTML/CSS UI
 │   │
-│   ├── systems/             # Game systems
-│   │   ├── SpawnSystem.js   # Object spawning
-│   │   └── CollisionSystem.js # Collision detection
-│   │
-│   ├── ui/                  # UI controller (Webflow)
-│   │   └── UIController.js  # HTML element management
-│   │
-│   ├── utils/               # Utilities
-│   │   ├── EventBus.js
-│   │   ├── MathUtils.js
-│   │   └── ObjectPool.js
-│   │
-│   ├── animations/          # GSAP animations
-│   │   ├── gsap-clouds.js
-│   │   ├── gsap-stars.js
-│   │   └── gsap-buttons.js
-│   │
-│   ├── Game.js              # Main game class
-│   ├── main.js              # Entry point for local development
-│   └── webflow.js           # 🎯 Entry point for Webflow bundle
+│   ├── Game.js                   # Main orchestrator
+│   ├── main.js                   # Entry: local dev
+│   └── webflow.js                # Entry: Webflow bundle
 │
 ├── public/
 │   └── assets/
-│       └── sprites/         # PNG sprites (@2x)
-│           ├── pig_rider.png
-│           ├── barier_base.png
-│           ├── coin.png
-│           └── ...
+│       ├── sprites/              # PNG & animated spritesheets
+│       │   ├── pig_rider.png
+│       │   ├── coin.png
+│       │   ├── coin-collect.json # Animated effect
+│       │   ├── boom.json         # Collision effect
+│       │   └── ...
+│       ├── sounds/               # Audio files
+│       └── music/                # Background music
 │
-├── dist/                    # 📦 Build output
-│   ├── game.bundle.js       # For Webflow
-│   └── game.bundle.js.map   # Source map
+├── dist/                         # Build output
+│   ├── game.min.js               # Standard build (451 KB)
+│   └── game.bundle.js            # Webflow build (128 KB)
 │
 └── vite.config.js
 ```
+
+### 🎯 Why Modular Architecture?
+
+- **Easy to find:** All booster-related code in `features/booster/`
+- **Easy to add:** New feature = new folder in `features/`
+- **Easy to maintain:** Changes isolated to feature modules
+- **SOLID compliant:** Each module has single responsibility
 
 ## 🚀 Development
 
@@ -158,7 +200,7 @@ Upload `dist/game.bundle.js` to your own server.
 ## 🔧 Configuration
 
 ### Overridable Constants
-You can override any value from `src/config/constants.js` via `window.GAME_CONFIG`:
+You can override any value from `src/shared/config/constants.js` via `window.GAME_CONFIG`:
 
 ```javascript
 window.GAME_CONFIG = {
@@ -189,7 +231,7 @@ window.GAME_CONFIG = {
 
 ## 🎨 Asset Requirements
 
-All sprites must be PNG @2x resolution:
+### Sprites (PNG @2x resolution):
 - `pig_rider.png` - Player character
 - `barier_base.png` - Small obstacle
 - `barier_large.png` - Large obstacle
@@ -198,6 +240,17 @@ All sprites must be PNG @2x resolution:
 - `booster.png` - Booster item
 - `star.png` - Decoration
 - `cloud.png` - Background element
+
+### Animated Spritesheets (JSON + PNG):
+- `coin-collect.json` + `coin-collect.png` - Coin collect effect (4 frames)
+- `boom.json` + `boom.png` - Collision explosion (6 frames)
+- `player-animated.json` + `player-animated.png` - Player animations
+- `booster-animated.json` + `booster-animated.png` - Booster animations
+
+### Audio Assets:
+- `main-music.mp3` - Gameplay background music
+- `bonus-music.mp3` - Booster mode music
+- `coin.mp3` - Coin collection sound effect
 
 ## 📝 Deployment Workflow
 
@@ -241,6 +294,32 @@ window.PigRiderGame.restartGame()
 ```javascript
 console.log(typeof PIXI) // Should output "object"
 ```
+
+## 📚 Documentation
+
+- **[CLAUDE.md](CLAUDE.md)** - Detailed development guide and architecture documentation
+- **[RESTRUCTURE_SUMMARY.md](RESTRUCTURE_SUMMARY.md)** - Modular monolith migration report
+- **[HOTFIX_REPORT.md](HOTFIX_REPORT.md)** - Critical bug fixes after migration
+
+### Key Concepts
+
+- **Modular Architecture:** Features organized by domain, not technical layers
+- **SOLID Principles:** Every module follows Single Responsibility Principle
+- **Hybrid Rendering:** PixiJS for game objects, HTML/CSS for UI
+- **Object Pooling:** Performance optimization for spawned objects
+- **Fixed Timestep:** 60 FPS game loop with interpolation
+
+## 🎮 Game Features
+
+- **Endless Runner:** Infinite side-scrolling gameplay
+- **3-Lane System:** Player can move between 3 horizontal lanes
+- **Coin Collection:** Collect coins to reach target score
+- **Obstacles:** Avoid various obstacles (small/large)
+- **Power-ups:** Booster mode with increased coin spawns
+- **Dynamic Difficulty:** Game speed increases with score
+- **Visual Effects:** Animated coin collection and collision effects
+- **Music System:** Dynamic music with state-based transitions
+- **Performance Monitoring:** Built-in performance stats (Shift+P)
 
 ## 📄 License
 
