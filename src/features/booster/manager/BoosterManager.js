@@ -75,6 +75,7 @@ export class BoosterManager {
     this.spawnSystem.clearAllObstacles();
     this.spawnSystem.fillLaneWithCoins(this.currentLane);
     this.ui.addBoosterClass();
+    this.ui.showBoosterIcon(); // Активируем визуальную иконку бустера
 
     if (this.player) {
       this.player.switchAnimation(true);
@@ -100,6 +101,7 @@ export class BoosterManager {
 
     this.cooldownTimer = CONFIG.BOOSTER_COOLDOWN_DURATION;
     this.ui.removeBoosterClass();
+    this.ui.hideBoosterIcon(); // Деактивируем визуальную иконку бустера
 
     if (this.player) {
       this.player.switchAnimation(false);

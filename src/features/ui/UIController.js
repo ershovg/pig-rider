@@ -4,14 +4,21 @@
  * Адаптирован под Webflow структуру
  */
 
+import confetti from 'canvas-confetti';
+
 export class UIController {
   constructor() {
     // Screens (Webflow structure)
-    this.startScreen = document.querySelector('.game-ui.game-start'); // hero state
-    this.runningScreen = document.querySelector('.game-ui.game-running'); // game state
-    this.faildScreen = document.querySelector('.game-ui.faild-screen') // faild state
-    this.winScreen = document.querySelector('.game-ui.win-screen') // win state
-    // this.boostScreen = document.querySelector('.game-ui.game-boost');
+    // Статичные экраны (display-based)
+    this.startScreen = document.querySelector('.game-ui.game-start');
+
+    // Абсолютные элементы (opacity-based)
+    this.runningScreen = document.querySelector('.game-ui.game-running');
+
+    // Абсолютные модалки (CSS класс is--active)
+    this.faildScreen = document.querySelector('.game-ui.faild-screen');
+    this.winScreen = document.querySelector('.game-ui.win-screen');
+    this.boostScreen = document.querySelector('.game-ui.game-boost');
 
     // Game counter (в running screen)
     this.coinCounter = document.querySelector('[game-counter]');
@@ -28,6 +35,13 @@ export class UIController {
 
     // Game state element (для добавления CSS класса booster-active)
     this.gameStateElement = document.querySelector('.game-state');
+
+    // Confetti canvas (внутри .pig-container в win-screen)
+    this.confettiCanvas = null;
+    this.confettiInstance = null;
+
+    // Booster icon (для визуальной индикации бустера в UI)
+    this.boosterIcon = document.querySelector('.game-logo');
 
     // НЕ вызываем hideAll() - Webflow уже установил правильное начальное состояние
     // Стартовый экран должен быть видим, остальные скрыты
@@ -100,20 +114,49 @@ export class UIController {
   /**
    * Show booster modal and wait for user confirmation
    * Returns a Promise that resolves when user clicks OK
+   * @param {boolean} isFirstTime - Is this the first booster ever? If false, auto-accepts
    * @returns {Promise<boolean>} - Resolves to true when user confirms
    */
-  showBoosterModal() {
+  showBoosterModal(isFirstTime = true) {
     return new Promise((resolve) => {
-      // Используем confirm пока нет Webflow UI
-      const boosterAccepted = confirm('Вы получили бонус бустер!');
+      // Автопринятие для последующих бустеров (не первый раз)
+      if (!isFirstTime) {
+        console.log('🚀 Auto-accepting booster (not first time)');
+        resolve(true);
+        return;
+      }
 
-      // if (this.boostScreen) {
-      //   this.boostScreen.style.opacity = '1';
-      //   this.boostScreen.style.pointerEvents = 'auto';
-      //   // Добавить обработчик на кнопку OK, который вызовет resolve(true)
-      // }
+      // Показываем модал только для первого бустера
+      if (this.boostScreen) {
+        // Принудительный reflow перед добавлением класса (для плавного transition)
+        void this.boostScreen.offsetHeight;
 
-      resolve(boosterAccepted);
+        // Добавляем класс в следующем frame для гарантии transition
+        requestAnimationFrame(() => {
+          this.boostScreen.classList.add('is--active');
+        });
+
+        // Находим кнопку принятия бустера
+        const acceptBtn = this.boostScreen.querySelector('.game-booster__accept');
+
+        if (acceptBtn) {
+          const handleAccept = () => {
+            this.hideBoosterModal();
+            acceptBtn.removeEventListener('click', handleAccept);
+            resolve(true);
+          };
+
+          acceptBtn.addEventListener('click', handleAccept);
+        } else {
+          console.warn('⚠️ Booster accept button (.game-booster__accept) not found');
+          // Фолбек: резолвим автоматически если кнопки нет
+          resolve(true);
+        }
+      } else {
+        console.warn('⚠️ Booster screen (.game-ui.game-boost) not found');
+        // Фолбек: резолвим автоматически если модала нет
+        resolve(true);
+      }
     });
   }
 
@@ -121,21 +164,32 @@ export class UIController {
    * Hide booster modal
    */
   hideBoosterModal() {
-    // if (this.boostScreen) {
-    //   this.boostScreen.style.opacity = '0';
-    //   this.boostScreen.style.pointerEvents = 'none';
-    // }
-    console.warn('⚠️ Booster modal not implemented in Webflow yet');
+    if (this.boostScreen) {
+      // Деактивируем через CSS класс (Webflow style)
+      this.boostScreen.classList.remove('is--active');
+    }
   }
 
   /**
    * Show win screen
-   * Статичный экран - используем display
+   * Абсолютная модалка - используем CSS класс is--active
    */
   showWinScreen(score) {
     this.hideAll();
     if (this.winScreen) {
-      this.winScreen.style.display = 'flex';
+      // Принудительный reflow перед добавлением класса (для плавного transition)
+      // Без этого браузер может "склеить" изменения и пропустить анимацию
+      void this.winScreen.offsetHeight;
+
+      // Добавляем класс в следующем frame для гарантии transition
+      requestAnimationFrame(() => {
+        this.winScreen.classList.add('is--active');
+      });
+
+      // Запускаем конфетти с задержкой 400ms
+      setTimeout(() => {
+        this.launchConfetti();
+      }, 400);
     }
     // Hide canvas
     if (this.canvas) {
@@ -146,32 +200,41 @@ export class UIController {
 
   /**
    * Show lose screen (faild-screen)
-   * Статичный экран - используем display
+   * Абсолютная модалка - используем CSS класс is--active
    */
   showLoseScreen(score) {
-    console.log(`💀 LOSE! Score: ${score}`);
-    alert(`💀 LOSE! Score: ${score}`)
     this.hideAll();
     if (this.faildScreen) {
-      this.faildScreen.style.display = 'flex';
+      // Принудительный reflow перед добавлением класса (для плавного transition)
+      void this.faildScreen.offsetHeight;
+
+      // Добавляем класс в следующем frame для гарантии transition
+      requestAnimationFrame(() => {
+        this.faildScreen.classList.add('is--active');
+      });
     }
+    // Hide canvas
     if (this.canvas) {
       this.canvas.style.display = 'none';
     }
+    console.log(`💀 LOSE! Score: ${score}`);
   }
 
   /**
    * Hide all screens
    * Статичные экраны - display: none
-   * Абсолютные элементы - opacity: 0
+   * Абсолютные модалки - убираем класс is--active
    */
   hideAll() {
     // Статичные экраны (display)
     if (this.startScreen) this.startScreen.style.display = 'none';
-    if (this.faildScreen) this.faildScreen.style.display = 'none';
-    if (this.winScreen) this.winScreen.style.display = 'none';
 
-    // Абсолютные элементы (opacity)
+    // Абсолютные модалки (CSS класс is--active)
+    if (this.faildScreen) this.faildScreen.classList.remove('is--active');
+    if (this.winScreen) this.winScreen.classList.remove('is--active');
+    if (this.boostScreen) this.boostScreen.classList.remove('is--active');
+
+    // Абсолютные элементы HUD (opacity)
     if (this.runningScreen) {
       this.runningScreen.style.opacity = '0';
       this.runningScreen.style.pointerEvents = 'none';
@@ -236,9 +299,103 @@ export class UIController {
   }
 
   /**
+   * Show booster icon (add is--active class)
+   * Визуально активирует иконку бустера в UI
+   */
+  showBoosterIcon() {
+    if (this.boosterIcon) {
+      this.boosterIcon.classList.add('is--active');
+      console.log('🌟 Booster icon activated');
+    }
+  }
+
+  /**
+   * Hide booster icon (remove is--active class)
+   * Деактивирует визуальное отображение иконки бустера
+   */
+  hideBoosterIcon() {
+    if (this.boosterIcon) {
+      this.boosterIcon.classList.remove('is--active');
+      console.log('💤 Booster icon deactivated');
+    }
+  }
+
+  /**
+   * Launch confetti animation around pig characters
+   * Конфетти вылетает из .pig-container
+   */
+  launchConfetti() {
+    // Находим canvas для конфетти (должен быть в Webflow внутри .pig-container)
+    if (!this.confettiCanvas) {
+      this.confettiCanvas = document.getElementById('confetti-canvas');
+    }
+
+    if (!this.confettiCanvas) {
+      console.warn('⚠️ Confetti canvas (#confetti-canvas) not found in Webflow');
+      return;
+    }
+
+    // Создаем confetti instance для кастомного canvas
+    if (!this.confettiInstance) {
+      this.confettiInstance = confetti.create(this.confettiCanvas, {
+        resize: true,
+        useWorker: true
+      });
+    }
+
+    // Цвета конфетти
+    const colors = ['#FFD700', '#FFA500', '#FF6347', '#87CEEB', '#A2C9C4', '#FF69B4'];
+
+    // Основной взрыв конфетти от центра canvas
+    this.confettiInstance({
+      particleCount: 150,
+      spread: 360,
+      origin: { x: 0.5, y: 0.5 }, // Центр canvas (где герои)
+      colors: colors,
+      startVelocity: 40,
+      gravity: 1.2,
+      drift: 0,
+      ticks: 300,
+      scalar: 1.5,
+      shapes: ['circle', 'square']
+    });
+
+    // Дополнительные боковые выстрелы
+    setTimeout(() => {
+      this.confettiInstance({
+        particleCount: 50,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.6 },
+        colors: colors,
+        startVelocity: 35,
+        scalar: 1.2
+      });
+
+      this.confettiInstance({
+        particleCount: 50,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.6 },
+        colors: colors,
+        startVelocity: 35,
+        scalar: 1.2
+      });
+    }, 250);
+
+    console.log('🎉 Confetti launched!');
+  }
+
+  /**
    * Cleanup
    */
   destroy() {
+    // Очищаем confetti instance
+    if (this.confettiInstance) {
+      this.confettiInstance.reset();
+      this.confettiInstance = null;
+    }
+
     // Remove event listeners if needed
     console.log('🗑️ UIController destroyed');
   }

@@ -45,6 +45,9 @@ export class Game {
     this.performanceMonitor = null;
     this.isColliding = false;
 
+    // Флаг блокировки автоматического resume (для модалов, ожидающих клика)
+    this.isWaitingForUserInput = false;
+
     this.cullingManager = new CullingManager({
       cullThreshold: CONFIG.CULLING.THRESHOLD,
       leftMultiplier: CONFIG.CULLING.LEFT_MULTIPLIER,
@@ -201,7 +204,8 @@ export class Game {
       gameLoop: this.gameLoop,
       renderer: this.renderer,
       ui: this.ui,
-      soundManager: this.soundManager
+      soundManager: this.soundManager,
+      setWaitingForInput: (isWaiting) => { this.isWaitingForUserInput = isWaiting; }
     });
 
     this.performanceMonitor = new PerformanceMonitor(this.renderer, this.gameLoop);

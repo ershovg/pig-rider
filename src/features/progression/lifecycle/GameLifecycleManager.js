@@ -12,6 +12,7 @@ export class GameLifecycleManager {
     this.renderer = dependencies.renderer;
     this.ui = dependencies.ui;
     this.soundManager = dependencies.soundManager;
+    this.setWaitingForInput = dependencies.setWaitingForInput || (() => {});
   }
 
   startGame() {
@@ -74,21 +75,24 @@ export class GameLifecycleManager {
     // 🔇 Context-Aware Pausing (Умная Пауза)
     // Приглушаем музыку только при ПЕРВОМ бустере (для обучающего модала)
     let volumeRestore = null;
+    const isFirstBooster = this.boosterManager.isFirstBooster();
 
-    if (this.soundManager && this.boosterManager.isFirstBooster()) {
+    if (this.soundManager && isFirstBooster) {
       console.log('🎓 First booster! Pausing music for tutorial modal...');
       volumeRestore = this.soundManager.pauseForModal(0.3); // До 30%
-
-      // - Убрать alert() из UIController.showBoosterModal()
-      // - Создать красивый HTML модал с анимацией
-      // - Передавать isFirstTime флаг для показа/скрытия обучающего текста
-      // - Fade будет работать параллельно с показом модала (без задержек)
     } else {
-      console.log('🚀 Subsequent booster, skipping music pause');
+      console.log('🚀 Subsequent booster, skipping modal and music pause');
     }
 
-    // Показываем модал (сейчас alert, в будущем custom UI)
-    const confirmed = await this.ui.showBoosterModal();
+    // 🚫 Блокируем автоматический resume (visibilitychange и т.д.)
+    this.setWaitingForInput(true);
+
+    // Показываем модал с флагом isFirstTime
+    // Если не первый раз - автоматически принимается без показа UI
+    const confirmed = await this.ui.showBoosterModal(isFirstBooster);
+
+    // ✅ Разблокируем автоматический resume
+    this.setWaitingForInput(false);
 
     if (volumeRestore) {
       volumeRestore.restore(300); // 300ms fade-in обратно
@@ -96,7 +100,7 @@ export class GameLifecycleManager {
 
     if (confirmed) {
       // Помечаем, что первый бустер использован
-      if (this.boosterManager.isFirstBooster()) {
+      if (isFirstBooster) {
         this.boosterManager.markFirstBoosterUsed();
       }
 

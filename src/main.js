@@ -36,7 +36,11 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     game.pause();
   } else {
-    game.resume();
+    // НЕ резюмим автоматически если ожидается пользовательский ввод
+    // (например, модал бустера требует клика по кнопке)
+    if (!game.isWaitingForUserInput) {
+      game.resume();
+    }
   }
 });
 

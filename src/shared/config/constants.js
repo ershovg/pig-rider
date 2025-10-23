@@ -5,7 +5,7 @@ export const CONFIG = {
   CANVAS_HEIGHT: 1080,
 
   // Game - Configurable variables
-  TARGET_COINS: 200,        // Целевое количество монет для победы
+  TARGET_COINS: 1,        // Целевое количество монет для победы
 
   // Booster settings
   BOOSTER_DURATION: 6,                // Длительность бустера в секундах (3 переключения × 2 сек)
