@@ -235,6 +235,10 @@ src/
 │   ├── state/                     # Модуль: State management
 │   │   └── GameStateManager.js
 │   │
+│   ├── confetti/                  # Модуль: Конфетти анимации
+│   │   └── manager/
+│   │       └── ConfettiManager.js
+│   │
 │   └── ui/                        # Модуль: HTML/CSS интерфейс
 │       └── UIController.js
 │
@@ -415,6 +419,37 @@ Background:   [Load Critical]   → [Show UI]  (1s blocking)
 ---
 
 ## Development Guidelines
+
+### ⚠️ ПЕРЕД НАЧАЛОМ ЛЮБОЙ ЗАДАЧИ
+
+**КРИТИЧЕСКИ ВАЖНО:** Перед добавлением нового кода, спроси себя:
+
+1. **Это новая фича/домен?**
+   - ✅ ДА → Создай новый модуль в `features/my-feature/`
+   - ❌ НЕТ → Добавь в существующий модуль
+
+2. **Соблюдаю ли я SOLID?**
+   - **SRP**: Один класс = одна ответственность
+   - **OCP**: Расширяю, не модифицирую базовые классы
+   - **LSP**: Наследники взаимозаменяемы
+   - **ISP**: Минимальные интерфейсы
+   - **DIP**: Зависимость от абстракций, не реализаций
+
+3. **Проверь аналогии в проекте:**
+   - Посмотри как организованы модули `sound/`, `effects/`, `collision/`
+   - Следуй той же структуре: `entities/`, `manager/`, `spawner/`, `effects/`
+   - Используй те же паттерны (EventBus, ObjectPool, Dependency Injection)
+
+**Правило:**
+> Никогда не добавляй код в существующий класс, если это новая ответственность. Создай новый модуль.
+
+**Примеры:**
+- ❌ Добавил логику конфетти в UIController (нарушение SRP)
+- ✅ Создал `features/confetti/manager/ConfettiManager.js` + импортировал в UIController
+- ❌ Добавил логику аудио в Game.js
+- ✅ Создал `features/sound/manager/SoundManager.js` + зарегистрировал в Game.js
+
+---
 
 ### Изменение Game Balance
 

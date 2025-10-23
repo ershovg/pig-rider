@@ -2,9 +2,13 @@
  * UIController - управление HTML UI элементами
  * Отвечает за показ/скрытие экранов, обновление счётчиков
  * Адаптирован под Webflow структуру
+ *
+ * SOLID Principles:
+ * - SRP: Только управление HTML UI, делегирует конфетти в ConfettiManager
+ * - DIP: Зависит от ConfettiManager API, а не от canvas-confetti напрямую
  */
 
-import confetti from 'canvas-confetti';
+import { ConfettiManager } from '../confetti/manager/ConfettiManager.js';
 
 export class UIController {
   constructor() {
@@ -36,9 +40,8 @@ export class UIController {
     // Game state element (для добавления CSS класса booster-active)
     this.gameStateElement = document.querySelector('.game-state');
 
-    // Confetti canvas (внутри .pig-container в win-screen)
-    this.confettiCanvas = null;
-    this.confettiInstance = null;
+    // Confetti Manager (инкапсулирует всю логику конфетти)
+    this.confettiManager = null;
 
     // Booster icon (для визуальной индикации бустера в UI)
     this.boosterIcon = document.querySelector('.game-logo');
@@ -320,80 +323,40 @@ export class UIController {
     }
   }
 
-  /**
-   * Launch confetti animation around pig characters
-   * Конфетти вылетает из .pig-container
-   */
+  /*
+   Launch confetti animation
+  */
   launchConfetti() {
-    // Находим canvas для конфетти (должен быть в Webflow внутри .pig-container)
-    if (!this.confettiCanvas) {
-      this.confettiCanvas = document.getElementById('confetti-canvas');
+    try {
+      console.log('🎊 launchConfetti() called');
+
+      if (!this.confettiManager) {
+        console.log('📦 Creating ConfettiManager...');
+        const confettiCanvas = document.getElementById('confetti-canvas');
+
+        if (!confettiCanvas) {
+          console.warn('⚠️ Confetti canvas (#confetti-canvas) not found, using default');
+        }
+
+        this.confettiManager = new ConfettiManager(confettiCanvas);
+      }
+
+      // Делегируем запуск эффекта в специализированный модуль
+      console.log('🚀 Calling launchVictoryEffect()...');
+      this.confettiManager.launchVictoryEffect();
+    } catch (error) {
+      console.error('❌ Confetti error:', error);
     }
-
-    if (!this.confettiCanvas) {
-      console.warn('⚠️ Confetti canvas (#confetti-canvas) not found in Webflow');
-      return;
-    }
-
-    // Создаем confetti instance для кастомного canvas
-    if (!this.confettiInstance) {
-      this.confettiInstance = confetti.create(this.confettiCanvas, {
-        resize: true,
-        useWorker: true
-      });
-    }
-
-    // Цвета конфетти
-    const colors = ['#FFD700', '#FFA500', '#FF6347', '#87CEEB', '#A2C9C4', '#FF69B4'];
-
-    // Основной взрыв конфетти от центра canvas
-    this.confettiInstance({
-      particleCount: 150,
-      spread: 360,
-      origin: { x: 0.5, y: 0.5 }, // Центр canvas (где герои)
-      colors: colors,
-      startVelocity: 40,
-      gravity: 1.2,
-      drift: 0,
-      ticks: 300,
-      scalar: 1.5,
-      shapes: ['circle', 'square']
-    });
-
-    // Дополнительные боковые выстрелы
-    setTimeout(() => {
-      this.confettiInstance({
-        particleCount: 50,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0, y: 0.6 },
-        colors: colors,
-        startVelocity: 35,
-        scalar: 1.2
-      });
-
-      this.confettiInstance({
-        particleCount: 50,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1, y: 0.6 },
-        colors: colors,
-        startVelocity: 35,
-        scalar: 1.2
-      });
-    }, 250);
-
-    console.log('🎉 Confetti launched!');
   }
 
   /**
    * Cleanup
    */
   destroy() {
-    // Очищаем confetti instance
-    if (this.confettiInstance) {
-      this.confettiInstance.reset();
-      this.confettiInstance = null;
+    // Очищаем confetti manager
+    if (this.confettiManager) {
+      this.confettiManager.destroy();
+      this.confettiManager = null;
     }
 
     // Remove event listeners if needed
