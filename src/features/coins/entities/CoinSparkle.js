@@ -1,5 +1,3 @@
-// src/entities/CoinSparkle.js
-
 import { Container, Graphics } from 'pixi.js';
 
 /**

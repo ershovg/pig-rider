@@ -17,7 +17,6 @@ import { EffectCoordinator } from './features/effects/manager/EffectCoordinator.
 import { GameLifecycleManager } from './features/progression/lifecycle/GameLifecycleManager.js';
 import { CullingCoordinator } from './features/rendering/culling/CullingCoordinator.js';
 import { PlayerPhysicsController } from './features/player/controllers/PlayerPhysicsController.js';
-import { PerformanceMonitor } from './features/monitoring/PerformanceMonitor.js';
 import { SoundManager } from './features/sound/manager/SoundManager.js';
 import { ASSET_PATHS } from './shared/config/constants.js';
 
@@ -42,7 +41,6 @@ export class Game {
     this.effectCoordinator = null;
     this.lifecycleManager = null;
     this.cullingCoordinator = null;
-    this.performanceMonitor = null;
     this.isColliding = false;
 
     // Флаг блокировки автоматического resume (для модалов, ожидающих клика)
@@ -60,18 +58,8 @@ export class Game {
 
     this.frameCount = 0;
     this.poolLogInterval = null;
-    this.setupPerformanceShortcut();
   }
 
-  setupPerformanceShortcut() {
-    document.addEventListener('keydown', (e) => {
-      if (e.shiftKey && e.key === 'P') {
-        if (this.performanceMonitor) {
-          this.performanceMonitor.toggle();
-        }
-      }
-    });
-  }
 
   async init() {
     try {
@@ -208,13 +196,8 @@ export class Game {
       setWaitingForInput: (isWaiting) => { this.isWaitingForUserInput = isWaiting; }
     });
 
-    this.performanceMonitor = new PerformanceMonitor(this.renderer, this.gameLoop);
-    this.performanceMonitor.enable();
     const rendererWidth = this.renderer.app?.screen?.width || CONFIG.CANVAS_WIDTH;
     this.cullingManager.setBoundaries(rendererWidth);
-
-    console.log('Press Shift+P to toggle Performance Monitor');
-    console.log('Press D to toggle Culling Debug Overlay');
 
     if (typeof window !== 'undefined') {
       window.soundManager = this.soundManager;
@@ -319,13 +302,6 @@ export class Game {
       }
 
       this.lifecycleManager.handleBoosterActivation();
-    }
-
-    if (this.performanceMonitor) {
-      this.performanceMonitor.update({
-        spawnSystem: this.spawnSystem,
-        cullingCoordinator: this.cullingCoordinator
-      });
     }
   }
 
