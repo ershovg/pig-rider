@@ -18,6 +18,7 @@ import { GameLifecycleManager } from './features/progression/lifecycle/GameLifec
 import { CullingCoordinator } from './features/rendering/culling/CullingCoordinator.js';
 import { PlayerPhysicsController } from './features/player/controllers/PlayerPhysicsController.js';
 import { SoundManager } from './features/sound/manager/SoundManager.js';
+import { RestartManager } from './features/restart/manager/RestartManager.js';
 import { ASSET_PATHS } from './shared/config/constants.js';
 
 export class Game {
@@ -41,6 +42,7 @@ export class Game {
     this.effectCoordinator = null;
     this.lifecycleManager = null;
     this.cullingCoordinator = null;
+    this.restartManager = null;
     this.isColliding = false;
 
     // Флаг блокировки автоматического resume (для модалов, ожидающих клика)
@@ -196,6 +198,19 @@ export class Game {
       setWaitingForInput: (isWaiting) => { this.isWaitingForUserInput = isWaiting; }
     });
 
+    this.restartManager = new RestartManager({
+      stateManager: this.stateManager,
+      progressionManager: this.progressionManager,
+      boosterManager: this.boosterManager,
+      difficultyManager: this.difficultyManager,
+      player: this.player,
+      spawnSystem: this.spawnSystem,
+      gameLoop: this.gameLoop,
+      ui: this.ui,
+      soundManager: this.soundManager,
+      game: this
+    });
+
     const rendererWidth = this.renderer.app?.screen?.width || CONFIG.CANVAS_WIDTH;
     this.cullingManager.setBoundaries(rendererWidth);
 
@@ -210,6 +225,7 @@ export class Game {
       onPlayClick: () => this.startGame(),
       onBoosterContinue: () => this.resumeGame(),
       onRetry: () => this.restartGame(),
+      onRestartGame: () => this.handleRestart(),
       onBookDemo: () => console.log('Book demo clicked')
     });
   }
@@ -236,6 +252,19 @@ export class Game {
 
   restartGame() {
     this.startGame();
+  }
+
+  /**
+   * Обработчик кнопки "Начать игру заново"
+   * Делегирует работу RestartManager для полной очистки и перезапуска
+   */
+  handleRestart() {
+    if (!this.restartManager) {
+      console.error('❌ RestartManager not initialized');
+      return;
+    }
+
+    this.restartManager.restart();
   }
 
   update(deltaTime, frameDeltaTime = null) {

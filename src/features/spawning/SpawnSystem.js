@@ -178,6 +178,48 @@ export class SpawnSystem {
     this.boosterSpawner.reset();
   }
 
+  /**
+   * Принудительно очищает все активные эффекты (coin collect, collision)
+   * Используется при рестарте игры для полной очистки экрана
+   */
+  clearAllEffects() {
+    console.log('🧹 SpawnSystem: Clearing all effects...');
+
+    // Очистка coinCollectEffect (искорки при сборе монет)
+    if (this.poolManager.hasPool('coinCollectEffect')) {
+      const coinEffectPool = this.poolManager.getPool('coinCollectEffect');
+      const activeCoinEffects = coinEffectPool.getActive();
+
+      console.log(`  - Deactivating ${activeCoinEffects.length} coin collect effects`);
+
+      for (let i = activeCoinEffects.length - 1; i >= 0; i--) {
+        const effect = activeCoinEffects[i];
+        if (effect && effect.deactivate) {
+          effect.deactivate(); // Принудительно деактивируем
+        }
+        coinEffectPool.release(effect); // Возвращаем в пул
+      }
+    }
+
+    // Очистка collisionEffect (взрывы при столкновении)
+    if (this.poolManager.hasPool('collisionEffect')) {
+      const collisionPool = this.poolManager.getPool('collisionEffect');
+      const activeCollisionEffects = collisionPool.getActive();
+
+      console.log(`  - Deactivating ${activeCollisionEffects.length} collision effects`);
+
+      for (let i = activeCollisionEffects.length - 1; i >= 0; i--) {
+        const effect = activeCollisionEffects[i];
+        if (effect && effect.deactivate) {
+          effect.deactivate(); // Принудительно деактивируем
+        }
+        collisionPool.release(effect); // Возвращаем в пул
+      }
+    }
+
+    console.log('  ✅ All effects cleared');
+  }
+
   getStats() {
     return this.poolManager.getAllStats();
   }

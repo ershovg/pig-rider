@@ -29,6 +29,7 @@ export class UIController {
 
     // Buttons
     this.startBtn = document.querySelector('[game-btn-start]');
+    this.restartBtn = document.querySelector('[open-modal-attr="restart-game"]');
 
     // this.pauseBtn = document.querySelector('[game-btn-pause]');
     // this.resumeBtn = document.querySelector('[game-btn-resume]');
@@ -224,6 +225,24 @@ export class UIController {
   }
 
   /**
+   * Hide win screen
+   */
+  hideWinScreen() {
+    if (this.winScreen) {
+      this.winScreen.classList.remove('is--active');
+    }
+  }
+
+  /**
+   * Hide lose screen
+   */
+  hideLoseScreen() {
+    if (this.faildScreen) {
+      this.faildScreen.classList.remove('is--active');
+    }
+  }
+
+  /**
    * Hide all screens
    * Статичные экраны - display: none
    * Абсолютные модалки - убираем класс is--active
@@ -270,6 +289,23 @@ export class UIController {
         e.preventDefault();
         callbacks.onPlayClick();
       });
+    }
+
+    // Restart button (в win/lose экранах)
+    // Используем EVENT DELEGATION на document, т.к. кнопки могут быть динамическими
+    if (callbacks.onRestartGame) {
+      // Event delegation: слушаем клики на document, фильтруем по селектору
+      document.addEventListener('click', (e) => {
+        // Ищем ближайший элемент с нужным атрибутом
+        const target = e.target.closest('[open-modal-attr="restart-game"]');
+
+        if (target) {
+          console.log('🔄 Restart button clicked');
+          e.preventDefault();
+          e.stopPropagation(); // Останавливаем всплытие
+          callbacks.onRestartGame();
+        }
+      }, true); // true = capturing phase (раньше других обработчиков)
     }
 
     // if (callbacks.onPause && this.pauseBtn) {
