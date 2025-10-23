@@ -3,6 +3,7 @@ import { MathUtils } from '../../../shared/utils/MathUtils.js';
 export class CollisionHandler {
   constructor(collisionSystem, soundManager = null) {
     this.collisionSystem = collisionSystem;
+    this.soundManager = soundManager; // Сохраняем soundManager для проигрывания звуков
   }
 
   processFrame(player, obstacles, coins, boosters) {

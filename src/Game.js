@@ -111,7 +111,7 @@ export class Game {
     });
 
     this.soundManager.loadSound('coin', ASSET_PATHS.SFX_COIN, {
-      volume: 0.05,
+      volume: 0.2, // 20% × sfxVolume(0.7) = 14% итоговая громкость - тихий, приятный звук
     });
 
     this.soundManager.initMusicStates({
