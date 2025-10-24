@@ -57,7 +57,13 @@ export class CollisionHandler {
 
       if (MathUtils.checkAABB(playerHitbox, boosterHitbox)) {
         const result = booster.collect();
-        if (result) return result;
+        if (result) {
+          // Проигрываем звук сбора бустера (ДО показа модалки)
+          if (this.soundManager) {
+            this.soundManager.play('boosterCollect');
+          }
+          return result;
+        }
       }
     }
 

@@ -194,12 +194,13 @@ export class UIController {
       // Добавляем класс в следующем frame для гарантии transition
       requestAnimationFrame(() => {
         this.winScreen.classList.add('is--active');
-      });
 
-      // Запускаем конфетти с задержкой 400ms
-      setTimeout(() => {
-        this.launchConfetti();
-      }, 400);
+        // Запускаем конфетти сразу вместе с появлением win screen
+        // Небольшая задержка (50ms) только для синхронизации с transition
+        setTimeout(() => {
+          this.launchConfetti();
+        }, 50);
+      });
     }
     // Hide canvas
     if (this.canvas) {

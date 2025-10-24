@@ -110,8 +110,25 @@ export class Game {
       volume: MUSIC_VOLUME,
     });
 
+    // Sound Effects (SFX)
     this.soundManager.loadSound('coin', ASSET_PATHS.SFX_COIN, {
       volume: 0.2, // 20% × sfxVolume(0.7) = 14% итоговая громкость - тихий, приятный звук
+    });
+
+    this.soundManager.loadSound('boosterCollect', ASSET_PATHS.SFX_BOOSTER_COLLECT, {
+      volume: 0.5, // Средняя громкость для важного события
+    });
+
+    this.soundManager.loadSound('collision', ASSET_PATHS.SFX_COLLISION, {
+      volume: 0.6, // Заметный звук удара
+    });
+
+    this.soundManager.loadSound('win', ASSET_PATHS.SFX_WIN, {
+      volume: 0.7, // Громкий победный звук
+    });
+
+    this.soundManager.loadSound('lose', ASSET_PATHS.SFX_LOSE, {
+      volume: 0.6, // Средне-громкий звук поражения
     });
 
     this.soundManager.initMusicStates({

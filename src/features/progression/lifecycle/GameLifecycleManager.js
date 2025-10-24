@@ -46,26 +46,47 @@ export class GameLifecycleManager {
       this.player.inputController.disable();
     }
 
-    // Пока просто останавливаем музыку
+    // Останавливаем музыку (но не SFX)
     if (this.soundManager) {
-      this.soundManager.stopAll();
-      console.log('🎵 Music stopped on game end');
+      // Останавливаем только музыкальные треки
+      const mainMusic = this.soundManager.sounds.get('mainMusic');
+      const bonusMusic = this.soundManager.sounds.get('bonusMusic');
+      if (mainMusic) mainMusic.stop();
+      if (bonusMusic) bonusMusic.stop();
+      console.log('🎵 Background music stopped on game end');
     }
 
     this.ui.hideHUD();
 
     if (isWin) {
+      // 🏆 ПОБЕДА: проигрываем победный звук
+      if (this.soundManager) {
+        this.soundManager.play('win');
+      }
       this.ui.showWinScreen(score);
     } else {
+      // 💀 ПОРАЖЕНИЕ: проигрываем звук поражения
+      if (this.soundManager) {
+        this.soundManager.play('lose');
+      }
       this.ui.showLoseScreen(score);
     }
   }
 
   async handleCollisionSequence(collisionPoint, effectCoordinator, onComplete) {
+    // 1️⃣ Проигрываем звук столкновения с препятствием
+    if (this.soundManager) {
+      this.soundManager.play('collision');
+    }
+
+    // 2️⃣ Показываем визуальный эффект взрыва
     effectCoordinator.emitCollisionEffect(collisionPoint.x, collisionPoint.y);
     this.gameLoop.stop();
 
+    // 3️⃣ Ждем завершения анимации взрыва (350ms)
     await this.delay(350);
+
+    // 4️⃣ Показываем lose screen + проигрываем звук поражения
     onComplete();
   }
 

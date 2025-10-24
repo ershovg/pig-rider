@@ -111,5 +111,11 @@ export const ASSET_PATHS = {
   // Audio - Оптимизированные OGG форматы
   get MUSIC_MAIN() { return getAssetPath('/assets/sounds/Music level/Just Funky.ogg'); },
   get MUSIC_BONUS() { return getAssetPath('/assets/sounds/Music Bonus/MusicBonus.ogg'); },
-  get SFX_COIN() { return getAssetPath('/assets/sounds/Sounds/CoinCollect/Coin.ogg'); }
+
+  // Sound Effects
+  get SFX_COIN() { return getAssetPath('/assets/sounds/Sounds/CoinCollect/Coin.ogg'); },
+  get SFX_BOOSTER_COLLECT() { return getAssetPath('/assets/sounds/Sounds/CupCollect/Bonus 2.ogg'); },
+  get SFX_COLLISION() { return getAssetPath('/assets/sounds/Sounds/WallCollision/Bump Jump Echoes.ogg'); },
+  get SFX_WIN() { return getAssetPath('/assets/sounds/Sounds/YouWin/Big Win Fanfare 1.ogg'); },
+  get SFX_LOSE() { return getAssetPath('/assets/sounds/Sounds/GameOver/Sorry You Lost.ogg'); }
 };
