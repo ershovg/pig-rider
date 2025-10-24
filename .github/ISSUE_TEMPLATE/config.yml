@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: 💬 Обсуждения и Вопросы
+    url: https://github.com/GeorgeStudio96/pig-rider/discussions
+    about: Общие вопросы, идеи, обсуждение (не конкретные баги)
   - name: 📚 Документация по игре
     url: https://github.com/GeorgeStudio96/pig-rider/blob/main/README.md
     about: Ознакомьтесь с документацией перед созданием issue
