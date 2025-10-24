@@ -7,4 +7,9 @@ dist/
 
 # Claude Code config (local settings only)
 .claude/
-.github/
+
+# GitHub configs (но разрешаем issue templates и workflows)
+.github/*
+!.github/ISSUE_TEMPLATE/
+!.github/CONTRIBUTING.md
+!.github/workflows/
