@@ -9,7 +9,7 @@
 1. **Играйте в игру** → Найдите баг или придумайте улучшение
 
 2. **Выберите, куда написать:**
-   - **[💬 Discussions](../../discussions)** - для общих вопросов, идей, обсуждений
+   - **[💬 Discussions]([../../discussions](https://github.com/GeorgeStudio96/pig-rider/discussions/categories/general))** - для общих вопросов, идей, обсуждений
    - **[🐛 Issues](../../issues)** - для конкретных багов и задач
 
 3. **Для Issues:** Нажмите "New Issue" и выберите шаблон:
