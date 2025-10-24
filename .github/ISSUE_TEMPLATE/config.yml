@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Документация по игре
+    url: https://github.com/YOUR_USERNAME/pig-rider-game/blob/main/README.md
+    about: Ознакомьтесь с документацией перед созданием issue
+  - name: 💬 Обсуждение в команде
+    url: https://github.com/YOUR_USERNAME/pig-rider-game/discussions
+    about: Общие вопросы и обсуждения (если включены Discussions)
