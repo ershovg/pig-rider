@@ -1,4 +1,4 @@
-import { CONFIG } from '../config/constants.js';
+import { CONFIG } from '../shared/config/constants.js';
 
 export class GameLoop {
   constructor(updateCallback, renderCallback) {
@@ -12,7 +12,6 @@ export class GameLoop {
 
     this.rafId = null;
 
-    // 🆕 FPS tracking для Performance Monitor
     this.frameCount = 0;
     this.fps = 60;
     this.fpsUpdateTime = 0;
@@ -59,19 +58,32 @@ export class GameLoop {
       deltaTime = CONFIG.MAX_DELTA;
     }
 
+    const frameDeltaTime = deltaTime / 1000;
+
     this.accumulator += deltaTime;
 
+    let physicsUpdates = 0;
+    const maxPhysicsUpdates = CONFIG.MAX_PHYSICS_UPDATES_PER_FRAME || 4;
+
     // Fixed timestep updates
-    while (this.accumulator >= this.fixedDeltaTime) {
-      this.updateCallback(this.fixedDeltaTime / 1000); // Convert to seconds
+    while (this.accumulator >= this.fixedDeltaTime && physicsUpdates < maxPhysicsUpdates) {
+      this.updateCallback(
+        this.fixedDeltaTime / 1000,
+        frameDeltaTime
+      );
       this.accumulator -= this.fixedDeltaTime;
+      physicsUpdates++;
+    }
+
+    if (physicsUpdates >= maxPhysicsUpdates && this.accumulator > this.fixedDeltaTime) {
+      console.warn(`[GameLoop] Clamped ${Math.floor(this.accumulator / this.fixedDeltaTime)} pending physics updates to prevent spiral`);
+      this.accumulator = this.fixedDeltaTime * 0.9;
     }
 
     // Render with interpolation factor
     const alpha = this.accumulator / this.fixedDeltaTime;
     this.renderCallback(alpha);
 
-    // 🆕 FPS calculation
     this.frameCount++;
     if (currentTime - this.fpsUpdateTime >= 1000) {
       this.fps = this.frameCount;
@@ -97,9 +109,6 @@ export class GameLoop {
     this.start();
   }
 
-  /**
-   * 🆕 Получить текущий FPS для Performance Monitor
-   */
   getCurrentFPS() {
     return this.fps;
   }

@@ -4,7 +4,7 @@
  */
 
 import { Game } from './Game.js';
-import { CONFIG } from './config/constants.js';
+import { CONFIG } from './shared/config/constants.js';
 
 // Глобальная переменная для доступа к игре
 let gameInstance = null;
@@ -68,7 +68,11 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     gameInstance.pause();
   } else {
-    gameInstance.resume();
+    // НЕ резюмим автоматически если ожидается пользовательский ввод
+    // (например, модал бустера требует клика по кнопке)
+    if (!gameInstance.isWaitingForUserInput) {
+      gameInstance.resume();
+    }
   }
 });
 

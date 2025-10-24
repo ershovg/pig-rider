@@ -3,6 +3,8 @@ node_modules/
 *.log
 .vscode/
 draft/
+dist/
 
-# Keep dist for Webflow CDN
-# dist/
+# Claude Code config (local settings only)
+.claude/
+.github/

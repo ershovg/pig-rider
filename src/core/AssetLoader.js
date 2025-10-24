@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { ASSET_PATHS } from '../config/constants.js';
+import { ASSET_PATHS } from '../shared/config/constants.js';
 
 export class AssetLoader {
   constructor() {

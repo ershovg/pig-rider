@@ -1,26 +1,25 @@
-import { CONFIG } from './config/constants.js';
+import { CONFIG } from './shared/config/constants.js';
 import { Renderer } from './core/Renderer.js';
 import { GameLoop } from './core/GameLoop.js';
 import { AssetLoader } from './core/AssetLoader.js';
-import { Player } from './entities/Player.js';
-import { SpawnSystem } from './systems/SpawnSystem.js';
-import { CollisionSystem } from './systems/CollisionSystem.js';
-import { DifficultyManager } from './systems/DifficultyManager.js';
-import { UIController } from './ui/UIController.js';
-import { GameStateManager } from './managers/GameStateManager.js';
-import { BoosterManager } from './managers/BoosterManager.js';
-import { ProgressionManager } from './managers/ProgressionManager.js';
-import { CullingManager } from './managers/CullingManager.js';
-import { InterpolationManager } from './managers/InterpolationManager.js';
-import { CollisionHandler } from './managers/CollisionHandler.js';
-import { EffectCoordinator } from './managers/EffectCoordinator.js';
-import { GameLifecycleManager } from './managers/GameLifecycleManager.js';
-import { CullingCoordinator } from './managers/CullingCoordinator.js';
-import { PlayerPhysicsController } from './controllers/PlayerPhysicsController.js';
-import { PerformanceMonitor } from './managers/PerformanceMonitor.js';
-import { DebugOverlay } from './utils/DebugOverlay.js';
-import { SoundManager } from './managers/SoundManager.js'; // 🆕 Звуковая система
-import { ASSET_PATHS } from './config/constants.js';
+import { Player } from './features/player/entities/Player.js';
+import { SpawnSystem } from './features/spawning/SpawnSystem.js';
+import { CollisionSystem } from './features/collision/system/CollisionSystem.js';
+import { DifficultyManager } from './features/progression/manager/DifficultyManager.js';
+import { UIController } from './features/ui/UIController.js';
+import { GameStateManager } from './features/state/GameStateManager.js';
+import { BoosterManager } from './features/booster/manager/BoosterManager.js';
+import { ProgressionManager } from './features/progression/manager/ProgressionManager.js';
+import { CullingManager } from './features/rendering/culling/CullingManager.js';
+import { InterpolationManager } from './features/rendering/interpolation/InterpolationManager.js';
+import { CollisionHandler } from './features/collision/handler/CollisionHandler.js';
+import { EffectCoordinator } from './features/effects/manager/EffectCoordinator.js';
+import { GameLifecycleManager } from './features/progression/lifecycle/GameLifecycleManager.js';
+import { CullingCoordinator } from './features/rendering/culling/CullingCoordinator.js';
+import { PlayerPhysicsController } from './features/player/controllers/PlayerPhysicsController.js';
+import { SoundManager } from './features/sound/manager/SoundManager.js';
+import { RestartManager } from './features/restart/manager/RestartManager.js';
+import { ASSET_PATHS } from './shared/config/constants.js';
 
 export class Game {
   constructor() {
@@ -36,18 +35,21 @@ export class Game {
     this.ui = null;
 
     this.stateManager = new GameStateManager();
-    this.soundManager = null; // 🆕 Управление аудио
+    this.soundManager = null;
     this.boosterManager = null;
     this.progressionManager = null;
     this.collisionHandler = null;
     this.effectCoordinator = null;
     this.lifecycleManager = null;
     this.cullingCoordinator = null;
-    this.performanceMonitor = null;
-    this.debugOverlay = null;
+    this.restartManager = null;
     this.isColliding = false;
 
+    // Флаг блокировки автоматического resume (для модалов, ожидающих клика)
+    this.isWaitingForUserInput = false;
+
     this.cullingManager = new CullingManager({
+      cullThreshold: CONFIG.CULLING.THRESHOLD,
       leftMultiplier: CONFIG.CULLING.LEFT_MULTIPLIER,
       rightMultiplier: CONFIG.CULLING.RIGHT_MULTIPLIER,
       rendererWidth: CONFIG.CANVAS_WIDTH,
@@ -57,24 +59,9 @@ export class Game {
     this.playerPhysicsController = new PlayerPhysicsController(CONFIG.PLAYER.PHYSICS);
 
     this.frameCount = 0;
-
-    // 🔍 DEBUG: Интервал для логирования размеров пулов (каждые 5 секунд)
     this.poolLogInterval = null;
-
-    // 🆕 Keyboard shortcut для Performance Monitor (Shift+P)
-    this.setupPerformanceShortcut();
   }
 
-  setupPerformanceShortcut() {
-    document.addEventListener('keydown', (e) => {
-      // Shift+P для toggle Performance Monitor
-      if (e.shiftKey && e.key === 'P') {
-        if (this.performanceMonitor) {
-          this.performanceMonitor.toggle();
-        }
-      }
-    });
-  }
 
   async init() {
     try {
@@ -90,7 +77,6 @@ export class Game {
 
       await this.assetLoader.loadCriticalAssets();
 
-      // 🆕 Инициализация звуковой системы (после загрузки assets)
       this.initSoundSystem();
 
       this.ui.hideLoading();
@@ -108,19 +94,55 @@ export class Game {
    * Инициализирует звуковую систему и загружает все звуки
    */
   initSoundSystem() {
-    this.soundManager = new SoundManager();
+    this.soundManager = new SoundManager({
+      masterVolume: 1.0,
+      musicVolume: 0.6,
+      sfxVolume: 0.7,
+    });
 
-    // Загружаем фоновую музыку
+    const MUSIC_VOLUME = 0.6;
+
     this.soundManager.loadMusic('mainMusic', ASSET_PATHS.MUSIC_MAIN, {
-      volume: 0.4, // Чуть тише, чтобы не отвлекала
+      volume: MUSIC_VOLUME,
     });
 
-    // Загружаем звуковые эффекты
+    this.soundManager.loadMusic('bonusMusic', ASSET_PATHS.MUSIC_BONUS, {
+      volume: MUSIC_VOLUME,
+    });
+
+    // Sound Effects (SFX)
     this.soundManager.loadSound('coin', ASSET_PATHS.SFX_COIN, {
-      volume: 0.7,
+      volume: 0.2, // 20% × sfxVolume(0.7) = 14% итоговая громкость - тихий, приятный звук
     });
 
-    console.log('🎵 Sound system initialized');
+    this.soundManager.loadSound('boosterCollect', ASSET_PATHS.SFX_BOOSTER_COLLECT, {
+      volume: 0.5, // Средняя громкость для важного события
+    });
+
+    this.soundManager.loadSound('collision', ASSET_PATHS.SFX_COLLISION, {
+      volume: 0.6, // Заметный звук удара
+    });
+
+    this.soundManager.loadSound('win', ASSET_PATHS.SFX_WIN, {
+      volume: 0.7, // Громкий победный звук
+    });
+
+    this.soundManager.loadSound('lose', ASSET_PATHS.SFX_LOSE, {
+      volume: 0.6, // Средне-громкий звук поражения
+    });
+
+    this.soundManager.initMusicStates({
+      bpm: 130,
+      beatsPerBar: 4,
+      beatSync: true,
+      gameplayBaseVolume: 0.6,
+      gameplayIntensityVolume: 0.6,
+      boosterIntensityVolume: 0.6,
+      boosterFadeOut: 500,
+      boosterFadeIn: 500,
+    });
+
+    console.log('Sound system initialized');
   }
 
   initSystems() {
@@ -155,7 +177,7 @@ export class Game {
       coinCollectEffectSpritesheet,
       collisionEffectSpritesheet,
       this.renderer.stage,
-      this.renderer.decorationLayer // 🆕 Передаём ParticleContainer для декораций
+      this.renderer.decorationLayer
     );
 
     this.collisionSystem = new CollisionSystem();
@@ -166,10 +188,11 @@ export class Game {
       this.spawnSystem,
       this.difficultyManager,
       this.ui,
-      this.player
+      this.player,
+      this.soundManager
     );
 
-    this.collisionHandler = new CollisionHandler(this.collisionSystem, this.soundManager); // 🆕 Передаём SoundManager
+    this.collisionHandler = new CollisionHandler(this.collisionSystem, this.soundManager);
     this.effectCoordinator = new EffectCoordinator(this.spawnSystem);
     this.cullingCoordinator = new CullingCoordinator(this.cullingManager, this.spawnSystem);
 
@@ -187,27 +210,30 @@ export class Game {
       spawnSystem: this.spawnSystem,
       gameLoop: this.gameLoop,
       renderer: this.renderer,
-      ui: this.ui
+      ui: this.ui,
+      soundManager: this.soundManager,
+      setWaitingForInput: (isWaiting) => { this.isWaitingForUserInput = isWaiting; }
     });
 
-    // 🆕 Инициализируем Performance Monitor
-    this.performanceMonitor = new PerformanceMonitor(this.renderer, this.gameLoop);
-    this.performanceMonitor.enable();
+    this.restartManager = new RestartManager({
+      stateManager: this.stateManager,
+      progressionManager: this.progressionManager,
+      boosterManager: this.boosterManager,
+      difficultyManager: this.difficultyManager,
+      player: this.player,
+      spawnSystem: this.spawnSystem,
+      gameLoop: this.gameLoop,
+      ui: this.ui,
+      soundManager: this.soundManager,
+      game: this
+    });
 
-    // 🆕 Инициализируем Debug Overlay для culling boundaries
-    this.debugOverlay = new DebugOverlay(this.renderer, this.cullingManager);
-
-    // Устанавливаем динамические boundaries на основе реального размера канваса
     const rendererWidth = this.renderer.app?.screen?.width || CONFIG.CANVAS_WIDTH;
     this.cullingManager.setBoundaries(rendererWidth);
 
-    console.log('💡 Press Shift+P to toggle Performance Monitor');
-    console.log('💡 Press D to toggle Culling Debug Overlay');
-
-    // 🔊 Debug: Expose sound manager to window for testing
     if (typeof window !== 'undefined') {
       window.soundManager = this.soundManager;
-      console.log('🔊 Debug: Type window.soundManager.playMusic("mainMusic", 100) to test music');
+      console.log('Debug: Type window.soundManager.playMusic("mainMusic", 100) to test music');
     }
   }
 
@@ -216,6 +242,7 @@ export class Game {
       onPlayClick: () => this.startGame(),
       onBoosterContinue: () => this.resumeGame(),
       onRetry: () => this.restartGame(),
+      onRestartGame: () => this.handleRestart(),
       onBookDemo: () => console.log('Book demo clicked')
     });
   }
@@ -231,13 +258,6 @@ export class Game {
 
     this.lifecycleManager.startGame();
 
-    // 🆕 Запускаем фоновую музыку с плавным fade-in
-    // ВАЖНО: Это происходит ПОСЛЕ user interaction (клик на "Play")
-    if (this.soundManager) {
-      console.log('🎶 Attempting to play music...');
-      this.soundManager.playMusic('mainMusic', 500); // 0.5s fade-in (быстрее, чтобы услышать до первого столкновения)
-    }
-
     this.startPoolLogging();
   }
 
@@ -251,7 +271,20 @@ export class Game {
     this.startGame();
   }
 
-  update(deltaTime) {
+  /**
+   * Обработчик кнопки "Начать игру заново"
+   * Делегирует работу RestartManager для полной очистки и перезапуска
+   */
+  handleRestart() {
+    if (!this.restartManager) {
+      console.error('❌ RestartManager not initialized');
+      return;
+    }
+
+    this.restartManager.restart();
+  }
+
+  update(deltaTime, frameDeltaTime = null) {
     if (!this.stateManager.isPlaying()) return;
 
     this.frameCount++;
@@ -273,7 +306,8 @@ export class Game {
     this.spawnSystem.update(deltaTime, this.progressionManager.getGameSpeed(), {
       ...boosterContext,
       difficultyManager: this.difficultyManager,
-      cullThreshold: this.cullingManager.cullThreshold
+      cullThreshold: this.cullingManager.cullThreshold,
+      frameDeltaTime: frameDeltaTime || deltaTime
     });
 
     this.cullingCoordinator.performCulling(this.frameCount);
@@ -315,14 +349,6 @@ export class Game {
 
       this.lifecycleManager.handleBoosterActivation();
     }
-
-    // 🆕 Обновляем Performance Monitor
-    if (this.performanceMonitor) {
-      this.performanceMonitor.update({
-        spawnSystem: this.spawnSystem,
-        cullingCoordinator: this.cullingCoordinator
-      });
-    }
   }
 
   render(alpha) {
@@ -350,14 +376,11 @@ export class Game {
     }
   }
 
-  // 🔍 DEBUG: Логирование размеров пулов
   startPoolLogging() {
-    // Очищаем предыдущий интервал, если был
     if (this.poolLogInterval) {
       clearInterval(this.poolLogInterval);
     }
 
-    // Логируем каждые 5 секунд
     this.poolLogInterval = setInterval(() => {
       if (!this.spawnSystem) return;
 
@@ -367,7 +390,6 @@ export class Game {
       const cloudPool = this.spawnSystem.cloudSpawner?.pool;
       const starPool = this.spawnSystem.starSpawner?.pool;
 
-      // Получаем полную статистику пула
       const obstacleStats = obstaclePool?.getStats() || { active: 0, pooled: 0, total: 0 };
       const coinStats = coinPool?.getStats() || { active: 0, pooled: 0, total: 0 };
       const boosterStats = boosterPool?.getStats() || { active: 0, pooled: 0, total: 0 };
@@ -375,7 +397,7 @@ export class Game {
       const starStats = starPool?.getStats() || { active: 0, pooled: 0, total: 0 };
 
       console.log(
-        `🔍 [POOL DEBUG] Obstacles: active=${obstacleStats.active} pooled=${obstacleStats.pooled} total=${obstacleStats.total} | ` +
+        `[POOL DEBUG] Obstacles: active=${obstacleStats.active} pooled=${obstacleStats.pooled} total=${obstacleStats.total} | ` +
         `Coins: active=${coinStats.active} pooled=${coinStats.pooled} | ` +
         `Boosters: active=${boosterStats.active} pooled=${boosterStats.pooled} | ` +
         `Clouds: active=${cloudStats.active} pooled=${cloudStats.pooled} | ` +
@@ -393,7 +415,6 @@ export class Game {
 
   destroy() {
     this.stopPoolLogging();
-    if (this.debugOverlay) this.debugOverlay.destroy();
     if (this.gameLoop) this.gameLoop.stop();
     if (this.player) this.player.destroy();
     if (this.ui) this.ui.destroy();

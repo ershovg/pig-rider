@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { CONFIG } from '../config/constants.js';
+import { CONFIG } from '../shared/config/constants.js';
 
 export class Renderer {
   constructor(canvasId = 'game-canvas') {

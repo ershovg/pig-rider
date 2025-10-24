@@ -99,69 +99,163 @@ npm run preview          # Preview production build
 
 ---
 
-## Структура Проекта
+## Архитектура: Modular Monolith (Feature-Based)
+
+**Архитектурный стиль:** Модульный монолит с организацией по доменным фичам (features), а не по техническим слоям.
+
+**Почему Modular:**
+- ✅ Все файлы одной фичи находятся рядом
+- ✅ Легко понять и изменить конкретную функциональность
+- ✅ Простое масштабирование (добавление новых модулей)
+- ✅ Соблюдение SOLID принципов на уровне модулей
+
+### Структура Проекта
 
 ```
 src/
-├── config/
-│   └── constants.js      # Все константы (TARGET_COINS, скорости, размеры)
+├── core/                           # Engine инфраструктура (PixiJS)
+│   ├── Renderer.js                # PixiJS renderer setup
+│   ├── GameLoop.js                # Fixed timestep (60 FPS)
+│   └── AssetLoader.js             # Background asset loading
 │
-├── core/                # PixiJS engine
-│   ├── AssetLoader.js   # Background asset loading (PixiJS manifest)
-│   ├── Renderer.js      # PixiJS renderer setup
-│   └── GameLoop.js      # Fixed timestep (60 FPS)
+├── shared/                        # Общие утилиты и конфигурация
+│   ├── config/
+│   │   └── constants.js           # Все константы игры
+│   └── utils/
+│       ├── EventBus.js            # Pub/Sub для модулей
+│       ├── MathUtils.js           # Математические утилиты
+│       └── ObjectPool.js          # Object pooling system
 │
-├── entities/            # Game objects (Player, Obstacle, Coin, Booster, Star, Cloud)
-│
-├── effects/             # 🆕 Визуальные эффекты (PixiJS sprites)
-│   └── CoinSparkle.js   # Эффект сбора монеты
-│
-├── managers/            # 🆕 High-level игровая логика (SOLID)
-│   ├── BoosterManager.js     # Вся логика бустеров (Single Responsibility)
-│   └── EffectManager.js      # Управление визуальными эффектами
-│
-├── systems/
-│   ├── SpawnSystem.js           # Orchestrator всех spawner'ов
-│   ├── CollisionSystem.js       # AABB collision detection
-│   ├── DifficultyManager.js     # Прогрессивное усложнение
+├── features/                      # Модули по доменам (фичам)
 │   │
-│   ├── spawners/                # Модульные spawner'ы
-│   │   ├── BaseSpawner.js       # Абстрактный базовый класс (Template Method)
-│   │   ├── ObstacleSpawner.js   # Препятствия + lane safety
-│   │   ├── CoinSpawner.js       # Монеты + booster mode
-│   │   ├── CloudSpawner.js      # Облака (декор)
-│   │   ├── StarSpawner.js       # Звезды (декор)
-│   │   └── BoosterSpawner.js    # Power-up объекты
+│   ├── player/                    # Модуль: Игрок
+│   │   ├── entities/
+│   │   │   └── Player.js         # Entity игрока
+│   │   └── controllers/
+│   │       ├── PlayerInputController.js
+│   │       └── PlayerPhysicsController.js
 │   │
-│   ├── pools/
-│   │   └── EntityPoolManager.js # Централизованное управление пулами
+│   ├── booster/                   # Модуль: Бустеры (power-ups)
+│   │   ├── entities/
+│   │   │   └── Booster.js
+│   │   ├── manager/
+│   │   │   └── BoosterManager.js # Логика активации/деактивации
+│   │   └── spawner/
+│   │       └── BoosterSpawner.js
 │   │
-│   └── services/
-│       └── LaneSafetyService.js # Гарантирует безопасный проход
+│   ├── obstacles/                 # Модуль: Препятствия
+│   │   ├── entities/
+│   │   │   └── Obstacle.js
+│   │   ├── spawner/
+│   │   │   └── ObstacleSpawner.js
+│   │   └── patterns/
+│   │       └── ObstaclePatternLibrary.js
+│   │
+│   ├── coins/                     # Модуль: Монеты и сбор
+│   │   ├── entities/
+│   │   │   ├── Coin.js
+│   │   │   └── CoinSparkle.js
+│   │   ├── spawner/
+│   │   │   ├── CoinSpawner.js
+│   │   │   └── SparkleSpawner.js
+│   │   └── effects/
+│   │       └── CoinCollectEffect.js
+│   │
+│   ├── decoration/                # Модуль: Декоративные элементы
+│   │   ├── entities/
+│   │   │   ├── Cloud.js
+│   │   │   └── Star.js
+│   │   └── spawners/
+│   │       ├── CloudSpawner.js
+│   │       └── StarSpawner.js
+│   │
+│   ├── collision/                 # Модуль: Коллизии
+│   │   ├── system/
+│   │   │   └── CollisionSystem.js
+│   │   ├── handler/
+│   │   │   └── CollisionHandler.js
+│   │   └── effects/
+│   │       └── CollisionEffect.js
+│   │
+│   ├── spawning/                  # Модуль: Spawn система (оркестратор)
+│   │   ├── SpawnSystem.js        # Координирует все spawner'ы
+│   │   ├── spawners/
+│   │   │   └── BaseSpawner.js    # Базовый класс для spawner'ов
+│   │   ├── pools/
+│   │   │   └── EntityPoolManager.js
+│   │   └── services/
+│   │       └── LaneSafetyService.js
+│   │
+│   ├── sound/                     # Модуль: Аудио система
+│   │   ├── manager/
+│   │   │   ├── SoundManager.js
+│   │   │   └── MusicStateManager.js
+│   │   ├── core/
+│   │   │   └── BeatSyncEngine.js
+│   │   └── states/
+│   │       ├── BaseMusicState.js
+│   │       ├── GameplayState.js
+│   │       ├── BoosterState.js
+│   │       ├── VictoryState.js
+│   │       ├── DefeatState.js
+│   │       └── CollisionState.js
+│   │
+│   ├── progression/               # Модуль: Прогрессия игры
+│   │   ├── manager/
+│   │   │   ├── ProgressionManager.js
+│   │   │   └── DifficultyManager.js
+│   │   └── lifecycle/
+│   │       └── GameLifecycleManager.js
+│   │
+│   ├── effects/                   # Модуль: Визуальные эффекты
+│   │   ├── manager/
+│   │   │   └── EffectCoordinator.js
+│   │   └── base/
+│   │       ├── Collectible.js
+│   │       ├── Collidable.js
+│   │       └── Renderable.js
+│   │
+│   ├── rendering/                 # Модуль: Рендеринг оптимизация
+│   │   ├── culling/
+│   │   │   ├── CullingManager.js
+│   │   │   └── CullingCoordinator.js
+│   │   ├── interpolation/
+│   │   │   └── InterpolationManager.js
+│   │   ├── interfaces/
+│   │   │   ├── Cullable.js
+│   │   │   └── Interpolatable.js
+│   │   └── animations/
+│   │       ├── gsap-buttons.js
+│   │       ├── gsap-clouds.js
+│   │       └── gsap-stars.js
+│   │
+│   ├── monitoring/                # Модуль: Performance мониторинг
+│   │   └── PerformanceMonitor.js
+│   │
+│   ├── state/                     # Модуль: State management
+│   │   └── GameStateManager.js
+│   │
+│   ├── confetti/                  # Модуль: Конфетти анимации
+│   │   └── manager/
+│   │       └── ConfettiManager.js
+│   │
+│   └── ui/                        # Модуль: HTML/CSS интерфейс
+│       └── UIController.js
 │
-├── ui/
-│   └── UIController.js  # Управление HTML экранами
-│
-├── animations/          # GSAP анимации (clouds, stars, buttons)
-├── utils/               # EventBus, MathUtils, ObjectPool
-│
-├── Game.js              # Главный оркестратор
-├── main.js              # Entry: local dev
-└── webflow.js           # Entry: Webflow bundle
+├── Game.js                        # Главный оркестратор (композиция модулей)
+├── main.js                        # Entry: local dev
+└── webflow.js                     # Entry: Webflow bundle
 ```
 
-### 🆕 Новые Папки (Manager Pattern)
+### Принципы Модульной Структуры
 
-**`managers/`** - High-level игровая логика, следующая SOLID:
-- Каждый manager отвечает за одну domain область (SRP)
-- Инкапсулирует сложную логику из `Game.js`
-- Предоставляет чистый публичный API
-- Примеры: `BoosterManager`, `EffectManager`
+**Модуль** = Доменная область (feature/функциональность)
 
-**`effects/`** - Визуальные эффекты (PixiJS sprites):
-- Отделены от game entities для clarity
-- Управляются через `EffectManager`
-- Используют object pooling через `EntityPoolManager`
+Каждый модуль:
+- 📦 **Инкапсулирован** - вся логика фичи в одной папке
+- 🔌 **Слабо связан** - зависит только от shared/ и других модулей через API
+- 🎯 **Единая ответственность** - отвечает за одну область (SRP на уровне модуля)
+- 📝 **Самодокументируемый** - структура папки отражает назначение
 
 ---
 
@@ -185,11 +279,12 @@ src/
 - `getActiveObstacles/Coins/Boosters()` - получить активные объекты
 
 **Как добавить новый тип объектов:**
-1. Создай Entity класс в `entities/` (имплементируй: `activate()`, `update()`, `deactivate()`, `isActive()`, `getHitbox()`)
-2. Создай Spawner в `spawners/` (наследуй `BaseSpawner`, переопредели `spawn()`)
-3. В `SpawnSystem.initializePools()` регистрируй пул: `this.poolManager.registerPool('name', EntityClass, size)`
-4. В `SpawnSystem.initializeSpawners()` создай инстанс spawner'а
-5. В `SpawnSystem.update()` вызови `this.mySpawner.update(...)`
+1. Создай новый модуль в `features/my-feature/`
+2. Создай Entity класс в `features/my-feature/entities/` (имплементируй: `activate()`, `update()`, `deactivate()`, `isActive()`, `getHitbox()`)
+3. Создай Spawner в `features/my-feature/spawner/` (наследуй `BaseSpawner` из `features/spawning/spawners/`, переопредели `spawn()`)
+4. В `features/spawning/SpawnSystem.js` регистрируй пул: `this.poolManager.registerPool('name', EntityClass, size)`
+5. В `SpawnSystem.initializeSpawners()` создай инстанс spawner'а
+6. В `SpawnSystem.update()` вызови `this.mySpawner.update(...)`
 
 ### 2. Booster Mechanic
 
@@ -209,7 +304,7 @@ src/
 
 ### 3. Configuration System
 
-**Файл:** `src/config/constants.js`
+**Файл:** `src/shared/config/constants.js`
 
 Все параметры игры централизованы. В Webflow можно переопределить через `window.GAME_CONFIG`:
 
@@ -226,7 +321,7 @@ window.GAME_CONFIG = {
 
 ### 4. UIController
 
-**Файл:** `src/ui/UIController.js`
+**Файл:** `src/features/ui/UIController.js`
 
 Управляет всеми HTML экранами без касания PixiJS:
 
@@ -325,9 +420,40 @@ Background:   [Load Critical]   → [Show UI]  (1s blocking)
 
 ## Development Guidelines
 
+### ⚠️ ПЕРЕД НАЧАЛОМ ЛЮБОЙ ЗАДАЧИ
+
+**КРИТИЧЕСКИ ВАЖНО:** Перед добавлением нового кода, спроси себя:
+
+1. **Это новая фича/домен?**
+   - ✅ ДА → Создай новый модуль в `features/my-feature/`
+   - ❌ НЕТ → Добавь в существующий модуль
+
+2. **Соблюдаю ли я SOLID?**
+   - **SRP**: Один класс = одна ответственность
+   - **OCP**: Расширяю, не модифицирую базовые классы
+   - **LSP**: Наследники взаимозаменяемы
+   - **ISP**: Минимальные интерфейсы
+   - **DIP**: Зависимость от абстракций, не реализаций
+
+3. **Проверь аналогии в проекте:**
+   - Посмотри как организованы модули `sound/`, `effects/`, `collision/`
+   - Следуй той же структуре: `entities/`, `manager/`, `spawner/`, `effects/`
+   - Используй те же паттерны (EventBus, ObjectPool, Dependency Injection)
+
+**Правило:**
+> Никогда не добавляй код в существующий класс, если это новая ответственность. Создай новый модуль.
+
+**Примеры:**
+- ❌ Добавил логику конфетти в UIController (нарушение SRP)
+- ✅ Создал `features/confetti/manager/ConfettiManager.js` + импортировал в UIController
+- ❌ Добавил логику аудио в Game.js
+- ✅ Создал `features/sound/manager/SoundManager.js` + зарегистрировал в Game.js
+
+---
+
 ### Изменение Game Balance
 
-Редактируй `src/config/constants.js`:
+Редактируй `src/shared/config/constants.js`:
 - `TARGET_COINS` - условие победы
 - `GAME_SPEED`, `MAX_SPEED`, `SPEED_INCREMENT` - прогрессия скорости
 - `OBSTACLE.MIN_DISTANCE`, `MAX_DISTANCE` - расстояние между препятствиями
@@ -336,9 +462,9 @@ Background:   [Load Critical]   → [Show UI]  (1s blocking)
 ### Добавление UI Экранов
 
 1. Добавь HTML структуру в `index.html`
-2. Добавь методы show/hide в `UIController.js`
+2. Добавь методы show/hide в `features/ui/UIController.js`
 3. Вызывай из `Game.js` при переходах состояния
-4. Используй EventBus для Canvas ↔ UI коммуникации при необходимости
+4. Используй EventBus из `shared/utils/EventBus.js` для Canvas ↔ UI коммуникации при необходимости
 
 ### Тестирование Webflow Build
 
@@ -366,19 +492,26 @@ npm run build:webflow
 
 **Изменить целевой счет:**
 ```javascript
-// src/config/constants.js
+// src/shared/config/constants.js
 TARGET_COINS: 500 // вместо 200
 ```
 
 **Добавить новый asset:**
 1. Добавь файл в `public/assets/sprites/`
-2. Добавь путь в `ASSET_PATHS` (`src/config/constants.js`)
-3. Добавь в соответствующий бандл в `AssetLoader.js` manifest:
+2. Добавь путь в `ASSET_PATHS` (`src/shared/config/constants.js`)
+3. Добавь в соответствующий бандл в `src/core/AssetLoader.js` manifest:
    - **critical** - если нужен для Start Screen
    - **gameplay** - если нужен только во время игры
 
 **Отладка коллизий:**
-Добавь визуализацию hitbox'ов в collision system. Hitbox'ы масштабированы: player (0.7x), obstacles (0.8x), coins (0.6x).
+Добавь визуализацию hitbox'ов в `features/collision/system/CollisionSystem.js`. Hitbox'ы масштабированы: player (0.7x), obstacles (0.8x), coins (0.6x).
+
+**Добавить новую фичу (модуль):**
+1. Создай папку в `src/features/my-feature/`
+2. Организуй файлы по назначению: `entities/`, `manager/`, `spawner/`, `effects/` и т.д.
+3. Импортируй необходимое из `shared/` (config, utils)
+4. Зарегистрируй модуль в `Game.js` если нужна централизованная композиция
+5. Следуй принципам SOLID на уровне модуля
 
 ---
 

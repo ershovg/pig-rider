@@ -1,6 +1,6 @@
 {
   "name": "pig-rider",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -10,18 +10,18 @@
     "preview": "vite preview --host",
     "test": "vitest",
     "optimize:images": "node scripts/optimize-images.js",
+    "optimize:audio": "node scripts/optimize-audio.js",
     "optimize:json": "node scripts/update-json-references.js",
-    "optimize": "npm run optimize:images && npm run optimize:json"
+    "optimize": "npm run optimize:images && npm run optimize:audio && npm run optimize:json"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "canvas-confetti": "^1.9.3",
     "gsap": "^3.13.0",
     "howler": "^2.2.4",
-    "matter-js": "^0.20.0",
-    "pixi-stats": "^4.2.0",
     "pixi.js": "^8.13.2"
   },
   "devDependencies": {

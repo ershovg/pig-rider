@@ -15,12 +15,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const INPUT_DIR = join(__dirname, '../public/assets/sprites');
-const OUTPUT_DIR = INPUT_DIR; // Сохраняем в ту же папку
+const OUTPUT_DIR = INPUT_DIR;
 
-// AVIF настройки для максимального качества при минимальном размере
 const AVIF_OPTIONS = {
-  quality: 80, // Качество 80 - оптимальный баланс
-  effort: 9,   // Максимальное сжатие (медленно, но эффективно)
+  quality: 80,
+  effort: 9,
 };
 
 /**
@@ -85,10 +84,9 @@ async function processDirectory() {
       successCount++;
     }
 
-    console.log(); // Пустая строка для разделения
+    console.log();
   }
 
-  // Итоговая статистика
   const totalCompression = ((1 - totalOutputSize / totalInputSize) * 100).toFixed(1);
 
   console.log('═══════════════════════════════════════════════');
@@ -100,5 +98,4 @@ async function processDirectory() {
   console.log('═══════════════════════════════════════════════');
 }
 
-// Запуск
 processDirectory().catch(console.error);

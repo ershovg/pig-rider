@@ -34,19 +34,15 @@ async function updateJsonReferences() {
     const filePath = join(SPRITES_DIR, file);
 
     try {
-      // Read JSON file
       const content = await readFile(filePath, 'utf-8');
       const data = JSON.parse(content);
 
-      // Check if meta.image exists and ends with .png
       if (data.meta && data.meta.image && data.meta.image.endsWith('.png')) {
         const oldImage = data.meta.image;
         const newImage = oldImage.replace('.png', '.avif');
 
-        // Update reference
         data.meta.image = newImage;
 
-        // Write back with pretty formatting
         await writeFile(filePath, JSON.stringify(data, null, '\t'), 'utf-8');
 
         console.log(`✅ ${file}`);
@@ -66,5 +62,4 @@ async function updateJsonReferences() {
   console.log('═══════════════════════════════════════');
 }
 
-// Run
 updateJsonReferences().catch(console.error);
