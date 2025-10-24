@@ -99,9 +99,11 @@ export class RestartManager {
       this.gameLoop.stop();
     }
 
-    // Остановить всю музыку и звуки
+    // 🔧 ИСПРАВЛЕНИЕ БАГА: Используем reset() вместо stopAll()
+    // reset() очищает состояния MusicStateManager (currentState/previousState)
+    // Это предотвращает конфликт при повторном запуске игры
     if (this.soundManager) {
-      this.soundManager.stopAll();
+      this.soundManager.reset();
     }
 
     // Остановить interval логирования пулов

@@ -79,11 +79,14 @@ export class UIController {
 
   /**
    * Show running screen (game HUD)
-   * Абсолютный элемент - используем opacity
+   * Абсолютный элемент - используем opacity + убираем is--hide для Webflow
    */
   showRunningScreen() {
     this.hideAll();
     if (this.runningScreen) {
+      // Убираем Webflow utility класс (предотвращает FOUC при медленном интернете)
+      this.runningScreen.classList.remove('is--hide');
+
       this.runningScreen.style.opacity = '1';
       this.runningScreen.style.pointerEvents = 'auto';
     }
@@ -100,6 +103,9 @@ export class UIController {
     if (this.runningScreen) {
       this.runningScreen.style.opacity = '0';
       this.runningScreen.style.pointerEvents = 'none';
+
+      // Возвращаем Webflow utility класс (для корректного начального состояния)
+      this.runningScreen.classList.add('is--hide');
     }
   }
 
@@ -256,10 +262,13 @@ export class UIController {
     if (this.winScreen) this.winScreen.classList.remove('is--active');
     if (this.boostScreen) this.boostScreen.classList.remove('is--active');
 
-    // Абсолютные элементы HUD (opacity)
+    // Абсолютные элементы HUD (opacity + is--hide для Webflow)
     if (this.runningScreen) {
       this.runningScreen.style.opacity = '0';
       this.runningScreen.style.pointerEvents = 'none';
+
+      // Возвращаем is--hide (важно для Webflow при медленном интернете)
+      this.runningScreen.classList.add('is--hide');
     }
   }
 

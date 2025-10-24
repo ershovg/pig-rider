@@ -281,6 +281,35 @@ export class MusicStateManager {
   }
 
   /**
+   * Сбрасывает состояние manager при рестарте
+   * КРИТИЧЕСКИ ВАЖНО: очищает currentState и previousState
+   * Предотвращает конфликт состояний при повторном запуске игры
+   */
+  reset() {
+    console.log('🔄 MusicStateManager: Resetting state...');
+
+    // Очистить текущее состояние (без вызова exit)
+    if (this.currentState) {
+      this.currentState.isActive = false;
+      console.log(`   Cleared state: ${this.currentState.name}`);
+    }
+
+    // Сбросить ссылки на состояния
+    this.currentState = null;
+    this.previousState = null;
+
+    // Остановить все треки (гарантируем чистое состояние)
+    this.sounds.forEach((sound, alias) => {
+      if (sound.playing()) {
+        sound.stop();
+        console.log(`   Stopped: ${alias}`);
+      }
+    });
+
+    console.log('✅ MusicStateManager: Reset complete');
+  }
+
+  /**
    * Debug info
    */
   getDebugInfo() {

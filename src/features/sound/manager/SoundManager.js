@@ -271,9 +271,17 @@ export class SoundManager {
 
   /**
    * Сброс состояния
+   * КРИТИЧЕСКИ ВАЖНО: сбрасывает MusicStateManager для предотвращения конфликтов
    */
   reset() {
+    // Сначала сбрасываем music state manager (очищает currentState/previousState)
+    if (this.musicStateManager) {
+      this.musicStateManager.reset();
+    }
+
+    // Потом останавливаем все звуки (включая SFX)
     this.stopAll();
-    console.log('🔄 SoundManager reset');
+
+    console.log('🔄 SoundManager reset complete');
   }
 }
