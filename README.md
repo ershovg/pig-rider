@@ -301,6 +301,12 @@ console.log(typeof PIXI) // Should output "object"
 - **[RESTRUCTURE_SUMMARY.md](RESTRUCTURE_SUMMARY.md)** - Modular monolith migration report
 - **[HOTFIX_REPORT.md](HOTFIX_REPORT.md)** - Critical bug fixes after migration
 
+## 🤝 Community & Support
+
+- **[💬 Discussions](https://github.com/GeorgeStudio96/pig-rider/discussions)** - Общие вопросы, идеи, обсуждения
+- **[🐛 Issues](https://github.com/GeorgeStudio96/pig-rider/issues)** - Баги и конкретные задачи
+- **[📖 Testing Guide](/.github/CONTRIBUTING.md)** - Как помочь с тестированием
+
 ### Key Concepts
 
 - **Modular Architecture:** Features organized by domain, not technical layers
