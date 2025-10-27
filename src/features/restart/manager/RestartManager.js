@@ -37,9 +37,17 @@ export class RestartManager {
     this.gameLoop = dependencies.gameLoop;
     this.ui = dependencies.ui;
     this.soundManager = dependencies.soundManager;
-    this.game = dependencies.game;
+    this.game = dependencies.game; // Будет установлен через setGame()
 
     console.log('✅ RestartManager initialized');
+  }
+
+  /**
+   * Устанавливает ссылку на Game (вызывается после инициализации всех систем)
+   * @param {Game} game - Экземпляр Game
+   */
+  setGame(game) {
+    this.game = game;
   }
 
   /**
@@ -170,10 +178,10 @@ export class RestartManager {
   _resetGameFlags() {
     console.log('  🏳️  Resetting game flags...');
 
-    // Сбросить флаг коллизии (чтобы новые коллизии обрабатывались)
-    if (this.game) {
-      this.game.isColliding = false;
-      this.game.frameCount = 0;
+    // Сбросить флаг коллизии и frame count через UpdateCoordinator
+    if (this.game && this.game.updateCoordinator) {
+      this.game.updateCoordinator.resetCollisionFlag();
+      this.game.updateCoordinator.resetFrameCount();
     }
   }
 
