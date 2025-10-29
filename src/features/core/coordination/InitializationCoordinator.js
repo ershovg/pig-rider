@@ -1,13 +1,5 @@
 /**
- * InitializationCoordinator
- *
- * Координирует инициализацию всех систем игры.
- * Отвечает за порядок и правильность создания всех компонентов.
- *
- * Принципы:
- * - Single Responsibility: Только инициализация систем
- * - Dependency Inversion: Получает SystemRegistry извне
- * - Open/Closed: Новые системы добавляются без изменения логики
+ * InitializationCoordinator - Инициализация всех систем игры в правильном порядке.
  */
 
 import { CONFIG, ASSET_PATHS } from '../../../shared/config/constants.js';
@@ -33,43 +25,27 @@ import { SoundManager } from '../../sound/manager/SoundManager.js';
 import { RestartManager } from '../../restart/manager/RestartManager.js';
 
 export class InitializationCoordinator {
-  /**
-   * @param {SystemRegistry} registry - Реестр систем для регистрации зависимостей
-   */
   constructor(registry) {
     this.registry = registry;
   }
 
-  /**
-   * Главная точка инициализации игры
-   * Последовательно инициализирует все критические системы
-   */
   async init() {
     try {
-      // 1. UI (показываем экран загрузки)
       this.registry.ui = new UIController();
 
-      // 2. Renderer (PixiJS)
       this.registry.renderer = new Renderer('game-canvas');
       await this.registry.renderer.init();
 
-      // 3. Asset Loader (загрузка критических ассетов)
       this.registry.assetLoader = new AssetLoader();
       await this.registry.assetLoader.init();
 
-      // 4. Фоновая загрузка gameplay ассетов
       this.registry.assetLoader.startBackgroundLoading();
-
-      // 5. Загрузка критических ассетов (для Start Screen)
       await this.registry.assetLoader.loadCriticalAssets();
 
-      // 6. Инициализация звуковой системы
       this.initSoundSystem();
 
-      // 7. Скрываем загрузку, показываем Start Screen
       this.registry.ui.hideLoading();
 
-      // 8. State Manager и начальное состояние
       this.registry.stateManager = new GameStateManager();
       this.registry.stateManager.setState('menu');
       this.registry.ui.showStartScreen();
@@ -81,9 +57,6 @@ export class InitializationCoordinator {
     }
   }
 
-  /**
-   * Инициализирует звуковую систему и загружает все звуки
-   */
   initSoundSystem() {
     this.registry.soundManager = new SoundManager({
       masterVolume: 1.0,
@@ -93,37 +66,15 @@ export class InitializationCoordinator {
 
     const MUSIC_VOLUME = 0.6;
 
-    // Музыка
-    this.registry.soundManager.loadMusic('mainMusic', ASSET_PATHS.MUSIC_MAIN, {
-      volume: MUSIC_VOLUME,
-    });
+    this.registry.soundManager.loadMusic('mainMusic', ASSET_PATHS.MUSIC_MAIN, { volume: MUSIC_VOLUME });
+    this.registry.soundManager.loadMusic('bonusMusic', ASSET_PATHS.MUSIC_BONUS, { volume: MUSIC_VOLUME });
 
-    this.registry.soundManager.loadMusic('bonusMusic', ASSET_PATHS.MUSIC_BONUS, {
-      volume: MUSIC_VOLUME,
-    });
+    this.registry.soundManager.loadSound('coin', ASSET_PATHS.SFX_COIN, { volume: 0.2 });
+    this.registry.soundManager.loadSound('boosterCollect', ASSET_PATHS.SFX_BOOSTER_COLLECT, { volume: 0.5 });
+    this.registry.soundManager.loadSound('collision', ASSET_PATHS.SFX_COLLISION, { volume: 0.6 });
+    this.registry.soundManager.loadSound('win', ASSET_PATHS.SFX_WIN, { volume: 0.7 });
+    this.registry.soundManager.loadSound('lose', ASSET_PATHS.SFX_LOSE, { volume: 0.6 });
 
-    // Sound Effects (SFX)
-    this.registry.soundManager.loadSound('coin', ASSET_PATHS.SFX_COIN, {
-      volume: 0.2, // Тихий, приятный звук сбора монеты
-    });
-
-    this.registry.soundManager.loadSound('boosterCollect', ASSET_PATHS.SFX_BOOSTER_COLLECT, {
-      volume: 0.5, // Средняя громкость для важного события
-    });
-
-    this.registry.soundManager.loadSound('collision', ASSET_PATHS.SFX_COLLISION, {
-      volume: 0.6, // Заметный звук удара
-    });
-
-    this.registry.soundManager.loadSound('win', ASSET_PATHS.SFX_WIN, {
-      volume: 0.7, // Громкий победный звук
-    });
-
-    this.registry.soundManager.loadSound('lose', ASSET_PATHS.SFX_LOSE, {
-      volume: 0.6, // Средне-громкий звук поражения
-    });
-
-    // Инициализация музыкальных состояний
     this.registry.soundManager.initMusicStates({
       bpm: 130,
       beatsPerBar: 4,
@@ -138,18 +89,13 @@ export class InitializationCoordinator {
     console.log('✅ Sound system initialized');
   }
 
-  /**
-   * Инициализирует все игровые системы (вызывается при первом старте игры)
-   * Ждет полной загрузки gameplay ассетов перед инициализацией
-   */
   async initGameplaySystems(updateCallback, renderCallback) {
-    // Ждем готовности gameplay ассетов
     await this.registry.assetLoader.ensureGameplayAssetsReady();
 
-    // 1. Player Physics Controller
+    // Player Physics
     this.registry.playerPhysicsController = new PlayerPhysicsController(CONFIG.PLAYER.PHYSICS);
 
-    // 2. Player Entity
+    // Player Entity
     const playerSpritesheet = this.registry.assetLoader.getAsset('playerAnimated');
     const playerBoostSpritesheet = this.registry.assetLoader.getAsset('playerAnimatedBoost');
     this.registry.player = new Player(
@@ -161,7 +107,7 @@ export class InitializationCoordinator {
     );
     this.registry.renderer.addToStage(this.registry.player.getSprite());
 
-    // 3. Spawn System (все entity spawners)
+    // Spawn System (управление всеми entity spawners)
     const obstacleTextures = [
       this.registry.assetLoader.getAsset('obstacleBase'),
       this.registry.assetLoader.getAsset('obstacleLarge')
@@ -185,10 +131,10 @@ export class InitializationCoordinator {
       this.registry.renderer.decorationLayer
     );
 
-    // 4. Collision System
+    // Collision System
     this.registry.collisionSystem = new CollisionSystem();
 
-    // 5. Managers
+    // Managers (difficulty, progression, booster)
     this.registry.difficultyManager = new DifficultyManager();
     this.registry.progressionManager = new ProgressionManager(this.registry.ui);
     this.registry.boosterManager = new BoosterManager(
@@ -199,14 +145,14 @@ export class InitializationCoordinator {
       this.registry.soundManager
     );
 
-    // 6. Handlers & Coordinators
+    // Handlers & Coordinators
     this.registry.collisionHandler = new CollisionHandler(
       this.registry.collisionSystem,
       this.registry.soundManager
     );
     this.registry.effectCoordinator = new EffectCoordinator(this.registry.spawnSystem);
 
-    // 7. Rendering Optimization
+    // Rendering Optimization (culling, interpolation)
     this.registry.cullingManager = new CullingManager({
       cullThreshold: CONFIG.CULLING.THRESHOLD,
       leftMultiplier: CONFIG.CULLING.LEFT_MULTIPLIER,
@@ -220,10 +166,10 @@ export class InitializationCoordinator {
       this.registry.spawnSystem
     );
 
-    // 8. Game Loop (с callback'ами на update/render)
+    // Game Loop
     this.registry.gameLoop = new GameLoop(updateCallback, renderCallback);
 
-    // 9. Lifecycle Manager (управление началом/концом игры)
+    // Lifecycle Manager (управление игровым жизненным циклом)
     this.registry.lifecycleManager = new GameLifecycleManager({
       stateManager: this.registry.stateManager,
       progressionManager: this.registry.progressionManager,
@@ -240,7 +186,7 @@ export class InitializationCoordinator {
       }
     });
 
-    // 10. Restart Manager (управление рестартом игры)
+    // Restart Manager (полный перезапуск игры)
     this.registry.restartManager = new RestartManager({
       stateManager: this.registry.stateManager,
       progressionManager: this.registry.progressionManager,
@@ -251,14 +197,12 @@ export class InitializationCoordinator {
       gameLoop: this.registry.gameLoop,
       ui: this.registry.ui,
       soundManager: this.registry.soundManager,
-      game: null // Будет установлен извне через setGame()
+      game: null
     });
 
-    // 11. Установка culling boundaries
     const rendererWidth = this.registry.renderer.app?.screen?.width || CONFIG.CANVAS_WIDTH;
     this.registry.cullingManager.setBoundaries(rendererWidth);
 
-    // Debug: экспонируем SoundManager в window для тестирования
     if (typeof window !== 'undefined') {
       window.soundManager = this.registry.soundManager;
       console.log('Debug: Type window.soundManager.playMusic("mainMusic", 100) to test music');
@@ -267,10 +211,6 @@ export class InitializationCoordinator {
     console.log('✅ Gameplay systems initialized');
   }
 
-  /**
-   * Устанавливает UI event listeners
-   * @param {Object} callbacks - Объект с callback'ами для UI событий
-   */
   initUI(callbacks) {
     this.registry.ui.setupEventListeners(callbacks);
   }
