@@ -20,7 +20,7 @@ export class Game {
     try {
       await this.initCoordinator.init();
 
-      this.initCoordinator.initUI({
+      this.initCoordinator.setupUIEventListeners({
         onPlayClick: () => this.startGame(),
         onBoosterContinue: () => this.resumeGame(),
         onRetry: () => this.restartGame(),

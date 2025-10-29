@@ -1,18 +1,35 @@
 /**
- * Sound Manager (Новая архитектура)
- *
  * Главный оркестратор аудио-системы игры.
  * Делегирует управление музыкой в MusicStateManager.
- *
- * SOLID принципы:
- * - Single Responsibility: только координация между компонентами
- * - Delegation: вся сложная логика в специализированных классах
- * - Open/Closed: легко расширяется новыми состояниями/звуками
  */
 import { Howl } from 'howler';
 import { MusicStateManager } from './MusicStateManager.js';
+import { DEFAULT_SOUND_CONFIG } from '../config/defaultSounds.js';
 
 export class SoundManager {
+  static createWithDefaults() {
+    const config = DEFAULT_SOUND_CONFIG;
+
+    const manager = new SoundManager({
+      masterVolume: config.volumes.master,
+      musicVolume: config.volumes.music,
+      sfxVolume: config.volumes.sfx,
+    });
+
+    config.music.forEach(({ id, path, volume }) => {
+      manager.loadMusic(id, path, { volume });
+    });
+
+    config.sfx.forEach(({ id, path, volume }) => {
+      manager.loadSound(id, path, { volume });
+    });
+
+    manager.initMusicStates(config.musicStates);
+
+    console.log('✅ Sound system initialized with default configuration');
+    return manager;
+  }
+
   constructor(config = {}) {
     // Реестр всех звуков (Howl instances)
     this.sounds = new Map();
@@ -167,7 +184,7 @@ export class SoundManager {
   pauseSmooth(targetVolume = 0.3, fadeDuration = 300) {
     if (!this.musicStateManager) {
       console.warn('⚠️ Music state manager not initialized');
-      return { restore: () => {} };
+      return { restore: () => { } };
     }
 
     return this.musicStateManager.pauseSmooth(targetVolume, fadeDuration);

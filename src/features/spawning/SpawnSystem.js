@@ -17,18 +17,23 @@ import { CollisionEffect } from '../collision/effects/CollisionEffect.js';
 import { CONFIG } from '../../shared/config/constants.js';
 
 export class SpawnSystem {
-  constructor(obstacleTextures, coinTexture, starTexture, cloudTexture, boosterSpritesheet, coinCollectEffectSpritesheet, collisionEffectSpritesheet, stage, decorationLayer = null) {
+  constructor(assetLoader, stage, decorationLayer = null) {
     this.stage = stage;
     this.decorationLayer = decorationLayer;
+
     this.textures = {
-      obstacles: obstacleTextures,
-      coin: coinTexture,
-      star: starTexture,
-      cloud: cloudTexture,
-      boosterSpritesheet: boosterSpritesheet,
-      coinCollectEffectSpritesheet: coinCollectEffectSpritesheet,
-      collisionEffectSpritesheet: collisionEffectSpritesheet
+      obstacles: [
+        assetLoader.getAsset('obstacleBase'),
+        assetLoader.getAsset('obstacleLarge')
+      ],
+      coin: assetLoader.getAsset('coin'),
+      star: assetLoader.getAsset('star'),
+      cloud: assetLoader.getAsset('cloud'),
+      boosterSpritesheet: assetLoader.getAsset('booster'),
+      coinCollectEffectSpritesheet: assetLoader.getAsset('coinCollectEffect'),
+      collisionEffectSpritesheet: assetLoader.getAsset('collisionEffect')
     };
+
     this.poolManager = new EntityPoolManager(stage, decorationLayer);
     this.initializePools();
     this.initializeSpawners();
