@@ -29,6 +29,7 @@ export class InitializationCoordinator {
     this.registry = registry;
   }
 
+
   async init() {
     try {
       this.registry.ui = new UIController();
