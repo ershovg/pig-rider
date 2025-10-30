@@ -25,13 +25,12 @@ export class CoinSpawner extends BaseSpawner {
     super({
       pool: config.pool,
       stage: config.stage,
-      baseInterval: 800, // Базовый интервал (мс) - будет модифицироваться
+      baseInterval: 800,
       getIntervalModifier: config.getIntervalModifier
     });
 
-    // Отслеживаем последнюю X-позицию монеты на каждой полосе
+    this.coordinationService = config.coordinationService;
     this.lastCoinX = [0, 0, 0];
-
     this.timer = 100;
   }
 
@@ -75,16 +74,9 @@ export class CoinSpawner extends BaseSpawner {
     }
   }
 
-  /**
-   * Спавн монеты в обычном режиме
-   * - Случайная полоса
-   * - Случайное расстояние между MIN и MAX
-   */
   spawnNormalCoin() {
-    // Выбираем случайную полосу
     const lane = MathUtils.randomInt(0, CONFIG.LANES.TOTAL - 1);
 
-    // Рассчитываем расстояние от последней монеты
     const minDist = CONFIG.COIN.MIN_DISTANCE;
     const maxDist = CONFIG.COIN.MAX_DISTANCE;
     const distance = MathUtils.randomFloat(minDist, maxDist);
@@ -94,7 +86,10 @@ export class CoinSpawner extends BaseSpawner {
       this.lastCoinX[lane] + distance
     );
 
-    // Спавним монету
+    if (this.coordinationService && !this.coordinationService.canSpawnAt(lane, spawnX, 150)) {
+      return;
+    }
+
     const coin = this.pool.acquire();
     if (coin) {
       coin.activate(lane, spawnX);

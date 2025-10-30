@@ -196,7 +196,7 @@ export class RestartManager {
     this.stateManager.setState('playing');
 
     // Показать HUD
-    this.ui.showHUD();
+    this.ui.showRunningScreen();
 
     // Обновить счетчик монет (0 из TARGET_COINS)
     this.ui.updateCoinCount(0, CONFIG.TARGET_COINS);

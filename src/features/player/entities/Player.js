@@ -1,16 +1,5 @@
 /**
  * Игрок с physics-based движением, interpolation и instant response
- *
- * Архитектура:
- * - PlayerPhysicsController: Управляет физикой движения (velocity, acceleration)
- * - Interpolatable: Плавный рендер на 120 FPS
- * - PlayerInputController: Обработка input (keyboard, mouse, touch)
- *
- * Отличия от GSAP подхода:
- * ✅ Мгновенный отклик - нет блокировки isAnimating
- * ✅ Синхронизация с physics loop (60 UPS)
- * ✅ Плавное торможение через friction
- * ✅ Возможность смены направления на лету
  */
 import * as PIXI from 'pixi.js';
 import gsap from 'gsap';
@@ -80,6 +69,25 @@ export class Player {
     if (this.targetLane === CONFIG.LANES.BOTTOM) return; // Уже двигаемся к нижней
 
     this.targetLane = Math.min(CONFIG.LANES.BOTTOM, this.targetLane + 1);
+    const targetY = CONFIG.LANES.Y_POSITIONS[this.targetLane];
+    this.physicsController.setTarget(targetY);
+  }
+
+  /**
+   * Прямое перемещение на конкретную полосу (для управления мышкой)
+   * @param {number} laneIndex - индекс полосы (0 = top, 1 = middle, 2 = bottom)
+   */
+  moveToLane(laneIndex) {
+    // Валидация индекса полосы
+    if (laneIndex < CONFIG.LANES.TOP || laneIndex > CONFIG.LANES.BOTTOM) {
+      console.warn(`⚠️ Invalid lane index: ${laneIndex}`);
+      return;
+    }
+
+    // Если уже двигаемся к этой полосе - игнорируем
+    if (this.targetLane === laneIndex) return;
+
+    this.targetLane = laneIndex;
     const targetY = CONFIG.LANES.Y_POSITIONS[this.targetLane];
     this.physicsController.setTarget(targetY);
   }

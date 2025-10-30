@@ -23,12 +23,14 @@ export class PlayerInputController {
     this.handleTouchStart = this.handleTouchStart.bind(this);
     this.handleTouchMove = this.handleTouchMove.bind(this);
     this.handleTouchEnd = this.handleTouchEnd.bind(this);
+    this.handleClick = this.handleClick.bind(this);
 
     this.eventTarget.addEventListener('keydown', this.handleKeyDown);
     this.eventTarget.addEventListener('keyup', this.handleKeyUp);
     this.eventTarget.addEventListener('touchstart', this.handleTouchStart, { passive: false });
     this.eventTarget.addEventListener('touchmove', this.handleTouchMove, { passive: false });
     this.eventTarget.addEventListener('touchend', this.handleTouchEnd);
+    this.eventTarget.addEventListener('click', this.handleClick);
   }
 
   handleKeyDown(e) {
@@ -97,6 +99,34 @@ export class PlayerInputController {
     this.touchStartY = null;
   }
 
+  handleClick(e) {
+    if (!this.enabled) return;
+
+    // Получаем canvas элемент для расчёта координат
+    const canvas = document.getElementById('game-canvas');
+    if (!canvas) return;
+
+    // Получаем позицию клика относительно canvas
+    const rect = canvas.getBoundingClientRect();
+    const clickY = e.clientY - rect.top;
+
+    // Нормализуем координату (0 = верх, 1 = низ)
+    const relativeY = clickY / rect.height;
+
+    // Определяем целевую полосу на основе трети экрана
+    let targetLane;
+    if (relativeY < 0.33) {
+      targetLane = 0; // TOP
+    } else if (relativeY < 0.66) {
+      targetLane = 1; // MIDDLE
+    } else {
+      targetLane = 2; // BOTTOM
+    }
+
+    // Используем новый метод прямого перемещения
+    this.player.moveToLane(targetLane);
+  }
+
   disable() {
     this.enabled = false;
   }
@@ -111,5 +141,6 @@ export class PlayerInputController {
     this.eventTarget.removeEventListener('touchstart', this.handleTouchStart);
     this.eventTarget.removeEventListener('touchmove', this.handleTouchMove);
     this.eventTarget.removeEventListener('touchend', this.handleTouchEnd);
+    this.eventTarget.removeEventListener('click', this.handleClick);
   }
 }

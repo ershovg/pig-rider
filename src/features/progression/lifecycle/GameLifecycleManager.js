@@ -24,7 +24,7 @@ export class GameLifecycleManager {
     this.spawnSystem.reset();
 
     this.ui.hideStartScreen();
-    this.ui.showHUD();
+    this.ui.showRunningScreen();
     this.ui.updateCoinCount(0, CONFIG.TARGET_COINS);
     this.ui.removeBoosterClass();
 
@@ -56,7 +56,7 @@ export class GameLifecycleManager {
       console.log('🎵 Background music stopped on game end');
     }
 
-    this.ui.hideHUD();
+    this.ui.hideRunningScreen();
 
     if (isWin) {
       // 🏆 ПОБЕДА: проигрываем победный звук
@@ -129,7 +129,15 @@ export class GameLifecycleManager {
       onConfirm?.();
     }
 
-    this.gameLoop.resume();
+    // 🔍 КРИТИЧЕСКИ ВАЖНО: Резюмим игру только если вкладка видима
+    // Если пользователь закрыл модалку в другой вкладке и вернулся,
+    // visibilitychange handler сам вызовет resume()
+    if (!document.hidden) {
+      this.gameLoop.resume();
+      console.log('✅ Game resumed after booster modal (tab is visible)');
+    } else {
+      console.log('⏸️ Game stays paused (tab is hidden, will resume on visibility change)');
+    }
   }
 
   delay(ms) {

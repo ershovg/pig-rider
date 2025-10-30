@@ -2,6 +2,7 @@
  * Система спавна объектов (оркестратор spawner'ов)
  */
 import { EntityPoolManager } from './pools/EntityPoolManager.js';
+import { SpawnCoordinationService } from './services/SpawnCoordinationService.js';
 import { ObstacleSpawner } from '../obstacles/spawner/ObstacleSpawner.js';
 import { CoinSpawner } from '../coins/spawner/CoinSpawner.js';
 import { CloudSpawner } from '../decoration/spawners/CloudSpawner.js';
@@ -36,6 +37,7 @@ export class SpawnSystem {
 
     this.poolManager = new EntityPoolManager(stage, decorationLayer);
     this.initializePools();
+    this.coordinationService = new SpawnCoordinationService(this.poolManager.getPool('obstacle'));
     this.initializeSpawners();
   }
 
@@ -68,7 +70,8 @@ export class SpawnSystem {
     this.coinSpawner = new CoinSpawner({
       pool: this.poolManager.getPool('coin'),
       stage: this.stage,
-      getIntervalModifier: (context) => 1.0
+      getIntervalModifier: (context) => 1.0,
+      coordinationService: this.coordinationService
     });
 
     this.cloudSpawner = new CloudSpawner({
@@ -83,7 +86,8 @@ export class SpawnSystem {
 
     this.boosterSpawner = new BoosterSpawner({
       pool: this.poolManager.getPool('booster'),
-      stage: this.stage
+      stage: this.stage,
+      coordinationService: this.coordinationService
     });
   }
 
