@@ -120,7 +120,8 @@ export class InitializationCoordinator {
       this.registry.difficultyManager,
       this.registry.ui,
       this.registry.player,
-      this.registry.soundManager
+      this.registry.soundManager,
+      this.registry.progressionManager  // Добавлен для плавных speed transitions
     );
   }
 

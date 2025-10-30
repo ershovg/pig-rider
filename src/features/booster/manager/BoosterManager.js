@@ -4,12 +4,13 @@
 import { CONFIG } from '../../../shared/config/constants.js';
 
 export class BoosterManager {
-  constructor(spawnSystem, difficultyManager, ui, player, soundManager = null) {
+  constructor(spawnSystem, difficultyManager, ui, player, soundManager = null, progressionManager = null) {
     this.spawnSystem = spawnSystem;
     this.difficultyManager = difficultyManager;
     this.ui = ui;
     this.player = player;
     this.soundManager = soundManager;
+    this.progressionManager = progressionManager;
 
     this.isActive = false;
     this.timeRemaining = 0;
@@ -77,6 +78,11 @@ export class BoosterManager {
     this.ui.addBoosterClass();
     this.ui.showBoosterIcon(); // Активируем визуальную иконку бустера
 
+    // Активируем плавное ускорение скорости (как в Subway Surfers)
+    if (this.progressionManager) {
+      this.progressionManager.activateBoosterSpeed();
+    }
+
     if (this.player) {
       this.player.switchAnimation(true);
     }
@@ -102,6 +108,11 @@ export class BoosterManager {
     this.cooldownTimer = CONFIG.BOOSTER_COOLDOWN_DURATION;
     this.ui.removeBoosterClass();
     this.ui.hideBoosterIcon(); // Деактивируем визуальную иконку бустера
+
+    // Плавно возвращаем скорость к tier speed (как нажатие тормоза)
+    if (this.progressionManager) {
+      this.progressionManager.deactivateBoosterSpeed();
+    }
 
     if (this.player) {
       this.player.switchAnimation(false);

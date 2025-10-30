@@ -13,9 +13,10 @@ export const CONFIG = {
   BOOSTER_COIN_SPAWN_INTERVAL: 0.08,  // Очень частый спавн монет во время бустера (секунды)
   BOOSTER_COOLDOWN_DURATION: 5,       // Cooldown после окончания бустера перед новым спавном (секунды)
 
-  GAME_SPEED: 1.0,
-  MAX_SPEED: 2.5,
-  SPEED_INCREMENT: 0.0005,
+  // Speed Progression System (Hybrid: Gradual + Fixed Booster)
+  GAME_SPEED: 1.0,              // Начальная скорость
+  MAX_SPEED: 2.5,               // Максимальная скорость (достигается постепенно + во время бустера)
+  SPEED_INCREMENT: 0.0005,      // Постепенный прирост скорости каждый фрейм (60 FPS)
 
   // Lanes
   LANES: {
