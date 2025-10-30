@@ -25,7 +25,8 @@ export class Game {
         onBoosterContinue: () => this.resumeGame(),
         onRetry: () => this.restartGame(),
         onRestartGame: () => this.handleRestart(),
-        onBookDemo: () => console.log('Book demo clicked')
+        onBookDemo: () => console.log('Book demo clicked'),
+        onMuteToggle: () => this.registry.soundManager.toggleMute()
       });
     } catch (error) {
       console.error('❌ Game initialization failed:', error);

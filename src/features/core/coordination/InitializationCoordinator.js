@@ -81,6 +81,11 @@ export class InitializationCoordinator {
     this.registry.stateManager = new GameStateManager();
     this.registry.stateManager.setState('menu');
     this.registry.ui.showStartScreen();
+
+    // Синхронизируем визуальное состояние mute кнопки с сохраненным состоянием
+    if (this.registry.soundManager) {
+      this.registry.ui.updateMuteButtonState(this.registry.soundManager.isMuted);
+    }
   }
 
   initPlayer() {

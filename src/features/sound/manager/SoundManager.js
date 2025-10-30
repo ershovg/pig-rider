@@ -44,6 +44,9 @@ export class SoundManager {
     // Music State Manager (управляет состояниями музыки)
     this.musicStateManager = null;
 
+    // Восстанавливаем сохраненное состояние mute из localStorage
+    this.loadMuteState();
+
     // Setup audio unlock
     this.setupAudioUnlock();
 
@@ -86,6 +89,32 @@ export class SoundManager {
   }
 
   /**
+   * Загружает сохраненное состояние mute из localStorage
+   */
+  loadMuteState() {
+    try {
+      const saved = localStorage.getItem('pigRider_soundMuted');
+      if (saved !== null) {
+        this.isMuted = saved === 'true';
+        console.log(`🔊 Restored mute state: ${this.isMuted ? 'muted' : 'unmuted'}`);
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to load mute state from localStorage:', error);
+    }
+  }
+
+  /**
+   * Сохраняет состояние mute в localStorage
+   */
+  saveMuteState() {
+    try {
+      localStorage.setItem('pigRider_soundMuted', this.isMuted.toString());
+    } catch (error) {
+      console.warn('⚠️ Failed to save mute state to localStorage:', error);
+    }
+  }
+
+  /**
    * Загружает звук
    */
   loadSound(alias, src, options = {}) {
@@ -96,6 +125,11 @@ export class SoundManager {
       ...options,
       src,
     });
+
+    // Применяем сохраненное состояние mute к новому звуку
+    if (this.isMuted) {
+      sound.mute(true);
+    }
 
     this.sounds.set(alias, sound);
     console.log(`🎵 Sound loaded: ${alias}`);
@@ -117,6 +151,11 @@ export class SoundManager {
       onload: () => console.log(`✅ Music loaded: ${alias}`),
       onloaderror: (_id, error) => console.error(`❌ Error loading ${alias}:`, error),
     });
+
+    // Применяем сохраненное состояние mute к новой музыке
+    if (this.isMuted) {
+      music.mute(true);
+    }
 
     this.sounds.set(alias, music);
 
@@ -219,12 +258,14 @@ export class SoundManager {
   mute() {
     this.isMuted = true;
     this.sounds.forEach(sound => sound.mute(true));
+    this.saveMuteState();
     console.log('🔇 Muted');
   }
 
   unmute() {
     this.isMuted = false;
     this.sounds.forEach(sound => sound.mute(false));
+    this.saveMuteState();
     console.log('🔊 Unmuted');
   }
 
@@ -234,6 +275,7 @@ export class SoundManager {
     } else {
       this.mute();
     }
+    return this.isMuted; // Возвращаем новое состояние для UI
   }
 
   /**

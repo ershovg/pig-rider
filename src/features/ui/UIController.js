@@ -30,10 +30,10 @@ export class UIController {
     // Buttons
     this.startBtn = document.querySelector('[game-btn-start]');
     this.restartBtn = document.querySelector('[open-modal-attr="restart-game"]');
+    this.mute = document.querySelector('.mute')
 
     // this.pauseBtn = document.querySelector('[game-btn-pause]');
     // this.resumeBtn = document.querySelector('[game-btn-resume]');
-    // this.retryBtn = document.querySelector('[game-btn-retry]');
 
     // Canvas
     this.canvas = document.getElementById('game-canvas');
@@ -181,6 +181,20 @@ export class UIController {
   }
 
   /**
+   * Обновляет визуальное состояние кнопки mute
+   * @param {boolean} isMuted - Текущее состояние (true = muted, false = unmuted)
+   */
+  updateMuteButtonState(isMuted) {
+    if (this.mute) {
+      if (isMuted) {
+        this.mute.classList.add('is--muted');
+      } else {
+        this.mute.classList.remove('is--muted');
+      }
+    }
+  }
+
+  /**
    * Show win screen
    * Абсолютная модалка - используем CSS класс is--active
    */
@@ -316,6 +330,16 @@ export class UIController {
           callbacks.onRestartGame();
         }
       }, true); // true = capturing phase (раньше других обработчиков)
+    }
+
+    // Mute button
+    if (callbacks.onMuteToggle && this.mute) {
+      this.mute.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isMuted = callbacks.onMuteToggle();
+        this.updateMuteButtonState(isMuted);
+        console.log(`🔊 Sound ${isMuted ? 'muted' : 'unmuted'}`);
+      });
     }
 
     // if (callbacks.onPause && this.pauseBtn) {
