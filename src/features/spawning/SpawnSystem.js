@@ -27,7 +27,7 @@ export class SpawnSystem {
         assetLoader.getAsset('obstacleBase'),
         assetLoader.getAsset('obstacleLarge')
       ],
-      coin: assetLoader.getAsset('coin'),
+      coinSpritesheet: assetLoader.getAsset('coin'),
       star: assetLoader.getAsset('star'),
       cloud: assetLoader.getAsset('cloud'),
       boosterSpritesheet: assetLoader.getAsset('booster'),
@@ -45,7 +45,7 @@ export class SpawnSystem {
     this.poolManager.registerPool('obstacle', Obstacle, CONFIG.OBSTACLE.POOL_SIZE, {
       texture: this.textures.obstacles[Math.floor(Math.random() * this.textures.obstacles.length)]
     });
-    this.poolManager.registerPool('coin', Coin, 50, { texture: this.textures.coin });
+    this.poolManager.registerPool('coin', Coin, 50, { texture: this.textures.coinSpritesheet });
     this.poolManager.registerPool('star', Star, 30, { texture: this.textures.star });
     this.poolManager.registerPool('cloud', Cloud, 15, { texture: this.textures.cloud });
     this.poolManager.registerPool('booster', Booster, CONFIG.BOOSTER.POOL_SIZE, { texture: this.textures.boosterSpritesheet });

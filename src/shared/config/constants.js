@@ -96,20 +96,21 @@ const getAssetPath = (path) => {
 };
 
 export const ASSET_PATHS = {
-  // AVIF спрайты
-  // Player: используем только анимированные спрайтшиты (JSON + AVIF)
-  get PLAYER_ANIMATED() { return getAssetPath('/assets/sprites/hryusha-flying.json'); }, // Sprite sheet анимация свиньи (обычная)
-  get PLAYER_ANIMATED_BOOST() { return getAssetPath('/assets/sprites/hryusha-boost.json'); }, // Sprite sheet анимация свиньи (бустер)
+  // Animated sprites - JSON файлы для анимации в PixiJS (TexturePacker sequences)
+  get PLAYER_ANIMATED() { return getAssetPath('/assets/sprites/hryusha-flying.json'); },
+  get PLAYER_ANIMATED_BOOST() { return getAssetPath('/assets/sprites/hryusha-boost.json'); },
+  get COIN() { return getAssetPath('/assets/sprites/coin.json'); },
+  get COIN_COLLECT_EFFECT() { return getAssetPath('/assets/sprites/coin-collect.json'); },
+  get COLLISION_EFFECT() { return getAssetPath('/assets/sprites/boom.json'); },
+  get BOOSTER() { return getAssetPath('/assets/sprites/cup.json'); },
+
+  // Static sprites - Изображения без анимации
   get OBSTACLE_BASE() { return getAssetPath('/assets/sprites/barier_base.avif'); },
   get OBSTACLE_LARGE() { return getAssetPath('/assets/sprites/barier_large.avif'); },
-  get COIN() { return getAssetPath('/assets/sprites/coin.avif'); },
-  get COIN_COLLECT_EFFECT() { return getAssetPath('/assets/sprites/coin-collect.json'); }, // Анимация сбора монеты (4 кадра)
-  get COLLISION_EFFECT() { return getAssetPath('/assets/sprites/boom.json'); }, // Эффект взрыва при столкновении (6 кадров)
-  get BOOSTER() { return getAssetPath('/assets/sprites/cup.json'); }, // Анимированный спрайтшит кубка с крыльями
   get STAR() { return getAssetPath('/assets/sprites/star.avif'); },
   get CLOUD() { return getAssetPath('/assets/sprites/cloud.avif'); },
 
-  // Audio - Оптимизированные OGG форматы
+  // Music - Оптимизированные OGG форматы
   get MUSIC_MAIN() { return getAssetPath('/assets/sounds/Music level/Just Funky.ogg'); },
   get MUSIC_BONUS() { return getAssetPath('/assets/sounds/Music Bonus/MusicBonus.ogg'); },
 

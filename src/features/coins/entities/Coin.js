@@ -2,24 +2,27 @@ import * as PIXI from 'pixi.js';
 import gsap from 'gsap';
 import { CONFIG } from '../../../shared/config/constants.js';
 import { Collectible } from '../../effects/base/Collectible.js';
+import { CoinAnimationController } from '../controllers/CoinAnimationController.js';
 
-/**
- * Собираемая монета с анимацией, interpolation и culling
- */
 export class Coin extends Collectible {
-  constructor(texture, container = null) {
+  constructor(spritesheet, container = null) {
     super();
-    this.container = container; // 🔥 Ссылка на PixiJS контейнер для lifecycle
-    this.sprite = new PIXI.Sprite(texture);
+    this.container = container;
+    this.animationController = new CoinAnimationController();
+
+    const animations = spritesheet.data.animations;
+    const animationName = Object.keys(animations)[0];
+    this.sprite = new PIXI.AnimatedSprite(spritesheet.animations[animationName]);
+
     this.sprite.anchor.set(0.5);
     const targetSize = CONFIG.COIN.SIZE;
-    const scale = targetSize / texture.width;
+    const firstFrameTexture = this.sprite.textures[0];
+    const scale = targetSize / firstFrameTexture.width;
     this.sprite.scale.set(scale);
 
     this.active = false;
     this.collected = false;
     this.lane = 0;
-    this.rotationTween = null;
     this.sprite.visible = false;
 
     this.previousX = 0;
@@ -29,7 +32,6 @@ export class Coin extends Collectible {
   }
 
   activate(lane, x) {
-    // 🔥 ДОБАВЛЕНО: Добавляем sprite в контейнер при активации
     if (this.container && !this.sprite.parent) {
       this.container.addChild(this.sprite);
     }
@@ -47,39 +49,22 @@ export class Coin extends Collectible {
 
     this.sprite.visible = true;
     this.sprite.scale.set(1);
-    this.startRotation();
+
+    this.animationController.initializeAnimation(this.sprite, this.sprite.totalFrames);
   }
 
   deactivate() {
     this.active = false;
     this.collected = false;
     this.sprite.visible = false;
-    this.stopRotation();
 
-    // Предотвращает "висящие" твины при быстром переиспользовании из пула
+    this.animationController.stopAnimation(this.sprite);
+
     gsap.killTweensOf(this.sprite);
     gsap.killTweensOf(this.sprite.scale);
 
-    // 🔥 ДОБАВЛЕНО: Удаляем sprite из контейнера для освобождения памяти
     if (this.sprite.parent) {
       this.sprite.parent.removeChild(this.sprite);
-    }
-  }
-
-  startRotation() {
-    this.stopRotation();
-    this.rotationTween = gsap.to(this.sprite, {
-      rotation: Math.PI * 2,
-      duration: 2,
-      ease: 'none',
-      repeat: -1
-    });
-  }
-
-  stopRotation() {
-    if (this.rotationTween) {
-      this.rotationTween.kill();
-      this.rotationTween = null;
     }
   }
 
@@ -87,15 +72,11 @@ export class Coin extends Collectible {
     if (this.collected) return;
     this.collected = true;
 
-    this.stopRotation();
-
-    // Монета быстро уменьшается с самого начала (эффект магнитного притяжения)
     gsap.to(this.sprite.scale, {
       x: 0,
       y: 0,
-      duration: 0.2, // 200ms - чуть дольше для заметности
+      duration: 0.2,
       onComplete: () => {
-        // После анимации деактивируем монету
         this.deactivate();
       }
     });
@@ -134,10 +115,8 @@ export class Coin extends Collectible {
     this.sprite.x = this.currentX;
     this.sprite.rotation = 0;
     this.sprite.alpha = 1;
-
-    // Важно: возвращаем к значению 1, а не к исходному targetSize/texture.width
-    // потому что в activate() мы устанавливаем scale.set(1)
     this.sprite.scale.set(1);
+    this.animationController.resetAnimation(this.sprite);
   }
 
   getSprite() {
