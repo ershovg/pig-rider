@@ -1,10 +1,41 @@
-/**
- * Управление логикой бустеров (активация, таймеры, cooldown)
- */
-import { CONFIG } from '../../../shared/config/constants.ts';
+import { CONFIG } from '../../../shared/config/constants';
+import { Lane } from '../../../types/common';
+import {
+  BoosterSnapshot,
+  SpawnSystem,
+  DifficultyManager,
+  ProgressionManager,
+  SoundManager,
+  BoosterContext
+} from '../../../types/managers';
+import { UIController } from '../../../types/ui';
+import { Player } from '../../../types/player';
 
 export class BoosterManager {
-  constructor(spawnSystem, difficultyManager, ui, player, soundManager = null, progressionManager = null) {
+  private spawnSystem: SpawnSystem;
+  private difficultyManager: DifficultyManager;
+  private ui: UIController;
+  private player: Player;
+  private soundManager: SoundManager | null;
+  private progressionManager: ProgressionManager | null;
+
+  private isActive: boolean;
+  private timeRemaining: number;
+  private currentLane: Lane;
+  private laneSwitchTimer: number;
+  private cooldownTimer: number;
+  private preBoosterSnapshot: BoosterSnapshot | null;
+
+  private isFirstBoosterEver: boolean;
+
+  constructor(
+    spawnSystem: SpawnSystem,
+    difficultyManager: DifficultyManager,
+    ui: UIController,
+    player: Player,
+    soundManager: SoundManager | null = null,
+    progressionManager: ProgressionManager | null = null
+  ) {
     this.spawnSystem = spawnSystem;
     this.difficultyManager = difficultyManager;
     this.ui = ui;
@@ -22,23 +53,16 @@ export class BoosterManager {
     this.isFirstBoosterEver = true;
   }
 
-  /**
-   * Проверяет, первый ли раз игрок получает бустер
-   * @returns {boolean}
-   */
-  isFirstBooster() {
+  isFirstBooster(): boolean {
     return this.isFirstBoosterEver;
   }
 
-  /**
-   * Помечает, что первый бустер был использован
-   */
-  markFirstBoosterUsed() {
+  markFirstBoosterUsed(): void {
     this.isFirstBoosterEver = false;
     console.log('First booster used, future boosters will skip tutorial modal');
   }
 
-  update(deltaTime) {
+  update(deltaTime: number): void {
     if (this.cooldownTimer > 0) {
       this.cooldownTimer -= deltaTime;
     }
@@ -57,30 +81,28 @@ export class BoosterManager {
     }
   }
 
-  switchLane() {
+  private switchLane(): void {
     this.laneSwitchTimer = CONFIG.BOOSTER_LANE_SWITCH_INTERVAL;
 
-    // Меняем активную полосу (старые монеты остаются, создавая плавный переход)
-    const availableLanes = [0, 1, 2].filter(l => l !== this.currentLane);
+    const availableLanes = ([0, 1, 2] as Lane[]).filter(l => l !== this.currentLane);
     this.currentLane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
     this.spawnSystem.fillLaneWithCoins(this.currentLane);
     console.log(`Booster lane switched to: ${this.currentLane}`);
   }
 
-  async activate() {
+  async activate(): Promise<void> {
     this.preBoosterSnapshot = this.difficultyManager.createSnapshot();
     this.isActive = true;
     this.timeRemaining = CONFIG.BOOSTER_DURATION;
     this.laneSwitchTimer = CONFIG.BOOSTER_LANE_SWITCH_INTERVAL;
-    this.currentLane = Math.floor(Math.random() * CONFIG.LANES.TOTAL);
+    this.currentLane = Math.floor(Math.random() * CONFIG.LANES.TOTAL) as Lane;
 
     this.difficultyManager.applyBoosterEffect();
     this.spawnSystem.clearAllObstacles();
     this.spawnSystem.fillLaneWithCoins(this.currentLane);
     this.ui.addBoosterClass();
-    this.ui.showBoosterIcon(); // Активируем визуальную иконку бустера
+    this.ui.showBoosterIcon();
 
-    // Активируем плавное ускорение скорости (как в Subway Surfers)
     if (this.progressionManager) {
       this.progressionManager.activateBoosterSpeed();
     }
@@ -97,12 +119,11 @@ export class BoosterManager {
     console.log(`Booster activated! Lane: ${this.currentLane}`);
   }
 
-  deactivate() {
+  deactivate(): void {
     this.isActive = false;
     this.timeRemaining = 0;
     this.laneSwitchTimer = 0;
 
-    // Очищаем все оставшиеся booster-монеты при окончании бустера
     this.spawnSystem.clearBoosterCoins();
 
     if (this.preBoosterSnapshot) {
@@ -112,9 +133,8 @@ export class BoosterManager {
 
     this.cooldownTimer = CONFIG.BOOSTER_COOLDOWN_DURATION;
     this.ui.removeBoosterClass();
-    this.ui.hideBoosterIcon(); // Деактивируем визуальную иконку бустера
+    this.ui.hideBoosterIcon();
 
-    // Плавно возвращаем скорость к tier speed (как нажатие тормоза)
     if (this.progressionManager) {
       this.progressionManager.deactivateBoosterSpeed();
     }
@@ -131,7 +151,7 @@ export class BoosterManager {
     console.log(`Booster deactivated. Cooldown: ${CONFIG.BOOSTER_COOLDOWN_DURATION}s`);
   }
 
-  reset() {
+  reset(): void {
     this.isActive = false;
     this.timeRemaining = 0;
     this.currentLane = 0;
@@ -140,7 +160,7 @@ export class BoosterManager {
     this.preBoosterSnapshot = null;
   }
 
-  getContext() {
+  getContext(): BoosterContext {
     return {
       isBoosterMode: this.isActive,
       boosterActiveLane: this.currentLane,

@@ -10,11 +10,9 @@ export class Booster extends Collectible {
   private sprite: PIXI.AnimatedSprite;
   private active: boolean;
   private collected: boolean;
-  private lane: Lane;
   private floatTween: gsap.core.Tween | null;
 
   private previousX: number;
-  private previousY: number;
   private currentX: number;
   private currentY: number;
   private baseY: number;
@@ -37,12 +35,10 @@ export class Booster extends Collectible {
 
     this.active = false;
     this.collected = false;
-    this.lane = 0;
     this.floatTween = null;
     this.sprite.visible = false;
 
     this.previousX = 0;
-    this.previousY = 0;
     this.currentX = 0;
     this.currentY = 0;
     this.baseY = 0;
@@ -55,7 +51,6 @@ export class Booster extends Collectible {
 
     this.active = true;
     this.collected = false;
-    this.lane = lane;
 
     this.currentX = x;
     this.currentY = CONFIG.LANES.Y_POSITIONS[lane];
@@ -63,7 +58,6 @@ export class Booster extends Collectible {
     this.sprite.x = this.currentX;
     this.sprite.y = this.currentY;
     this.previousX = this.currentX;
-    this.previousY = this.currentY;
 
     this.sprite.visible = true;
     const targetSize = CONFIG.BOOSTER.SIZE;
@@ -183,7 +177,6 @@ export class Booster extends Collectible {
 
   saveState(): void {
     this.previousX = this.currentX;
-    this.previousY = this.currentY;
   }
 
   interpolate(alpha: number): void {

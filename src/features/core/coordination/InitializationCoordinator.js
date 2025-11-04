@@ -8,7 +8,7 @@ import { CollisionSystem } from '../../collision/system/CollisionSystem.js';
 import { DifficultyManager } from '../../progression/manager/DifficultyManager.js';
 import { UIController } from '../../ui/UIController.js';
 import { GameStateManager } from '../../state/GameStateManager.js';
-import { BoosterManager } from '../../booster/manager/BoosterManager.js';
+import { BoosterManager } from '../../booster/manager/BoosterManager.ts';
 import { ProgressionManager } from '../../progression/manager/ProgressionManager.js';
 import { CullingManager } from '../../rendering/culling/CullingManager.js';
 import { InterpolationManager } from '../../rendering/interpolation/InterpolationManager.js';

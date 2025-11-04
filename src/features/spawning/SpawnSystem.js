@@ -7,7 +7,7 @@ import { ObstacleSpawner } from '../obstacles/spawner/ObstacleSpawner.js';
 import { CoinSpawner } from '../coins/spawner/CoinSpawner.js';
 import { CloudSpawner } from '../decoration/spawners/CloudSpawner.js';
 import { StarSpawner } from '../decoration/spawners/StarSpawner.js';
-import { BoosterSpawner } from '../booster/spawner/BoosterSpawner.js';
+import { BoosterSpawner } from '../booster/spawner/BoosterSpawner.ts';
 import { Obstacle } from '../obstacles/entities/Obstacle.js';
 import { Coin } from '../coins/entities/Coin.js';
 import { Cloud } from '../decoration/entities/Cloud.js';
