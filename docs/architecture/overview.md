@@ -59,7 +59,7 @@ src/
 ├── config/         # Константы и настройки
 ├── core/           # PixiJS engine (AssetLoader, Renderer, GameLoop)
 ├── entities/       # Игровые объекты (Player, Obstacle, Coin, Booster)
-├── effects/        # Визуальные эффекты (CoinSparkle)
+├── effects/        # Визуальные эффекты (CoinCollectEffect)
 ├── managers/       # High-level логика (BoosterManager, EffectManager)
 ├── systems/        # Игровые системы (Spawn, Collision, Difficulty)
 ├── ui/             # HTML UI (UIController, modals)
@@ -111,7 +111,7 @@ class MyEntity {
 
 #### `effects/` 🆕
 **Назначение:** Визуальные эффекты (PixiJS sprites)
-**Примеры:** `CoinSparkle.js` - эффект сбора монеты
+**Примеры:** `CoinCollectEffect.js` - анимация сбора монеты
 
 **Отличие от entities:** Effects - это чисто визуал, не участвуют в геймплее
 
@@ -381,7 +381,7 @@ this.effectManager.playExplosion(x, y);
 **Что рендерит:**
 - Игровые объекты (Player, Obstacles, Coins)
 - Декорации (Clouds, Stars)
-- Эффекты (Sparkles, Trails)
+- Эффекты (CoinCollectEffect, CollisionEffect)
 
 **Почему:** Высокая производительность для динамичных объектов
 

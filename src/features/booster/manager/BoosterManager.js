@@ -1,7 +1,7 @@
 /**
  * Управление логикой бустеров (активация, таймеры, cooldown)
  */
-import { CONFIG } from '../../../shared/config/constants.js';
+import { CONFIG } from '../../../shared/config/constants.ts';
 
 export class BoosterManager {
   constructor(spawnSystem, difficultyManager, ui, player, soundManager = null, progressionManager = null) {
@@ -59,6 +59,8 @@ export class BoosterManager {
 
   switchLane() {
     this.laneSwitchTimer = CONFIG.BOOSTER_LANE_SWITCH_INTERVAL;
+
+    // Меняем активную полосу (старые монеты остаются, создавая плавный переход)
     const availableLanes = [0, 1, 2].filter(l => l !== this.currentLane);
     this.currentLane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
     this.spawnSystem.fillLaneWithCoins(this.currentLane);
@@ -99,6 +101,9 @@ export class BoosterManager {
     this.isActive = false;
     this.timeRemaining = 0;
     this.laneSwitchTimer = 0;
+
+    // Очищаем все оставшиеся booster-монеты при окончании бустера
+    this.spawnSystem.clearBoosterCoins();
 
     if (this.preBoosterSnapshot) {
       this.difficultyManager.restoreSnapshot(this.preBoosterSnapshot);

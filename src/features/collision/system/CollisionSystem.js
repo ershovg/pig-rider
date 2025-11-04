@@ -1,5 +1,5 @@
-import { CONFIG } from '../../../shared/config/constants.js';
-import { MathUtils } from '../../../shared/utils/MathUtils.js';
+import { CONFIG } from '../../../shared/config/constants.ts';
+import { MathUtils } from '../../../shared/utils/MathUtils.ts';
 
 export class CollisionSystem {
   constructor() {

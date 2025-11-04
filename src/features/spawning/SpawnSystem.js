@@ -15,7 +15,7 @@ import { Star } from '../decoration/entities/Star.js';
 import { Booster } from '../booster/entities/Booster.js';
 import { CoinCollectEffect } from '../coins/effects/CoinCollectEffect.js';
 import { CollisionEffect } from '../collision/effects/CollisionEffect.js';
-import { CONFIG } from '../../shared/config/constants.js';
+import { CONFIG } from '../../shared/config/constants.ts';
 
 export class SpawnSystem {
   constructor(assetLoader, stage, decorationLayer = null) {
@@ -54,10 +54,14 @@ export class SpawnSystem {
   }
 
   initializeSpawners() {
+    // Передаем coin pool в coordination service для проверки монет при спавне препятствий
+    this.coordinationService.setCoinPool(this.poolManager.getPool('coin'));
+
     this.obstacleSpawner = new ObstacleSpawner({
       pool: this.poolManager.getPool('obstacle'),
       stage: this.stage,
       textures: this.textures.obstacles,
+      coordinationService: this.coordinationService, // Передаем сервис в ObstacleSpawner
       getIntervalModifier: (context) => {
         const { difficultyManager } = context;
         if (!difficultyManager) return 1.0;
@@ -133,6 +137,10 @@ export class SpawnSystem {
 
   fillLaneWithCoins(lane) {
     this.coinSpawner.fillLaneWithCoins(lane);
+  }
+
+  clearBoosterCoins() {
+    this.coinSpawner.clearBoosterCoins();
   }
 
   clearAllObstacles() {

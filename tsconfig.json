@@ -1,0 +1,60 @@
+{
+  "compilerOptions": {
+    // Базовые настройки
+    "target": "ES2020",                          // Современный JS (поддержка async/await, optional chaining)
+    "module": "ESNext",                          // ES modules (как сейчас в проекте)
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],   // Доступные API (браузер + современный JS)
+
+    // Разрешение модулей
+    "moduleResolution": "bundler",               // Vite bundler resolution
+    "resolveJsonModule": true,                   // Импорт JSON файлов
+    "allowImportingTsExtensions": true,          // Импорт .ts файлов
+
+    // Постепенная миграция (КРИТИЧНО!)
+    "allowJs": true,                             // Разрешить JS файлы рядом с TS
+    "checkJs": false,                            // НЕ проверять JS файлы (проверяем только TS)
+    "isolatedModules": true,                     // Каждый файл как отдельный модуль (для Vite)
+
+    // Строгость типизации (начинаем мягко)
+    "strict": false,                             // Отключаем strict mode для начала
+    "noEmit": true,                              // Vite сам компилирует, TS только для проверки
+
+    // Постепенно включим эти опции:
+    "noImplicitAny": false,                      // Разрешаем `any` пока мигрируем
+    "strictNullChecks": false,                   // Мягкая проверка null/undefined
+    "strictFunctionTypes": false,                // Мягкая проверка функций
+
+    // Полезные проверки
+    "noUnusedLocals": true,                      // Предупреждать о неиспользуемых переменных
+    "noUnusedParameters": true,                  // Предупреждать о неиспользуемых параметрах
+    "noFallthroughCasesInSwitch": true,          // Проверка switch-case
+
+    // Поддержка для IDE
+    "skipLibCheck": true,                        // Пропускать проверку .d.ts файлов (быстрее)
+    "esModuleInterop": true,                     // Совместимость CommonJS/ES modules
+    "allowSyntheticDefaultImports": true,        // Разрешить default imports
+    "forceConsistentCasingInFileNames": true,    // Чувствительность к регистру файлов
+
+    // Paths для удобства (опционально, можем добавить позже)
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@core/*": ["src/core/*"],
+      "@features/*": ["src/features/*"],
+      "@shared/*": ["src/shared/*"]
+    }
+  },
+
+  // Какие файлы включать
+  "include": [
+    "src/**/*.ts",      // Все TS файлы
+    "src/**/*.js"       // Все JS файлы (для постепенной миграции)
+  ],
+
+  // Какие файлы исключать
+  "exclude": [
+    "node_modules",
+    "dist",
+    "public"
+  ]
+}

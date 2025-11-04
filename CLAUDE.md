@@ -153,11 +153,9 @@ src/
 │   │
 │   ├── coins/                     # Модуль: Монеты и сбор
 │   │   ├── entities/
-│   │   │   ├── Coin.js
-│   │   │   └── CoinSparkle.js
+│   │   │   └── Coin.js
 │   │   ├── spawner/
-│   │   │   ├── CoinSpawner.js
-│   │   │   └── SparkleSpawner.js
+│   │   │   └── CoinSpawner.js
 │   │   └── effects/
 │   │       └── CoinCollectEffect.js
 │   │
@@ -269,13 +267,13 @@ src/
 - `BaseSpawner` - абстрактный класс (Template Method Pattern)
 - `EntityPoolManager` - централизованное управление пулами (Registry Pattern)
 - `LaneSafetyService` - гарантирует, что хотя бы одна полоса всегда свободна
-- Специализированные spawner'ы: `ObstacleSpawner`, `CoinSpawner`, `CloudSpawner`, `StarSpawner`, `BoosterSpawner`, `SparkleSpawner`
+- Специализированные spawner'ы: `ObstacleSpawner`, `CoinSpawner`, `CloudSpawner`, `StarSpawner`, `BoosterSpawner`
 
 **API:**
 - `update(deltaTime, gameSpeed, context)` - обновляет все spawner'ы
 - `fillLaneWithCoins(lane)` - заполнить полосу монетами (booster mode)
 - `clearAllObstacles()` - очистить препятствия (при бустере)
-- `emitCoinSparkle(x, y)` - эффект сбора монеты
+- `emitCoinCollectEffect(x, y)` - эффект сбора монеты
 - `getActiveObstacles/Coins/Boosters()` - получить активные объекты
 
 **Как добавить новый тип объектов:**

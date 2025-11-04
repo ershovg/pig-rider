@@ -1,4 +1,4 @@
-import { ObjectPool } from '../../../shared/utils/ObjectPool.js';
+import { ObjectPool } from '../../../shared/utils/ObjectPool.ts';
 
 /**
  * EntityPoolManager - Централизованное управление всеми пулами объектов

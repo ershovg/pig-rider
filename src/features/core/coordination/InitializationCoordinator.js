@@ -1,4 +1,4 @@
-import { CONFIG } from '../../../shared/config/constants.js';
+import { CONFIG } from '../../../shared/config/constants.ts';
 import { Renderer } from '../../../core/Renderer.js';
 import { GameLoop } from '../../../core/GameLoop.js';
 import { AssetLoader } from '../../../core/AssetLoader.js';

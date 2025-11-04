@@ -3,7 +3,7 @@
  * Сглаживает движение объектов между fixed timestep updates (60 FPS) для плавности на любом мониторе.
  */
 
-import { CONFIG } from '../../../shared/config/constants.js';
+import { CONFIG } from '../../../shared/config/constants.ts';
 
 export class RenderCoordinator {
   constructor(registry) {

@@ -1,6 +1,6 @@
 import { BaseSpawner } from '../../spawning/spawners/BaseSpawner.js';
-import { CONFIG } from '../../../shared/config/constants.js';
-import { MathUtils } from '../../../shared/utils/MathUtils.js';
+import { CONFIG } from '../../../shared/config/constants.ts';
+import { MathUtils } from '../../../shared/utils/MathUtils.ts';
 import { ObstaclePatternLibrary } from '../patterns/ObstaclePatternLibrary.js';
 
 /**
@@ -41,6 +41,9 @@ export class ObstacleSpawner extends BaseSpawner {
 
     // Pattern library для выбора безопасных комбинаций
     this.patternLibrary = new ObstaclePatternLibrary();
+
+    // Координационный сервис для проверки монет перед спавном
+    this.coordinationService = config.coordinationService || null;
 
     // Отслеживаем глобальную позицию последнего спавна (любой полосы)
     // Используется для расчета следующей позиции паттерна
@@ -100,14 +103,22 @@ export class ObstacleSpawner extends BaseSpawner {
       this.lastPatternX + distance
     );
 
-    // Спавним все препятствия паттерна
+    // Спавним все препятствия паттерна с проверкой Lane Safety
     let spawnedCount = 0;
+    let skippedDueToCoins = 0;
+
     for (let i = 0; i < pattern.lanes.length; i++) {
       const lane = pattern.lanes[i];
 
       // Рассчитываем X с учетом offset (если есть)
       const offset = (i === 1 && pattern.offset) ? pattern.offset : 0;
       const spawnX = baseX + offset;
+
+      // 🛡️ Lane Safety: Проверяем, не накладывается ли на монету (важно после бустера!)
+      if (this.coordinationService && !this.coordinationService.canSpawnObstacleAt(lane, spawnX, 150)) {
+        skippedDueToCoins++;
+        continue; // Пропускаем это препятствие, чтобы не накладываться на монету
+      }
 
       const texture = this.getRandomTexture();
 
@@ -117,6 +128,11 @@ export class ObstacleSpawner extends BaseSpawner {
         obstacle.activate(lane, spawnX, texture);
         spawnedCount++;
       }
+    }
+
+    // Логируем если были пропущены препятствия из-за монет (для дебага)
+    if (skippedDueToCoins > 0) {
+      console.log(`[ObstacleSpawner] Skipped ${skippedDueToCoins} obstacles due to coin collision (Lane Safety)`);
     }
 
     // Обновляем позицию последнего паттерна

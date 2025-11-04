@@ -4,7 +4,7 @@
  */
 
 import { Game } from './Game.js';
-import { CONFIG } from './shared/config/constants.js';
+import { CONFIG } from './shared/config/constants.ts';
 
 // Глобальная переменная для доступа к игре
 let gameInstance = null;

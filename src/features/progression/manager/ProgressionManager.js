@@ -3,7 +3,7 @@
  * Hybrid подход: Постепенный рост + фиксированный мощный бустер
  * Нативный lerp для плавных переходов (синхронно с game loop)
  */
-import { CONFIG } from '../../../shared/config/constants.js';
+import { CONFIG } from '../../../shared/config/constants.ts';
 
 export class ProgressionManager {
   constructor(ui) {

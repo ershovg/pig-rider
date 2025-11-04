@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { CONFIG } from '../../../shared/config/constants.js';
+import { CONFIG } from '../../../shared/config/constants.ts';
 import { Collidable } from '../../effects/base/Collidable.js';
 import { Interpolatable } from '../../rendering/interfaces/Interpolatable.js';
 import { Cullable } from '../../rendering/interfaces/Cullable.js';

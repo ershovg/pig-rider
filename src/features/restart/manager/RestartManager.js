@@ -11,7 +11,7 @@
  * - DIP: Зависит от абстракций (managers API), не реализаций
  * - ISP: Минимальный публичный интерфейс (restart())
  */
-import { CONFIG } from '../../../shared/config/constants.js';
+import { CONFIG } from '../../../shared/config/constants.ts';
 
 export class RestartManager {
   /**

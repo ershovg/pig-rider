@@ -1,6 +1,5 @@
 import * as PIXI from 'pixi.js';
-import gsap from 'gsap';
-import { CONFIG } from '../../../shared/config/constants.js';
+import { CONFIG } from '../../../shared/config/constants.ts';
 import { Collectible } from '../../effects/base/Collectible.js';
 import { CoinAnimationController } from '../controllers/CoinAnimationController.js';
 
@@ -13,12 +12,13 @@ export class Coin extends Collectible {
     const animations = spritesheet.data.animations;
     const animationName = Object.keys(animations)[0];
     this.sprite = new PIXI.AnimatedSprite(spritesheet.animations[animationName]);
-
     this.sprite.anchor.set(0.5);
+
     const targetSize = CONFIG.COIN.SIZE;
     const firstFrameTexture = this.sprite.textures[0];
     const scale = targetSize / firstFrameTexture.width;
     this.sprite.scale.set(scale);
+    this.baseScale = scale;
 
     this.active = false;
     this.collected = false;
@@ -48,7 +48,7 @@ export class Coin extends Collectible {
     this.previousY = this.currentY;
 
     this.sprite.visible = true;
-    this.sprite.scale.set(1);
+    this.sprite.scale.set(this.baseScale);
 
     this.animationController.initializeAnimation(this.sprite, this.sprite.totalFrames);
   }
@@ -60,9 +60,6 @@ export class Coin extends Collectible {
 
     this.animationController.stopAnimation(this.sprite);
 
-    gsap.killTweensOf(this.sprite);
-    gsap.killTweensOf(this.sprite.scale);
-
     if (this.sprite.parent) {
       this.sprite.parent.removeChild(this.sprite);
     }
@@ -71,16 +68,7 @@ export class Coin extends Collectible {
   collect() {
     if (this.collected) return;
     this.collected = true;
-
-    gsap.to(this.sprite.scale, {
-      x: 0,
-      y: 0,
-      duration: 0.2,
-      onComplete: () => {
-        this.deactivate();
-      }
-    });
-
+    this.deactivate();
     return CONFIG.COIN.VALUE;
   }
 
@@ -115,7 +103,7 @@ export class Coin extends Collectible {
     this.sprite.x = this.currentX;
     this.sprite.rotation = 0;
     this.sprite.alpha = 1;
-    this.sprite.scale.set(1);
+    this.sprite.scale.set(this.baseScale);
     this.animationController.resetAnimation(this.sprite);
   }
 

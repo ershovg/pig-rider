@@ -1,4 +1,4 @@
-import { MathUtils } from '../../../shared/utils/MathUtils.js';
+import { MathUtils } from '../../../shared/utils/MathUtils.ts';
 
 export class CollisionHandler {
   constructor(collisionSystem, soundManager = null) {

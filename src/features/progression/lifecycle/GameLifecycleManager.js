@@ -1,4 +1,4 @@
-import { CONFIG } from '../../../shared/config/constants.js';
+import { CONFIG } from '../../../shared/config/constants.ts';
 
 export class GameLifecycleManager {
   constructor(dependencies) {

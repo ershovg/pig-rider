@@ -1,4 +1,4 @@
-import { ASSET_PATHS } from '../../../shared/config/constants.js';
+import { ASSET_PATHS } from '../../../shared/config/constants.ts';
 
 export const DEFAULT_SOUND_CONFIG = {
   volumes: {

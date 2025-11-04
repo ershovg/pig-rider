@@ -1,4 +1,4 @@
-import { CONFIG } from '../../../shared/config/constants.js';
+import { CONFIG } from '../../../shared/config/constants.ts';
 
 /**
  * DifficultyManager - управление сложностью игры
