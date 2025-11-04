@@ -1,7 +1,24 @@
-import { CONFIG } from '../shared/config/constants.js';
+import { CONFIG } from '../shared/config/constants.ts';
+
+type UpdateCallback = (fixedDelta: number, frameDelta: number) => void;
+type RenderCallback = (alpha: number) => void;
 
 export class GameLoop {
-  constructor(updateCallback, renderCallback) {
+  private updateCallback: UpdateCallback;
+  private renderCallback: RenderCallback;
+
+  private isRunning: boolean;
+  private lastTime: number;
+  private accumulator: number;
+  private fixedDeltaTime: number;
+
+  private rafId: number | null;
+
+  private frameCount: number;
+  private fps: number;
+  private fpsUpdateTime: number;
+
+  constructor(updateCallback: UpdateCallback, renderCallback: RenderCallback) {
     this.updateCallback = updateCallback;
     this.renderCallback = renderCallback;
 
@@ -17,10 +34,7 @@ export class GameLoop {
     this.fpsUpdateTime = 0;
   }
 
-  /**
-   * Start the game loop
-   */
-  start() {
+  start(): void {
     if (this.isRunning) return;
 
     this.isRunning = true;
@@ -31,10 +45,7 @@ export class GameLoop {
     console.log('🎮 Game loop started');
   }
 
-  /**
-   * Stop the game loop
-   */
-  stop() {
+  stop(): void {
     this.isRunning = false;
     if (this.rafId) {
       cancelAnimationFrame(this.rafId);
@@ -43,17 +54,12 @@ export class GameLoop {
     console.log('⏸️ Game loop stopped');
   }
 
-  /**
-   * Main game loop with fixed timestep
-   */
-  loop(currentTime) {
+  private loop(currentTime: number): void {
     if (!this.isRunning) return;
 
-    // Calculate frame time
     let deltaTime = currentTime - this.lastTime;
     this.lastTime = currentTime;
 
-    // Cap deltaTime to prevent spiral of death
     if (deltaTime > CONFIG.MAX_DELTA) {
       deltaTime = CONFIG.MAX_DELTA;
     }
@@ -63,9 +69,8 @@ export class GameLoop {
     this.accumulator += deltaTime;
 
     let physicsUpdates = 0;
-    const maxPhysicsUpdates = CONFIG.MAX_PHYSICS_UPDATES_PER_FRAME || 4;
+    const maxPhysicsUpdates = CONFIG.MAX_PHYSICS_UPDATES_PER_FRAME;
 
-    // Fixed timestep updates
     while (this.accumulator >= this.fixedDeltaTime && physicsUpdates < maxPhysicsUpdates) {
       this.updateCallback(
         this.fixedDeltaTime / 1000,
@@ -80,7 +85,6 @@ export class GameLoop {
       this.accumulator = this.fixedDeltaTime * 0.9;
     }
 
-    // Render with interpolation factor
     const alpha = this.accumulator / this.fixedDeltaTime;
     this.renderCallback(alpha);
 
@@ -91,25 +95,18 @@ export class GameLoop {
       this.fpsUpdateTime = currentTime;
     }
 
-    // Schedule next frame
     this.rafId = requestAnimationFrame((time) => this.loop(time));
   }
 
-  /**
-   * Pause the game loop
-   */
-  pause() {
+  pause(): void {
     this.stop();
   }
 
-  /**
-   * Resume the game loop
-   */
-  resume() {
+  resume(): void {
     this.start();
   }
 
-  getCurrentFPS() {
+  getCurrentFPS(): number {
     return this.fps;
   }
 }

@@ -1,17 +1,27 @@
 import * as PIXI from 'pixi.js';
-import { ASSET_PATHS } from '../shared/config/constants.js';
+import { ASSET_PATHS } from '../shared/config/constants.ts';
+
+type BundleName = 'critical' | 'gameplay';
+
+interface AssetManifest {
+  bundles: Array<{
+    name: BundleName;
+    assets: Array<{
+      alias: string;
+      src: string;
+    }>;
+  }>;
+}
 
 export class AssetLoader {
-  constructor() {
-    this.assets = {};
-    this.loaded = false;
-    this.manifestInitialized = false;
-  }
+  private assets: Record<string, any> = {};
+  private loaded: boolean = false;
+  private manifestInitialized: boolean = false;
 
-  async init() {
+  async init(): Promise<void> {
     if (this.manifestInitialized) return;
 
-    const manifest = {
+    const manifest: AssetManifest = {
       bundles: [
         {
           name: 'critical',
@@ -41,10 +51,10 @@ export class AssetLoader {
     console.log('📦 Asset manifest initialized');
   }
 
-  async loadCriticalAssets() {
+  async loadCriticalAssets(): Promise<Record<string, any>> {
     console.log('🚀 Loading critical assets...');
 
-    const criticalAssets = await PIXI.Assets.loadBundle('critical', (progress) => {
+    const criticalAssets = await PIXI.Assets.loadBundle('critical', (progress: number) => {
       console.log(`Critical: ${Math.round(progress * 100)}%`);
     });
 
@@ -55,12 +65,12 @@ export class AssetLoader {
     return criticalAssets;
   }
 
-  startBackgroundLoading() {
+  startBackgroundLoading(): void {
     console.log('🎮 Starting background loading for gameplay assets...');
     PIXI.Assets.backgroundLoadBundle(['gameplay']);
   }
 
-  async ensureGameplayAssetsReady() {
+  async ensureGameplayAssetsReady(): Promise<Record<string, any>> {
     console.log('⏳ Ensuring gameplay assets are ready...');
 
     const gameplayAssets = await PIXI.Assets.loadBundle('gameplay');
@@ -71,7 +81,7 @@ export class AssetLoader {
     return gameplayAssets;
   }
 
-  async loadAssets() {
+  async loadAssets(): Promise<Record<string, any>> {
     try {
       await this.init();
 
@@ -87,7 +97,11 @@ export class AssetLoader {
     }
   }
 
-  getAsset(key) {
+  getAsset(key: string): any {
     return this.assets[key];
+  }
+
+  isLoaded(): boolean {
+    return this.loaded;
   }
 }

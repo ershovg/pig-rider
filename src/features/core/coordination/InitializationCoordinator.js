@@ -1,7 +1,7 @@
 import { CONFIG } from '../../../shared/config/constants.ts';
-import { Renderer } from '../../../core/Renderer.js';
-import { GameLoop } from '../../../core/GameLoop.js';
-import { AssetLoader } from '../../../core/AssetLoader.js';
+import { Renderer } from '../../../core/Renderer.ts';
+import { GameLoop } from '../../../core/GameLoop.ts';
+import { AssetLoader } from '../../../core/AssetLoader.ts';
 import { Player } from '../../player/entities/Player.js';
 import { SpawnSystem } from '../../spawning/SpawnSystem.js';
 import { CollisionSystem } from '../../collision/system/CollisionSystem.js';

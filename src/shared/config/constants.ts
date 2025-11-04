@@ -58,6 +58,8 @@ interface GameConfig {
   };
 
   FIXED_TIMESTEP: number;
+  MAX_DELTA: number;
+  MAX_PHYSICS_UPDATES_PER_FRAME: number;
 
   CULLING: {
     LEFT_MULTIPLIER: number;
@@ -132,6 +134,8 @@ export const CONFIG: GameConfig = {
   },
 
   FIXED_TIMESTEP: 1000 / 60,
+  MAX_DELTA: 250,
+  MAX_PHYSICS_UPDATES_PER_FRAME: 4,
 
   CULLING: {
     LEFT_MULTIPLIER: 0.08,
