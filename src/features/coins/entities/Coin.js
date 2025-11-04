@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { CONFIG } from '../../../shared/config/constants.ts';
-import { Collectible } from '../../effects/base/Collectible.js';
+import { Collectible } from '../../effects/base/Collectible.ts';
 import { CoinAnimationController } from '../controllers/CoinAnimationController.js';
 
 export class Coin extends Collectible {

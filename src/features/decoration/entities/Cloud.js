@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { CONFIG } from '../../../shared/config/constants.ts';
-import { Renderable } from '../../effects/base/Renderable.js';
+import { Renderable } from '../../effects/base/Renderable.ts';
 
 /**
  * Декоративное облако с эффектом параллакса

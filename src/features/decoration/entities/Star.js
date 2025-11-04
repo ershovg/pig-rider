@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import gsap from 'gsap';
 import { CONFIG } from '../../../shared/config/constants.ts';
-import { Renderable } from '../../effects/base/Renderable.js';
+import { Renderable } from '../../effects/base/Renderable.ts';
 
 /**
  * Декоративная звезда с мерцанием

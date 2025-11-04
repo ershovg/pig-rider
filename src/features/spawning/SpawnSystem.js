@@ -12,7 +12,7 @@ import { Obstacle } from '../obstacles/entities/Obstacle.js';
 import { Coin } from '../coins/entities/Coin.js';
 import { Cloud } from '../decoration/entities/Cloud.js';
 import { Star } from '../decoration/entities/Star.js';
-import { Booster } from '../booster/entities/Booster.js';
+import { Booster } from '../booster/entities/Booster.ts';
 import { CoinCollectEffect } from '../coins/effects/CoinCollectEffect.js';
 import { CollisionEffect } from '../collision/effects/CollisionEffect.js';
 import { CONFIG } from '../../shared/config/constants.ts';

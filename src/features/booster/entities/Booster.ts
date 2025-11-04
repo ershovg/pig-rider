@@ -1,30 +1,38 @@
 import * as PIXI from 'pixi.js';
 import gsap from 'gsap';
-import { CONFIG } from '../../../shared/config/constants.ts';
-import { Collectible } from '../../effects/base/Collectible.js';
+import { CONFIG } from '../../../shared/config/constants';
+import { Collectible } from '../../effects/base/Collectible';
+import { Lane } from '../../../types/common';
+import { Hitbox } from '../../../types/entities';
 
-/**
- * Собираемый бустер с анимированным спрайтшитом (крылья кубка),
- * плавающей анимацией, interpolation и culling
- */
 export class Booster extends Collectible {
-  constructor(spritesheet, container = null) {
+  private container: PIXI.Container | null;
+  private sprite: PIXI.AnimatedSprite;
+  private active: boolean;
+  private collected: boolean;
+  private lane: Lane;
+  private floatTween: gsap.core.Tween | null;
+
+  private previousX: number;
+  private previousY: number;
+  private currentX: number;
+  private currentY: number;
+  private baseY: number;
+
+  constructor(spritesheet: PIXI.Spritesheet, container: PIXI.Container | null = null) {
     super();
 
-    this.container = container; // 🔥 Ссылка на PixiJS контейнер для lifecycle
+    this.container = container;
 
-    // Анимация "Cup" содержит все 38 кадров (Cup_000.png -> Cup_037.png)
     const frames = spritesheet.animations['Cup'];
     this.sprite = new PIXI.AnimatedSprite(frames);
     this.sprite.anchor.set(0.5);
 
-    // Настройка анимации
-    this.sprite.animationSpeed = 0.3; // 0.3 кадров за тик (60 FPS) = ~18 FPS анимация
-    this.sprite.loop = true;           // Зацикленная анимация
+    this.sprite.animationSpeed = 0.3;
+    this.sprite.loop = true;
 
-    // Масштабирование под размер из CONFIG
     const targetSize = CONFIG.BOOSTER.SIZE;
-    const scale = targetSize / 250; // Cup frames = 250x250px по JSON
+    const scale = targetSize / 250;
     this.sprite.scale.set(scale);
 
     this.active = false;
@@ -37,11 +45,10 @@ export class Booster extends Collectible {
     this.previousY = 0;
     this.currentX = 0;
     this.currentY = 0;
-    this.baseY = 0; // Base Y для float анимации
+    this.baseY = 0;
   }
 
-  activate(lane, x) {
-    // 🔥 ДОБАВЛЕНО: Добавляем sprite в контейнер при активации
+  activate(lane: Lane, x: number): void {
     if (this.container && !this.sprite.parent) {
       this.container.addChild(this.sprite);
     }
@@ -69,7 +76,7 @@ export class Booster extends Collectible {
     this.startFloat();
   }
 
-  deactivate() {
+  deactivate(): void {
     this.active = false;
     this.collected = false;
     this.sprite.visible = false;
@@ -78,13 +85,12 @@ export class Booster extends Collectible {
 
     this.stopFloat();
 
-    // 🔥 ДОБАВЛЕНО: Удаляем sprite из контейнера для освобождения памяти
     if (this.sprite.parent) {
       this.sprite.parent.removeChild(this.sprite);
     }
   }
 
-  startFloat() {
+  private startFloat(): void {
     this.stopFloat();
     this.floatTween = gsap.to(this, {
       currentY: this.baseY - 15,
@@ -95,20 +101,19 @@ export class Booster extends Collectible {
     });
   }
 
-  stopFloat() {
+  private stopFloat(): void {
     if (this.floatTween) {
       this.floatTween.kill();
       this.floatTween = null;
     }
   }
 
-  collect() {
+  collect(): { type: string; value: number } | null {
     if (this.collected) return null;
     this.collected = true;
 
-    // Сохраняем текущий scale для относительного увеличения
     const currentScale = this.sprite.scale.x;
-    const targetScale = currentScale * 1.8; // Увеличиваем в 1.8 раз от текущего
+    const targetScale = currentScale * 1.8;
 
     gsap.to(this.sprite, {
       rotation: Math.PI * 2,
@@ -135,7 +140,7 @@ export class Booster extends Collectible {
     };
   }
 
-  update(deltaTime, gameSpeed) {
+  update(deltaTime: number, gameSpeed: number): void {
     if (!this.active || this.collected) return;
 
     this.saveState();
@@ -146,7 +151,7 @@ export class Booster extends Collectible {
     }
   }
 
-  getHitbox() {
+  getHitbox(): Hitbox | null {
     if (!this.active || this.collected) return null;
     const scale = CONFIG.COLLISION.COIN_HITBOX_SCALE;
     const width = this.sprite.width * scale;
@@ -160,7 +165,7 @@ export class Booster extends Collectible {
     };
   }
 
-  reset() {
+  reset(): void {
     this.deactivate();
     this.currentX = CONFIG.CANVAS_WIDTH + 100;
     this.sprite.x = this.currentX;
@@ -168,27 +173,26 @@ export class Booster extends Collectible {
     this.sprite.alpha = 1;
   }
 
-  getSprite() {
+  getSprite(): PIXI.AnimatedSprite {
     return this.sprite;
   }
 
-  isActive() {
+  isActive(): boolean {
     return this.active && !this.collected;
   }
 
-  saveState() {
+  saveState(): void {
     this.previousX = this.currentX;
     this.previousY = this.currentY;
   }
 
-  interpolate(alpha) {
+  interpolate(alpha: number): void {
     if (!this.sprite) return;
     this.sprite.x = this.previousX + (this.currentX - this.previousX) * alpha;
-    // Y уже анимируется через GSAP (float), просто копируем
     this.sprite.y = this.currentY;
   }
 
-  shouldCull(threshold) {
+  shouldCull(threshold: number): boolean {
     return (this.active && !this.collected) && this.currentX < threshold;
   }
 }
