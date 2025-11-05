@@ -1,14 +1,22 @@
 import * as PIXI from 'pixi.js';
-import { CONFIG } from '../../../shared/config/constants.ts';
-import { Renderable } from '../../effects/base/Renderable.ts';
+import { CONFIG } from '../../../shared/config/constants';
+import { Renderable } from '../../effects/base/Renderable';
+import { Lane } from '../../../types';
+import { CullableEntity } from '../../../types/rendering';
 
 /**
  * Декоративное облако с эффектом параллакса
  */
-export class Cloud extends Renderable {
-  constructor(texture, container = null) {
+export class Cloud extends Renderable implements CullableEntity {
+  private container: PIXI.Container | null;
+  private sprite: PIXI.Sprite;
+  private active: boolean;
+  public lane: Lane;
+  private speedMultiplier: number;
+
+  constructor(texture: PIXI.Texture, container: PIXI.Container | null = null) {
     super();
-    this.container = container; // 🔥 Ссылка на PixiJS контейнер для lifecycle
+    this.container = container;
     this.sprite = new PIXI.Sprite(texture);
     this.sprite.anchor.set(0.5);
 
@@ -18,8 +26,7 @@ export class Cloud extends Renderable {
     this.sprite.visible = false;
   }
 
-  activate(lane, x) {
-    // 🔥 ДОБАВЛЕНО: Добавляем sprite в контейнер при активации
+  activate(lane: Lane, x: number): void {
     if (this.container && !this.sprite.parent) {
       this.container.addChild(this.sprite);
     }
@@ -36,17 +43,16 @@ export class Cloud extends Renderable {
     this.sprite.alpha = 0.6 + Math.random() * 0.3;
   }
 
-  deactivate() {
+  deactivate(): void {
     this.active = false;
     this.sprite.visible = false;
 
-    // 🔥 ДОБАВЛЕНО: Удаляем sprite из контейнера для освобождения памяти
     if (this.sprite.parent) {
       this.sprite.parent.removeChild(this.sprite);
     }
   }
 
-  update(deltaTime, gameSpeed) {
+  update(deltaTime: number, gameSpeed: number): void {
     if (!this.active) return;
     this.sprite.x = Math.round(this.sprite.x - gameSpeed * deltaTime * 200 * this.speedMultiplier);
     if (this.sprite.x < -100) {
@@ -54,21 +60,21 @@ export class Cloud extends Renderable {
     }
   }
 
-  reset() {
+  reset(): void {
     this.deactivate();
     this.sprite.x = CONFIG.CANVAS_WIDTH + 100;
     this.sprite.alpha = 1;
   }
 
-  getSprite() {
+  getSprite(): PIXI.Sprite {
     return this.sprite;
   }
 
-  isActive() {
+  isActive(): boolean {
     return this.active;
   }
 
-  shouldCull(threshold) {
+  shouldCull(threshold: number): boolean {
     return this.active && this.sprite.x < threshold;
   }
 }
