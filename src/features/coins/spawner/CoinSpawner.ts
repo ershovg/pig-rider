@@ -1,14 +1,37 @@
-import { BaseSpawner } from '../../spawning/spawners/BaseSpawner.js';
-import { CONFIG } from '../../../shared/config/constants.ts';
-import { MathUtils } from '../../../shared/utils/MathUtils.ts';
+import * as PIXI from 'pixi.js';
+import { BaseSpawner } from '../../spawning/spawners/BaseSpawner';
+import { CONFIG } from '../../../shared/config/constants';
+import { MathUtils } from '../../../shared/utils/MathUtils';
+import {
+  Lane,
+  ObjectPool,
+  SpawnContext,
+  SpawnCoordinationService,
+  ActivatableEntity
+} from '../../../types';
+import { Coin } from '../entities/Coin';
 
-/**
- * Спавнер монет с поддержкой двух режимов:
- * - Normal: случайные полосы, переменный интервал
- * - Booster: одна полоса, плотное расположение (80px)
- */
+interface CoinSpawnerConfig {
+  pool: ObjectPool<ActivatableEntity>;
+  stage: PIXI.Container;
+  coordinationService?: SpawnCoordinationService;
+  getIntervalModifier: ((gameSpeed: number) => number) | null;
+}
+
+interface CoinSpawnContext extends SpawnContext {
+  isBoosterMode?: boolean;
+  boosterActiveLane?: Lane;
+  gameSpeed?: number;
+  difficultyManager?: {
+    getCoinSpawnInterval(): number;
+  } | null;
+}
+
 export class CoinSpawner extends BaseSpawner {
-  constructor(config) {
+  private coordinationService?: SpawnCoordinationService;
+  private lastCoinX: [number, number, number];
+
+  constructor(config: CoinSpawnerConfig) {
     super({
       pool: config.pool,
       stage: config.stage,
@@ -18,10 +41,9 @@ export class CoinSpawner extends BaseSpawner {
 
     this.coordinationService = config.coordinationService;
     this.lastCoinX = [0, 0, 0];
-    this.timer = 100;
   }
 
-  getCurrentInterval(context) {
+  getCurrentInterval(context: CoinSpawnContext): number {
     const { isBoosterMode = false, gameSpeed = 1.0, difficultyManager = null } = context;
 
     if (isBoosterMode) {
@@ -35,7 +57,7 @@ export class CoinSpawner extends BaseSpawner {
     return baseInterval / gameSpeed;
   }
 
-  spawn(gameSpeed, context = {}) {
+  spawn(_gameSpeed: number, context: CoinSpawnContext = {}): void {
     const { isBoosterMode = false, boosterActiveLane = 0 } = context;
 
     if (isBoosterMode) {
@@ -45,8 +67,8 @@ export class CoinSpawner extends BaseSpawner {
     }
   }
 
-  spawnNormalCoin() {
-    const lane = MathUtils.randomInt(0, CONFIG.LANES.TOTAL - 1);
+  private spawnNormalCoin(): void {
+    const lane = MathUtils.randomInt(0, CONFIG.LANES.TOTAL - 1) as Lane;
     const distance = MathUtils.randomFloat(CONFIG.COIN.MIN_DISTANCE, CONFIG.COIN.MAX_DISTANCE);
 
     const spawnX = Math.max(
@@ -65,8 +87,8 @@ export class CoinSpawner extends BaseSpawner {
     }
   }
 
-  spawnBoosterCoin(lane) {
-    const distance = 80; // Плотное расположение для booster режима
+  private spawnBoosterCoin(lane: Lane): void {
+    const distance = 80;
 
     const spawnX = Math.max(
       CONFIG.CANVAS_WIDTH + distance,
@@ -80,10 +102,7 @@ export class CoinSpawner extends BaseSpawner {
     }
   }
 
-  /**
-   * Заполняет полосу 20 монетами при старте бустера
-   */
-  fillLaneWithCoins(lane) {
+  fillLaneWithCoins(lane: Lane): void {
     const coinCount = 20;
     const spacing = 80;
     let spawnX = CONFIG.CANVAS_WIDTH + 100;
@@ -100,27 +119,23 @@ export class CoinSpawner extends BaseSpawner {
     console.log(`[CoinSpawner] Filled lane ${lane} with ${coinCount} coins`);
   }
 
-  reset() {
+  reset(): void {
     super.reset();
     this.lastCoinX = [0, 0, 0];
   }
 
-  /**
-   * Очищает дальние booster-монеты (оставляет ~5 ближайших) и монеты на препятствиях
-   */
-  clearBoosterCoins() {
-    const activeCoins = this.getActiveObjects();
+  clearBoosterCoins(): void {
+    const activeCoins = this.getActiveObjects() as Coin[];
     let clearedCount = 0;
     let safetyCleared = 0;
 
-    // Оставляем ~5 монет (400px = 5 * 80px spacing)
     const keepThreshold = CONFIG.CANVAS_WIDTH + 400;
 
     for (let i = activeCoins.length - 1; i >= 0; i--) {
       const coin = activeCoins[i];
       if (coin && coin.isActive()) {
-        const coinX = coin.x;
-        const coinLane = coin.lane;
+        const coinX = (coin as any).currentX;
+        const coinLane = (coin as any).lane as Lane;
         let shouldRemove = false;
 
         if (coinX > keepThreshold) {
@@ -141,7 +156,8 @@ export class CoinSpawner extends BaseSpawner {
     console.log(`[CoinSpawner] Cleared ${clearedCount} distant + ${safetyCleared} unsafe coins`);
   }
 
-  getCoinsInLane(lane) {
-    return this.getActiveObjects().filter(coin => coin.lane === lane);
+  getCoinsInLane(lane: Lane): Coin[] {
+    const activeCoins = this.getActiveObjects() as Coin[];
+    return activeCoins.filter(coin => (coin as any).lane === lane);
   }
 }

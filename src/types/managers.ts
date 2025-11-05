@@ -1,8 +1,5 @@
 import { Lane } from './common';
-
-export interface BoosterSnapshot {
-  [key: string]: unknown;
-}
+import { BoosterSnapshot } from './booster';
 
 export interface SpawnSystem {
   clearAllObstacles(): void;
@@ -23,11 +20,4 @@ export interface ProgressionManager {
 
 export interface SoundManager {
   setMusicState(state: string): void;
-}
-
-export interface BoosterContext {
-  isBoosterMode: boolean;
-  boosterActiveLane: Lane;
-  isBoosterActive: boolean;
-  boosterCooldown: number;
 }

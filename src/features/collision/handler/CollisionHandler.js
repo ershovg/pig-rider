@@ -32,10 +32,11 @@ export class CollisionHandler {
     const collected = [];
 
     for (const coin of coinsCollected) {
-      const value = coin.collect();
-      if (value) {
+      const result = coin.collect();
+      if (result) {
         const sprite = coin.getSprite();
-        collected.push({ value, x: sprite.x, y: sprite.y });
+        // Извлекаем value из CollectResult { type, value }
+        collected.push({ value: result.value, x: sprite.x, y: sprite.y });
 
         if (this.soundManager) {
           this.soundManager.play('coin');
@@ -62,7 +63,8 @@ export class CollisionHandler {
           if (this.soundManager) {
             this.soundManager.play('boosterCollect');
           }
-          return result;
+          // Возвращаем value из CollectResult { type, value }
+          return result.value;
         }
       }
     }

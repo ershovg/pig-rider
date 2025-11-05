@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { Lane } from '../../../types/common';
+import { Lane } from '../../../types';
 
 export abstract class Renderable {
   constructor() {

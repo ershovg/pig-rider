@@ -2,13 +2,13 @@ import * as PIXI from 'pixi.js';
 import { BaseSpawner } from '../../spawning/spawners/BaseSpawner';
 import { CONFIG } from '../../../shared/config/constants';
 import { MathUtils } from '../../../shared/utils/MathUtils';
-import { Lane } from '../../../types/common';
 import {
+  Lane,
   ObjectPool,
   SpawnCoordinationService,
   ActivatableEntity,
   SpawnContext
-} from '../../../types/spawning';
+} from '../../../types';
 
 interface BoosterSpawnerConfig {
   pool: ObjectPool<ActivatableEntity>;

@@ -91,8 +91,8 @@ export class UpdateCoordinator {
     return false;
   }
 
-  handleBoosterCollection(booster) {
-    this.registry.progressionManager.addScore(booster.value);
+  handleBoosterCollection(boosterValue) {
+    this.registry.progressionManager.addScore(boosterValue);
 
     if (this.registry.progressionManager.checkWinCondition()) {
       this.registry.lifecycleManager.endGame(

@@ -1,4 +1,5 @@
 import { Collidable } from './Collidable';
+import type { CollectResult } from '../../../types/collectibles';
 
 export abstract class Collectible extends Collidable {
   constructor() {
@@ -8,5 +9,5 @@ export abstract class Collectible extends Collidable {
     }
   }
 
-  abstract collect(): { type: string; value: number } | null;
+  abstract collect(): CollectResult | null;
 }

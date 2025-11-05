@@ -1,5 +1,5 @@
 import { Renderable } from './Renderable';
-import { Hitbox } from '../../../types/entities';
+import { Hitbox } from '../../../types';
 
 export abstract class Collidable extends Renderable {
   constructor() {

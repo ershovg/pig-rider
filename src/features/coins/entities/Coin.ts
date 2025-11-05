@@ -1,10 +1,24 @@
 import * as PIXI from 'pixi.js';
-import { CONFIG } from '../../../shared/config/constants.ts';
-import { Collectible } from '../../effects/base/Collectible.ts';
-import { CoinAnimationController } from '../controllers/CoinAnimationController.js';
+import { CONFIG } from '../../../shared/config/constants';
+import { Collectible } from '../../effects/base/Collectible';
+import { CoinAnimationController } from '../controllers/CoinAnimationController';
+import type { Lane, Hitbox } from '../../../types';
+import type { CollectResult } from '../../../types/collectibles';
 
 export class Coin extends Collectible {
-  constructor(spritesheet, container = null) {
+  private container: PIXI.Container | null;
+  private animationController: CoinAnimationController;
+  private sprite: PIXI.AnimatedSprite;
+  private active: boolean;
+  private collected: boolean;
+  private lane: Lane;
+  private baseScale: number;
+  private previousX: number;
+  private previousY: number;
+  private currentX: number;
+  private currentY: number;
+
+  constructor(spritesheet: PIXI.Spritesheet, container: PIXI.Container | null = null) {
     super();
     this.container = container;
     this.animationController = new CoinAnimationController();
@@ -16,7 +30,8 @@ export class Coin extends Collectible {
 
     const targetSize = CONFIG.COIN.SIZE;
     const firstFrameTexture = this.sprite.textures[0];
-    const scale = targetSize / firstFrameTexture.width;
+    const textureWidth = (firstFrameTexture as PIXI.Texture).width;
+    const scale = targetSize / textureWidth;
     this.sprite.scale.set(scale);
     this.baseScale = scale;
 
@@ -31,7 +46,7 @@ export class Coin extends Collectible {
     this.currentY = 0;
   }
 
-  activate(lane, x) {
+  activate(lane: Lane, x: number): void {
     if (this.container && !this.sprite.parent) {
       this.container.addChild(this.sprite);
     }
@@ -53,7 +68,7 @@ export class Coin extends Collectible {
     this.animationController.initializeAnimation(this.sprite, this.sprite.totalFrames);
   }
 
-  deactivate() {
+  deactivate(): void {
     this.active = false;
     this.collected = false;
     this.sprite.visible = false;
@@ -65,14 +80,17 @@ export class Coin extends Collectible {
     }
   }
 
-  collect() {
-    if (this.collected) return;
+  collect(): CollectResult | null {
+    if (this.collected) return null;
     this.collected = true;
     this.deactivate();
-    return CONFIG.COIN.VALUE;
+    return {
+      type: 'coin',
+      value: CONFIG.COIN.VALUE
+    };
   }
 
-  update(deltaTime, gameSpeed) {
+  update(deltaTime: number, gameSpeed: number): void {
     if (!this.active || this.collected) return;
 
     this.saveState();
@@ -83,7 +101,7 @@ export class Coin extends Collectible {
     }
   }
 
-  getHitbox() {
+  getHitbox(): Hitbox | null {
     if (!this.active || this.collected) return null;
     const scale = CONFIG.COLLISION.COIN_HITBOX_SCALE;
     const width = this.sprite.width * scale;
@@ -97,7 +115,7 @@ export class Coin extends Collectible {
     };
   }
 
-  reset() {
+  reset(): void {
     this.deactivate();
     this.currentX = CONFIG.CANVAS_WIDTH + 100;
     this.sprite.x = this.currentX;
@@ -107,26 +125,30 @@ export class Coin extends Collectible {
     this.animationController.resetAnimation(this.sprite);
   }
 
-  getSprite() {
+  getSprite(): PIXI.AnimatedSprite {
     return this.sprite;
   }
 
-  isActive() {
+  isActive(): boolean {
     return this.active && !this.collected;
   }
 
-  saveState() {
+  saveState(): void {
     this.previousX = this.currentX;
     this.previousY = this.currentY;
   }
 
-  interpolate(alpha) {
+  interpolate(alpha: number): void {
     if (!this.sprite) return;
     this.sprite.x = this.previousX + (this.currentX - this.previousX) * alpha;
     this.sprite.y = this.previousY + (this.currentY - this.previousY) * alpha;
   }
 
-  shouldCull(threshold) {
+  shouldCull(threshold: number): boolean {
     return (this.active && !this.collected) && this.currentX < threshold;
+  }
+
+  getLane(): Lane {
+    return this.lane;
   }
 }

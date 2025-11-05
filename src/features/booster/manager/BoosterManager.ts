@@ -1,15 +1,15 @@
 import { CONFIG } from '../../../shared/config/constants';
-import { Lane } from '../../../types/common';
 import {
+  Lane,
   BoosterSnapshot,
+  BoosterContext,
   SpawnSystem,
   DifficultyManager,
   ProgressionManager,
   SoundManager,
-  BoosterContext
-} from '../../../types/managers';
-import { UIController } from '../../../types/ui';
-import { Player } from '../../../types/player';
+  UIController,
+  Player
+} from '../../../types';
 
 export class BoosterManager {
   private spawnSystem: SpawnSystem;

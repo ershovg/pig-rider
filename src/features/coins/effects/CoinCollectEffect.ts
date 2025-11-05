@@ -1,7 +1,11 @@
 import * as PIXI from 'pixi.js';
 
 export class CoinCollectEffect {
-  constructor(spritesheet, container) {
+  private container: PIXI.Container;
+  private sprite: PIXI.AnimatedSprite;
+  private active: boolean;
+
+  constructor(spritesheet: PIXI.Spritesheet, container: PIXI.Container) {
     this.container = container;
 
     const frames = spritesheet.animations['CoinCollect'];
@@ -26,7 +30,7 @@ export class CoinCollectEffect {
     };
   }
 
-  activate(x, y) {
+  activate(x: number, y: number): void {
     this.active = true;
     this.sprite.x = x;
     this.sprite.y = y;
@@ -40,21 +44,21 @@ export class CoinCollectEffect {
     this.sprite.gotoAndPlay(0);
   }
 
-  deactivate() {
+  deactivate(): void {
     this.active = false;
     this.sprite.visible = false;
     this.sprite.stop();
   }
 
-  getSprite() {
+  getSprite(): PIXI.AnimatedSprite {
     return this.sprite;
   }
 
-  isActive() {
+  isActive(): boolean {
     return this.active;
   }
 
-  reset() {
+  reset(): void {
     this.deactivate();
 
     const targetSize = 120;

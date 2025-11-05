@@ -2,8 +2,8 @@ import * as PIXI from 'pixi.js';
 import gsap from 'gsap';
 import { CONFIG } from '../../../shared/config/constants';
 import { Collectible } from '../../effects/base/Collectible';
-import { Lane } from '../../../types/common';
-import { Hitbox } from '../../../types/entities';
+import type { Lane, Hitbox } from '../../../types';
+import type { CollectResult } from '../../../types/collectibles';
 
 export class Booster extends Collectible {
   private container: PIXI.Container | null;
@@ -102,7 +102,7 @@ export class Booster extends Collectible {
     }
   }
 
-  collect(): { type: string; value: number } | null {
+  collect(): CollectResult | null {
     if (this.collected) return null;
     this.collected = true;
 
