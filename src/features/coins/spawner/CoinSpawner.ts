@@ -1,37 +1,19 @@
-import * as PIXI from 'pixi.js';
 import { BaseSpawner } from '../../spawning/spawners/BaseSpawner';
 import { CONFIG } from '../../../shared/config/constants';
 import { MathUtils } from '../../../shared/utils/MathUtils';
 import {
   Lane,
-  ObjectPool,
   SpawnContext,
-  SpawnCoordinationService,
-  ActivatableEntity
+  ActivatableEntity,
+  CollectibleSpawnerConfig
 } from '../../../types';
 import { Coin } from '../entities/Coin';
 
-interface CoinSpawnerConfig {
-  pool: ObjectPool<ActivatableEntity>;
-  stage: PIXI.Container;
-  coordinationService?: SpawnCoordinationService;
-  getIntervalModifier: ((gameSpeed: number) => number) | null;
-}
-
-interface CoinSpawnContext extends SpawnContext {
-  isBoosterMode?: boolean;
-  boosterActiveLane?: Lane;
-  gameSpeed?: number;
-  difficultyManager?: {
-    getCoinSpawnInterval(): number;
-  } | null;
-}
-
 export class CoinSpawner extends BaseSpawner {
-  private coordinationService?: SpawnCoordinationService;
+  private coordinationService: CollectibleSpawnerConfig<ActivatableEntity>['coordinationService'];
   private lastCoinX: [number, number, number];
 
-  constructor(config: CoinSpawnerConfig) {
+  constructor(config: CollectibleSpawnerConfig<ActivatableEntity>) {
     super({
       pool: config.pool,
       stage: config.stage,
@@ -43,21 +25,21 @@ export class CoinSpawner extends BaseSpawner {
     this.lastCoinX = [0, 0, 0];
   }
 
-  getCurrentInterval(context: CoinSpawnContext): number {
+  getCurrentInterval(context: SpawnContext): number {
     const { isBoosterMode = false, gameSpeed = 1.0, difficultyManager = null } = context;
 
     if (isBoosterMode) {
       return CONFIG.BOOSTER_COIN_SPAWN_INTERVAL * 1000;
     }
 
-    const baseInterval = difficultyManager
+    const baseInterval = difficultyManager?.getCoinSpawnInterval
       ? difficultyManager.getCoinSpawnInterval() * 1000
       : this.baseInterval;
 
     return baseInterval / gameSpeed;
   }
 
-  spawn(_gameSpeed: number, context: CoinSpawnContext = {}): void {
+  spawn(_gameSpeed: number, context: SpawnContext = {}): void {
     const { isBoosterMode = false, boosterActiveLane = 0 } = context;
 
     if (isBoosterMode) {

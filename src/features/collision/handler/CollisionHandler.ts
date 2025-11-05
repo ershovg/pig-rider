@@ -1,11 +1,9 @@
 import { MathUtils } from '../../../shared/utils/MathUtils';
 import { CollisionSystem } from '../system/CollisionSystem';
 import type { SoundManager } from '../../../types/managers';
-import type { HasHitbox, HasSprite, Collectible } from '../../../types';
+import type { HasHitbox, HasSprite, RenderableCollectible } from '../../../types';
 import type { Point2D } from '../../../types/common';
 import type { ProcessFrameResult, CoinCollectedEvent } from '../../../types/collision';
-
-type CollectibleEntity = Collectible & HasSprite;
 
 export class CollisionHandler {
   private collisionSystem: CollisionSystem;
@@ -16,7 +14,7 @@ export class CollisionHandler {
     this.soundManager = soundManager;
   }
 
-  processFrame<TObstacle extends HasHitbox & HasSprite, TCoin extends CollectibleEntity, TBooster extends CollectibleEntity>(
+  processFrame<TObstacle extends HasHitbox & HasSprite, TCoin extends RenderableCollectible, TBooster extends RenderableCollectible>(
     player: HasHitbox & HasSprite,
     obstacles: TObstacle[],
     coins: TCoin[],
@@ -46,7 +44,7 @@ export class CollisionHandler {
     };
   }
 
-  private handleCoinCollection(coinsCollected: CollectibleEntity[]): CoinCollectedEvent[] {
+  private handleCoinCollection(coinsCollected: RenderableCollectible[]): CoinCollectedEvent[] {
     const collected: CoinCollectedEvent[] = [];
 
     for (const coin of coinsCollected) {
@@ -64,7 +62,7 @@ export class CollisionHandler {
     return collected;
   }
 
-  private handleBoosterCollection<T extends CollectibleEntity>(
+  private handleBoosterCollection<T extends RenderableCollectible>(
     player: HasHitbox,
     boosters: T[]
   ): number | null {

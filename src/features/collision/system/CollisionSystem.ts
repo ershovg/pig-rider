@@ -2,15 +2,11 @@ import { CONFIG } from '../../../shared/config/constants';
 import { MathUtils } from '../../../shared/utils/MathUtils';
 import type { HasHitbox, Hitbox } from '../../../types';
 import type { CollisionProcessResult } from '../../../types/collision';
+import type { CheckResult } from '../../../types/patterns';
 
 interface GridItem<T> {
   obj: T;
   hitbox: Hitbox;
-}
-
-interface ObstacleCollisionResult<T> {
-  hit: boolean;
-  obstacle: T | null;
 }
 
 export class CollisionSystem {
@@ -75,7 +71,7 @@ export class CollisionSystem {
   checkObstacleCollisions<T extends HasHitbox>(
     player: HasHitbox,
     obstacles: T[]
-  ): ObstacleCollisionResult<T> {
+  ): CheckResult<T> {
     this.clearGrid();
 
     for (const obstacle of obstacles) {
@@ -87,18 +83,18 @@ export class CollisionSystem {
 
     const playerHitbox = player.getHitbox();
     if (!playerHitbox) {
-      return { hit: false, obstacle: null };
+      return { found: false, entity: null };
     }
 
     const potentialCollisions = this.getPotentialCollisions(playerHitbox);
 
     for (const { obj, hitbox } of potentialCollisions) {
       if (MathUtils.checkAABB(playerHitbox, hitbox)) {
-        return { hit: true, obstacle: obj as T };
+        return { found: true, entity: obj as T };
       }
     }
 
-    return { hit: false, obstacle: null };
+    return { found: false, entity: null };
   }
 
   checkCoinCollisions<T extends HasHitbox>(player: HasHitbox, coins: T[]): T[] {
@@ -126,8 +122,8 @@ export class CollisionSystem {
   ): CollisionProcessResult<TObstacle, TCoin> {
     const obstacleCollision = this.checkObstacleCollisions(player, obstacles);
     return {
-      obstacleHit: obstacleCollision.hit,
-      hitObstacle: obstacleCollision.obstacle,
+      obstacleHit: obstacleCollision.found,
+      hitObstacle: obstacleCollision.entity,
       coinsCollected: this.checkCoinCollisions(player, coins)
     };
   }

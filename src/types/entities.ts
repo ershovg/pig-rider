@@ -51,3 +51,20 @@ export interface Interpolatable {
   saveState(): void;
   interpolate(alpha: number): void;
 }
+
+/**
+ * Composition Types
+ * Типы-композиции для часто используемых комбинаций интерфейсов
+ */
+
+/**
+ * Collectible entity с возможностью рендеринга
+ * Используется для всех визуальных collectibles (Coin, Booster, Shield, Gem, etc.)
+ */
+export type RenderableCollectible = Collectible & HasSprite;
+
+/**
+ * Collidable entity с возможностью рендеринга
+ * Используется для всех визуальных collidable objects (Obstacle, Player, etc.)
+ */
+export type RenderableCollidable = Collidable & HasSprite;

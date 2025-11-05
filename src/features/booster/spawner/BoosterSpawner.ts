@@ -1,26 +1,18 @@
-import * as PIXI from 'pixi.js';
 import { BaseSpawner } from '../../spawning/spawners/BaseSpawner';
 import { CONFIG } from '../../../shared/config/constants';
 import { MathUtils } from '../../../shared/utils/MathUtils';
 import {
   Lane,
-  ObjectPool,
-  SpawnCoordinationService,
   ActivatableEntity,
-  SpawnContext
+  SpawnContext,
+  CollectibleSpawnerConfig
 } from '../../../types';
 
-interface BoosterSpawnerConfig {
-  pool: ObjectPool<ActivatableEntity>;
-  stage: PIXI.Container;
-  coordinationService?: SpawnCoordinationService;
-}
-
 export class BoosterSpawner extends BaseSpawner {
-  private coordinationService: SpawnCoordinationService | undefined;
+  private coordinationService: CollectibleSpawnerConfig<ActivatableEntity>['coordinationService'];
   private lastBoosterX: [number, number, number];
 
-  constructor(config: BoosterSpawnerConfig) {
+  constructor(config: CollectibleSpawnerConfig<ActivatableEntity>) {
     super({
       pool: config.pool,
       stage: config.stage,
@@ -33,9 +25,9 @@ export class BoosterSpawner extends BaseSpawner {
   }
 
   spawn(_gameSpeed: number, context: SpawnContext = {}): void {
-    const { isBoosterActive = false, boosterCooldown = 0 } = context;
+    const { isBoosterMode = false, boosterCooldown = 0 } = context;
 
-    if (isBoosterActive || boosterCooldown > 0) {
+    if (isBoosterMode || boosterCooldown > 0) {
       return;
     }
 
