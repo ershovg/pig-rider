@@ -19,5 +19,6 @@ export interface ProgressionManager {
 }
 
 export interface SoundManager {
-  setMusicState(state: string): void;
+  play(alias: string, options?: Record<string, unknown>): void;
+  setMusicState(state: string, context?: Record<string, unknown>): void;
 }

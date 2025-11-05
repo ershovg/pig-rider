@@ -14,7 +14,7 @@ import { Cloud } from '../decoration/entities/Cloud.js';
 import { Star } from '../decoration/entities/Star.js';
 import { Booster } from '../booster/entities/Booster.ts';
 import { CoinCollectEffect } from '../coins/effects/CoinCollectEffect.js';
-import { CollisionEffect } from '../collision/effects/CollisionEffect.js';
+import { CollisionEffect } from '../collision/effects/CollisionEffect.ts';
 import { CONFIG } from '../../shared/config/constants.ts';
 
 export class SpawnSystem {

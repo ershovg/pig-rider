@@ -1,12 +1,27 @@
-import { MathUtils } from '../../../shared/utils/MathUtils.ts';
+import { MathUtils } from '../../../shared/utils/MathUtils';
+import { CollisionSystem } from '../system/CollisionSystem';
+import type { SoundManager } from '../../../types/managers';
+import type { HasHitbox, HasSprite, Collectible } from '../../../types';
+import type { Point2D } from '../../../types/common';
+import type { ProcessFrameResult, CoinCollectedEvent } from '../../../types/collision';
+
+type CollectibleEntity = Collectible & HasSprite;
 
 export class CollisionHandler {
-  constructor(collisionSystem, soundManager = null) {
+  private collisionSystem: CollisionSystem;
+  private soundManager: SoundManager | null;
+
+  constructor(collisionSystem: CollisionSystem, soundManager: SoundManager | null = null) {
     this.collisionSystem = collisionSystem;
-    this.soundManager = soundManager; // Сохраняем soundManager для проигрывания звуков
+    this.soundManager = soundManager;
   }
 
-  processFrame(player, obstacles, coins, boosters) {
+  processFrame<TObstacle extends HasHitbox & HasSprite, TCoin extends CollectibleEntity, TBooster extends CollectibleEntity>(
+    player: HasHitbox & HasSprite,
+    obstacles: TObstacle[],
+    coins: TCoin[],
+    boosters: TBooster[]
+  ): ProcessFrameResult {
     const collisions = this.collisionSystem.processCollisions(player, obstacles, coins);
 
     return {
@@ -16,8 +31,11 @@ export class CollisionHandler {
     };
   }
 
-  handleObstacleCollision(player, collisions) {
-    if (!collisions.obstacleHit) return null;
+  private handleObstacleCollision<T extends HasSprite>(
+    player: HasSprite,
+    collisions: { obstacleHit: boolean; hitObstacle: T | null }
+  ): Point2D | null {
+    if (!collisions.obstacleHit || !collisions.hitObstacle) return null;
 
     const playerSprite = player.getSprite();
     const obstacleSprite = collisions.hitObstacle.getSprite();
@@ -28,14 +46,13 @@ export class CollisionHandler {
     };
   }
 
-  handleCoinCollection(coinsCollected) {
-    const collected = [];
+  private handleCoinCollection(coinsCollected: CollectibleEntity[]): CoinCollectedEvent[] {
+    const collected: CoinCollectedEvent[] = [];
 
     for (const coin of coinsCollected) {
       const result = coin.collect();
       if (result) {
         const sprite = coin.getSprite();
-        // Извлекаем value из CollectResult { type, value }
         collected.push({ value: result.value, x: sprite.x, y: sprite.y });
 
         if (this.soundManager) {
@@ -47,8 +64,12 @@ export class CollisionHandler {
     return collected;
   }
 
-  handleBoosterCollection(player, boosters) {
+  private handleBoosterCollection<T extends CollectibleEntity>(
+    player: HasHitbox,
+    boosters: T[]
+  ): number | null {
     const playerHitbox = player.getHitbox();
+    if (!playerHitbox) return null;
 
     for (const booster of boosters) {
       if (!booster.isActive()) continue;
@@ -59,11 +80,9 @@ export class CollisionHandler {
       if (MathUtils.checkAABB(playerHitbox, boosterHitbox)) {
         const result = booster.collect();
         if (result) {
-          // Проигрываем звук сбора бустера (ДО показа модалки)
           if (this.soundManager) {
             this.soundManager.play('boosterCollect');
           }
-          // Возвращаем value из CollectResult { type, value }
           return result.value;
         }
       }

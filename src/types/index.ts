@@ -1,6 +1,7 @@
 export * from './common';
 export * from './entities';
 export * from './events';
+export * from './collision';
 export * from './rendering';
 export * from './managers';
 export * from './spawning';

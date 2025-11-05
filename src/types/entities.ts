@@ -5,6 +5,19 @@ export interface Hitbox {
   height: number;
 }
 
+export interface HasHitbox {
+  getHitbox(): Hitbox | null;
+}
+
+export interface Sprite {
+  x: number;
+  y: number;
+}
+
+export interface HasSprite {
+  getSprite(): Sprite;
+}
+
 export interface Entity {
   activate(x: number, y: number, lane: number): void;
   update(deltaTime: number, gameSpeed: number): void;
@@ -12,8 +25,7 @@ export interface Entity {
   isActive(): boolean;
 }
 
-export interface Collidable extends Entity {
-  getHitbox(): Hitbox | null;
+export interface Collidable extends Entity, HasHitbox {
   onCollision?(other: Collidable): void;
 }
 

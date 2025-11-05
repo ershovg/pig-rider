@@ -1,7 +1,22 @@
-import { CONFIG } from '../../../shared/config/constants.ts';
-import { MathUtils } from '../../../shared/utils/MathUtils.ts';
+import { CONFIG } from '../../../shared/config/constants';
+import { MathUtils } from '../../../shared/utils/MathUtils';
+import type { HasHitbox, Hitbox } from '../../../types';
+import type { CollisionProcessResult } from '../../../types/collision';
+
+interface GridItem<T> {
+  obj: T;
+  hitbox: Hitbox;
+}
+
+interface ObstacleCollisionResult<T> {
+  hit: boolean;
+  obstacle: T | null;
+}
 
 export class CollisionSystem {
+  private gridCellSize: number;
+  private spatialGrid: Map<string, GridItem<HasHitbox>[]>;
+
   constructor() {
     this.gridCellSize = CONFIG.COLLISION.GRID_CELL_SIZE;
     this.spatialGrid = new Map();
@@ -9,27 +24,17 @@ export class CollisionSystem {
     console.log('💥 Collision system initialized');
   }
 
-  /**
-   * Clear spatial grid
-   */
-  clearGrid() {
+  clearGrid(): void {
     this.spatialGrid.clear();
   }
 
-  /**
-   * Get grid cell key from position
-   */
-  getCellKey(x, y) {
+  getCellKey(x: number, y: number): string {
     const cellX = Math.floor(x / this.gridCellSize);
     const cellY = Math.floor(y / this.gridCellSize);
     return `${cellX},${cellY}`;
   }
 
-  /**
-   * Add object to spatial grid
-   */
-  addToGrid(obj, hitbox) {
-    // Get all cells this object overlaps
+  addToGrid(obj: HasHitbox, hitbox: Hitbox): void {
     const minCellX = Math.floor(hitbox.x / this.gridCellSize);
     const maxCellX = Math.floor((hitbox.x + hitbox.width) / this.gridCellSize);
     const minCellY = Math.floor(hitbox.y / this.gridCellSize);
@@ -41,16 +46,13 @@ export class CollisionSystem {
         if (!this.spatialGrid.has(key)) {
           this.spatialGrid.set(key, []);
         }
-        this.spatialGrid.get(key).push({ obj, hitbox });
+        this.spatialGrid.get(key)!.push({ obj, hitbox });
       }
     }
   }
 
-  /**
-   * Get potential collisions from spatial grid
-   */
-  getPotentialCollisions(hitbox) {
-    const potential = new Set();
+  getPotentialCollisions(hitbox: Hitbox): GridItem<HasHitbox>[] {
+    const potential = new Set<GridItem<HasHitbox>>();
 
     const minCellX = Math.floor(hitbox.x / this.gridCellSize);
     const maxCellX = Math.floor((hitbox.x + hitbox.width) / this.gridCellSize);
@@ -70,7 +72,10 @@ export class CollisionSystem {
     return Array.from(potential);
   }
 
-  checkObstacleCollisions(player, obstacles) {
+  checkObstacleCollisions<T extends HasHitbox>(
+    player: HasHitbox,
+    obstacles: T[]
+  ): ObstacleCollisionResult<T> {
     this.clearGrid();
 
     for (const obstacle of obstacles) {
@@ -81,24 +86,28 @@ export class CollisionSystem {
     }
 
     const playerHitbox = player.getHitbox();
+    if (!playerHitbox) {
+      return { hit: false, obstacle: null };
+    }
+
     const potentialCollisions = this.getPotentialCollisions(playerHitbox);
 
     for (const { obj, hitbox } of potentialCollisions) {
       if (MathUtils.checkAABB(playerHitbox, hitbox)) {
-        return { hit: true, obstacle: obj };
+        return { hit: true, obstacle: obj as T };
       }
     }
 
     return { hit: false, obstacle: null };
   }
 
-  /**
-   * Check collision between player and coins
-   * @returns {Array} Array of collected coins
-   */
-  checkCoinCollisions(player, coins) {
-    const collected = [];
+  checkCoinCollisions<T extends HasHitbox>(player: HasHitbox, coins: T[]): T[] {
+    const collected: T[] = [];
     const playerHitbox = player.getHitbox();
+
+    if (!playerHitbox) {
+      return collected;
+    }
 
     for (const coin of coins) {
       const coinHitbox = coin.getHitbox();
@@ -110,7 +119,11 @@ export class CollisionSystem {
     return collected;
   }
 
-  processCollisions(player, obstacles, coins) {
+  processCollisions<TObstacle extends HasHitbox, TCoin extends HasHitbox>(
+    player: HasHitbox,
+    obstacles: TObstacle[],
+    coins: TCoin[]
+  ): CollisionProcessResult<TObstacle, TCoin> {
     const obstacleCollision = this.checkObstacleCollisions(player, obstacles);
     return {
       obstacleHit: obstacleCollision.hit,
