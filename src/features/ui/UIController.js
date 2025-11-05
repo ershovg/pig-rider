@@ -29,6 +29,8 @@ export class UIController {
     this.startBtn = document.querySelector('[game-btn-start]');
     this.restartBtn = document.querySelector('[open-modal-attr="restart-game"]');
     this.mute = document.querySelector('.mute');
+    this.muteIconOn = document.querySelector('.mute-icon.on');
+    this.muteIconOff = document.querySelector('.mute-icon.off');
 
     // Managers
     this.confettiManager = null;
@@ -228,6 +230,19 @@ export class UIController {
         this.mute.classList.remove('is--muted');
       }
     }
+
+    // Переключаем видимость иконок через JS
+    if (this.muteIconOn && this.muteIconOff) {
+      if (isMuted) {
+        // Звук выключен → показываем иконку OFF
+        this.muteIconOn.style.display = 'none';
+        this.muteIconOff.style.display = 'block';
+      } else {
+        // Звук включен → показываем иконку ON
+        this.muteIconOn.style.display = 'block';
+        this.muteIconOff.style.display = 'none';
+      }
+    }
   }
 
   // Добавить CSS класс booster-active
@@ -286,6 +301,7 @@ export class UIController {
     if (callbacks.onMuteToggle && this.mute) {
       this.mute.addEventListener('click', (e) => {
         e.preventDefault();
+        e.stopPropagation(); // ⚠️ Блокируем всплытие события к PlayerInputController
         const isMuted = callbacks.onMuteToggle();
         this.updateMuteButtonState(isMuted);
         console.log(`🔊 Sound ${isMuted ? 'muted' : 'unmuted'}`);

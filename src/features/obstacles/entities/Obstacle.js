@@ -21,6 +21,7 @@ export class Obstacle extends Collidable {
     // Sprite setup
     this.sprite = new PIXI.Sprite(texture);
     this.sprite.anchor.set(0.5);
+    this.sprite.zIndex = 10; // 🎨 Игровой слой (между decorationLayer:0 и effectsLayer:20)
     const targetSize = CONFIG.OBSTACLE.SIZE;
     const scale = targetSize / texture.width;
     this.sprite.scale.set(scale);

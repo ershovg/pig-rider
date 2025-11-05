@@ -13,7 +13,7 @@ import { ProgressionManager } from '../../progression/manager/ProgressionManager
 import { CullingManager } from '../../rendering/culling/CullingManager.js';
 import { InterpolationManager } from '../../rendering/interpolation/InterpolationManager.js';
 import { CollisionHandler } from '../../collision/handler/CollisionHandler.ts';
-import { EffectCoordinator } from '../../effects/manager/EffectCoordinator.js';
+import { EffectCoordinator } from '../../effects/manager/EffectCoordinator.ts';
 import { GameLifecycleManager } from '../../progression/lifecycle/GameLifecycleManager.js';
 import { CullingCoordinator } from '../../rendering/culling/CullingCoordinator.js';
 import { PlayerPhysicsController } from '../../player/controllers/PlayerPhysicsController.js';
@@ -102,14 +102,17 @@ export class InitializationCoordinator {
       CONFIG.CANVAS_HEIGHT
     );
 
-    this.registry.renderer.addToStage(this.registry.player.getSprite());
+    const playerSprite = this.registry.player.getSprite();
+    playerSprite.zIndex = 10; // 🎨 Игровой слой (между decorationLayer:0 и effectsLayer:20)
+    this.registry.renderer.addToStage(playerSprite);
   }
 
   initSpawnSystem() {
     this.registry.spawnSystem = new SpawnSystem(
       this.registry.assetLoader,
       this.registry.renderer.stage,
-      this.registry.renderer.decorationLayer
+      this.registry.renderer.decorationLayer,
+      this.registry.renderer.effectsLayer
     );
   }
 

@@ -102,6 +102,14 @@ export class PlayerInputController {
   handleClick(e) {
     if (!this.enabled) return;
 
+    // ⚠️ Игнорируем клики по UI кнопкам (mute, restart и т.д.)
+    const clickedElement = e.target;
+    if (clickedElement.closest('.mute') ||
+        clickedElement.closest('[game-btn-start]') ||
+        clickedElement.closest('[open-modal-attr]')) {
+      return; // Не обрабатываем клики по UI элементам
+    }
+
     // Получаем canvas элемент для расчёта координат
     const canvas = document.getElementById('game-canvas');
     if (!canvas) return;

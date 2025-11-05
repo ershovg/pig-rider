@@ -18,9 +18,10 @@ import { CollisionEffect } from '../collision/effects/CollisionEffect.ts';
 import { CONFIG } from '../../shared/config/constants.ts';
 
 export class SpawnSystem {
-  constructor(assetLoader, stage, decorationLayer = null) {
+  constructor(assetLoader, stage, decorationLayer = null, effectsLayer = null) {
     this.stage = stage;
     this.decorationLayer = decorationLayer;
+    this.effectsLayer = effectsLayer;
 
     this.textures = {
       obstacles: [
@@ -35,7 +36,7 @@ export class SpawnSystem {
       collisionEffectSpritesheet: assetLoader.getAsset('collisionEffect')
     };
 
-    this.poolManager = new EntityPoolManager(stage, decorationLayer);
+    this.poolManager = new EntityPoolManager(stage, decorationLayer, effectsLayer);
     this.initializePools();
     this.coordinationService = new SpawnCoordinationService(this.poolManager.getPool('obstacle'));
     this.initializeSpawners();

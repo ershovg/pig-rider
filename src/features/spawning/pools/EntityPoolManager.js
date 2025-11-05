@@ -17,8 +17,10 @@ import { ObjectPool } from '../../../shared/utils/ObjectPool.ts';
  * const obstacle = manager.acquire('obstacle');
  */
 export class EntityPoolManager {
-  constructor(stage, decorationLayer = null) {
+  constructor(stage, decorationLayer = null, effectsLayer = null) {
     this.stage = stage;
+    this.decorationLayer = decorationLayer; // 🔥 ИСПРАВЛЕНО: сохраняем decorationLayer
+    this.effectsLayer = effectsLayer; // 🔥 ДОБАВЛЕНО: слой для эффектов (поверх всего)
     this.pools = new Map(); // Хранилище пулов: name -> ObjectPool
   }
 
@@ -36,11 +38,21 @@ export class EntityPoolManager {
       return;
     }
 
-    // Декорации (cloud, star) → ParticleContainer, остальное → обычный stage
+    // 🎨 Определяем целевой контейнер в зависимости от типа entity:
+    // - Декорации (cloud, star) → decorationLayer (фон)
+    // - Эффекты (coinCollectEffect, collisionEffect) → effectsLayer (поверх всего)
+    // - Игровые объекты (obstacle, coin, booster, player) → stage (средний слой)
     const isDecoration = (name === 'cloud' || name === 'star');
-    const targetContainer = isDecoration && this.decorationLayer
-      ? this.decorationLayer
-      : this.stage;
+    const isEffect = (name === 'coinCollectEffect' || name === 'collisionEffect');
+
+    let targetContainer;
+    if (isDecoration && this.decorationLayer) {
+      targetContainer = this.decorationLayer;
+    } else if (isEffect && this.effectsLayer) {
+      targetContainer = this.effectsLayer;
+    } else {
+      targetContainer = this.stage;
+    }
 
     // Factory функция для создания объектов
     // 🔥 ИЗМЕНЕНО: НЕ добавляем sprite в контейнер при создании
