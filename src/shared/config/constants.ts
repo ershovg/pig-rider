@@ -173,7 +173,7 @@ export const ASSET_PATHS = {
   get CLOUD() { return getAssetPath('/assets/sprites/cloud.avif'); },
 
   // Music - Оптимизированные OGG форматы
-  get MUSIC_MAIN() { return getAssetPath('/assets/sounds/Music level/Just Funky.ogg'); },
+  get MUSIC_MAIN() { return getAssetPath('/assets/sounds/Music level/Just Funky v2.ogg'); },
   get MUSIC_BONUS() { return getAssetPath('/assets/sounds/Music Bonus/MusicBonus.ogg'); },
 
   // Sound Effects
