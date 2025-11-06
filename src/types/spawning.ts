@@ -4,11 +4,17 @@ import { Lane } from './common';
 export interface ObjectPool<T = unknown> {
   acquire(): T | null;
   release(obj: T): void;
+  releaseAll(): void;
   getActive(): T[];
+  getActiveCount(): number;
+  getPooledCount(): number;
+  getTotalCount(): number;
 }
 
 export interface SpawnCoordinationService {
   canSpawnAt(lane: Lane, x: number, minDistance: number): boolean;
+  canSpawnObstacleAt(lane: Lane, x: number, safeRadius: number): boolean;
+  setCoinPool(coinPool: ObjectPool): void;
 }
 
 export interface ActivatableEntity {

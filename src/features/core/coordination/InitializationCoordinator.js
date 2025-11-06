@@ -2,7 +2,7 @@ import { CONFIG } from '../../../shared/config/constants.ts';
 import { Renderer } from '../../../core/Renderer.ts';
 import { GameLoop } from '../../../core/GameLoop.ts';
 import { AssetLoader } from '../../../core/AssetLoader.ts';
-import { Player } from '../../player/entities/Player.js';
+import { Player } from '../../player/entities/Player.ts';
 import { SpawnSystem } from '../../spawning/SpawnSystem.js';
 import { CollisionSystem } from '../../collision/system/CollisionSystem.ts';
 import { DifficultyManager } from '../../progression/manager/DifficultyManager.js';
@@ -16,7 +16,7 @@ import { CollisionHandler } from '../../collision/handler/CollisionHandler.ts';
 import { EffectCoordinator } from '../../effects/manager/EffectCoordinator.ts';
 import { GameLifecycleManager } from '../../progression/lifecycle/GameLifecycleManager.js';
 import { CullingCoordinator } from '../../rendering/culling/CullingCoordinator.js';
-import { PlayerPhysicsController } from '../../player/controllers/PlayerPhysicsController.js';
+import { PlayerPhysicsController } from '../../player/controllers/PlayerPhysicsController.ts';
 import { SoundManager } from '../../sound/manager/SoundManager.js';
 import { RestartManager } from '../../restart/manager/RestartManager.js';
 

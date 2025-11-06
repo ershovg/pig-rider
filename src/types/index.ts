@@ -10,3 +10,4 @@ export * from './booster';
 export * from './player';
 export * from './ui';
 export * from './collectibles';
+export * from './obstacles';

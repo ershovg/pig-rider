@@ -1,20 +1,34 @@
-/**
- * Игрок с physics-based движением, interpolation и instant response
- */
 import * as PIXI from 'pixi.js';
 import gsap from 'gsap';
-import { CONFIG } from '../../../shared/config/constants.ts';
-import { PlayerInputController } from '../controllers/PlayerInputController.js';
-import { PlayerPhysicsController } from '../controllers/PlayerPhysicsController.js';
+import { CONFIG } from '../../../shared/config/constants';
+import { PlayerInputController } from '../controllers/PlayerInputController';
+import { PlayerPhysicsController } from '../controllers/PlayerPhysicsController';
+import type { Lane, Hitbox, Interpolatable } from '../../../types';
 
-export class Player {
-  constructor(spritesheet, boostSpritesheet, physicsController, screenWidth = CONFIG.CANVAS_WIDTH, screenHeight = CONFIG.CANVAS_HEIGHT) {
-    this.currentLane = CONFIG.LANES.MIDDLE;
-    this.targetLane = CONFIG.LANES.MIDDLE;
+export class Player implements Interpolatable {
+  private currentLane: Lane;
+  private targetLane: Lane;
+  private readonly physicsController: PlayerPhysicsController;
+  private readonly normalSpritesheet: PIXI.Spritesheet;
+  private readonly boostSpritesheet: PIXI.Spritesheet;
+  private readonly sprite: PIXI.AnimatedSprite;
+  private readonly inputController: PlayerInputController;
+  private readonly currentX: number;
+  private currentY: number;
+  private previousY: number;
+
+  constructor(
+    spritesheet: PIXI.Spritesheet,
+    boostSpritesheet: PIXI.Spritesheet,
+    physicsController?: PlayerPhysicsController,
+    _screenWidth: number = CONFIG.CANVAS_WIDTH,
+    _screenHeight: number = CONFIG.CANVAS_HEIGHT
+  ) {
+    this.currentLane = CONFIG.LANES.MIDDLE as Lane;
+    this.targetLane = CONFIG.LANES.MIDDLE as Lane;
 
     this.physicsController = physicsController || new PlayerPhysicsController(CONFIG.PLAYER.PHYSICS);
 
-    // Сохраняем оба spritesheet'а для переключения анимаций
     this.normalSpritesheet = spritesheet;
     this.boostSpritesheet = boostSpritesheet;
 
@@ -24,6 +38,7 @@ export class Player {
       console.log('Available animations:', Object.keys(spritesheet.animations));
       throw new Error('Missing animation: Hryusha_flying_v2');
     }
+
     this.sprite = new PIXI.AnimatedSprite(textures);
     this.sprite.anchor.set(0.5);
     this.sprite.animationSpeed = 0.5;
@@ -34,7 +49,6 @@ export class Player {
 
     this.currentX = CONFIG.PLAYER.START_X;
     this.currentY = CONFIG.LANES.Y_POSITIONS[this.currentLane];
-    this.previousX = this.currentX;
     this.previousY = this.currentY;
 
     this.sprite.x = this.currentX;
@@ -42,49 +56,33 @@ export class Player {
 
     this.physicsController.reset(this.currentY);
 
-    // Input handling
     this.inputController = new PlayerInputController(this);
 
     console.log('🐷 Animated Player created with', textures.length, 'frames (physics-based)');
   }
 
-  /**
-   * Движение вверх (мгновенный отклик)
-   *
-   * Старая версия блокировала повторные вызовы через isAnimating.
-   * Новая версия позволяет смену направления на лету.
-   */
-  moveUp() {
-    if (this.targetLane === CONFIG.LANES.TOP) return; // Уже двигаемся к верхней
+  moveUp(): void {
+    if (this.targetLane === CONFIG.LANES.TOP) return;
 
-    this.targetLane = Math.max(CONFIG.LANES.TOP, this.targetLane - 1);
+    this.targetLane = Math.max(CONFIG.LANES.TOP, this.targetLane - 1) as Lane;
     const targetY = CONFIG.LANES.Y_POSITIONS[this.targetLane];
     this.physicsController.setTarget(targetY);
   }
 
-  /**
-   * Движение вниз (мгновенный отклик)
-   */
-  moveDown() {
-    if (this.targetLane === CONFIG.LANES.BOTTOM) return; // Уже двигаемся к нижней
+  moveDown(): void {
+    if (this.targetLane === CONFIG.LANES.BOTTOM) return;
 
-    this.targetLane = Math.min(CONFIG.LANES.BOTTOM, this.targetLane + 1);
+    this.targetLane = Math.min(CONFIG.LANES.BOTTOM, this.targetLane + 1) as Lane;
     const targetY = CONFIG.LANES.Y_POSITIONS[this.targetLane];
     this.physicsController.setTarget(targetY);
   }
 
-  /**
-   * Прямое перемещение на конкретную полосу (для управления мышкой)
-   * @param {number} laneIndex - индекс полосы (0 = top, 1 = middle, 2 = bottom)
-   */
-  moveToLane(laneIndex) {
-    // Валидация индекса полосы
+  moveToLane(laneIndex: Lane): void {
     if (laneIndex < CONFIG.LANES.TOP || laneIndex > CONFIG.LANES.BOTTOM) {
       console.warn(`⚠️ Invalid lane index: ${laneIndex}`);
       return;
     }
 
-    // Если уже двигаемся к этой полосе - игнорируем
     if (this.targetLane === laneIndex) return;
 
     this.targetLane = laneIndex;
@@ -92,7 +90,7 @@ export class Player {
     this.physicsController.setTarget(targetY);
   }
 
-  getHitbox() {
+  getHitbox(): Hitbox {
     const scale = CONFIG.COLLISION.PLAYER_HITBOX_SCALE;
     const width = this.sprite.width * scale;
     const height = this.sprite.height * scale;
@@ -105,28 +103,20 @@ export class Player {
     };
   }
 
-  /**
-   * Обновление физики (вызывается в game loop 60 UPS)
-   */
-  update(deltaTime) {
+  update(deltaTime: number): void {
     this.saveState();
 
-    // Обновляем физику через controller
     const result = this.physicsController.update(deltaTime);
     this.currentY = result.y;
 
-    // Обновляем lane когда достигли цели
     if (!result.isMoving && this.currentLane !== this.targetLane) {
       this.currentLane = this.targetLane;
     }
-
-    // X позиция фиксирована
-    // (если будут power-ups с горизонтальным движением, добавить здесь)
   }
 
-  reset() {
-    this.currentLane = CONFIG.LANES.MIDDLE;
-    this.targetLane = CONFIG.LANES.MIDDLE;
+  reset(): void {
+    this.currentLane = CONFIG.LANES.MIDDLE as Lane;
+    this.targetLane = CONFIG.LANES.MIDDLE as Lane;
 
     this.currentY = CONFIG.LANES.Y_POSITIONS[this.currentLane];
     this.previousY = this.currentY;
@@ -141,29 +131,19 @@ export class Player {
     gsap.killTweensOf(this.sprite);
   }
 
-  getSprite() {
+  getSprite(): PIXI.AnimatedSprite {
     return this.sprite;
   }
 
-  /**
-   * Проверяет, движется ли игрок в данный момент
-   */
-  isMoving() {
+  isMoving(): boolean {
     return this.physicsController.isMoving();
   }
 
-  /**
-   * Получить текущую lane (0 = top, 1 = middle, 2 = bottom)
-   */
-  getCurrentLane() {
+  getCurrentLane(): Lane {
     return this.currentLane;
   }
 
-  /**
-   * Переключение анимации свиньи (обычная ↔ бустер)
-   * @param {boolean} isBoosted - true = бустер анимация, false = обычная
-   */
-  switchAnimation(isBoosted) {
+  switchAnimation(isBoosted: boolean): void {
     const animationName = isBoosted ? 'Hryusha_boost' : 'Hryusha_flying_v2';
     const spritesheet = isBoosted ? this.boostSpritesheet : this.normalSpritesheet;
 
@@ -173,13 +153,10 @@ export class Player {
       return;
     }
 
-    // Сохраняем текущий прогресс анимации
     const wasPlaying = this.sprite.playing;
 
-    // Переключаем текстуры
     this.sprite.textures = textures;
 
-    // Возобновляем воспроизведение если было активно
     if (wasPlaying) {
       this.sprite.play();
     }
@@ -187,7 +164,7 @@ export class Player {
     console.log(`🐷 Switched to ${isBoosted ? 'BOOST' : 'NORMAL'} animation (${textures.length} frames)`);
   }
 
-  destroy() {
+  destroy(): void {
     gsap.killTweensOf(this.sprite);
     if (this.inputController) {
       this.inputController.destroy();
@@ -195,19 +172,17 @@ export class Player {
     this.sprite.destroy();
   }
 
-  saveState() {
-    this.previousX = this.currentX;
+  saveState(): void {
     this.previousY = this.currentY;
   }
 
-  interpolate(alpha) {
+  interpolate(alpha: number): void {
     if (!this.sprite) return;
     this.sprite.x = this.currentX;
     this.sprite.y = this.previousY + (this.currentY - this.previousY) * alpha;
   }
 
-  // Player не cullable (всегда на экране), но должен реагировать на isActive() проверки
-  isActive() {
+  isActive(): boolean {
     return true;
   }
 }

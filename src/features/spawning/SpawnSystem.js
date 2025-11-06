@@ -3,12 +3,12 @@
  */
 import { EntityPoolManager } from './pools/EntityPoolManager.js';
 import { SpawnCoordinationService } from './services/SpawnCoordinationService.js';
-import { ObstacleSpawner } from '../obstacles/spawner/ObstacleSpawner.js';
+import { ObstacleSpawner } from '../obstacles/spawner/ObstacleSpawner.ts';
 import { CoinSpawner } from '../coins/spawner/CoinSpawner.js';
 import { CloudSpawner } from '../decoration/spawners/CloudSpawner.ts';
 import { StarSpawner } from '../decoration/spawners/StarSpawner.ts';
 import { BoosterSpawner } from '../booster/spawner/BoosterSpawner.ts';
-import { Obstacle } from '../obstacles/entities/Obstacle.js';
+import { Obstacle } from '../obstacles/entities/Obstacle.ts';
 import { Coin } from '../coins/entities/Coin.js';
 import { Cloud } from '../decoration/entities/Cloud.ts';
 import { Star } from '../decoration/entities/Star.ts';
