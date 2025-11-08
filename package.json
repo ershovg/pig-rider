@@ -22,6 +22,7 @@
     "canvas-confetti": "^1.9.3",
     "gsap": "^3.13.0",
     "howler": "^2.2.4",
+    "lottie-web": "^5.13.0",
     "pixi.js": "^8.13.2"
   },
   "devDependencies": {

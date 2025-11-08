@@ -9,6 +9,7 @@
  */
 
 import { ConfettiManager } from '../confetti/manager/ConfettiManager.js';
+import lottie from 'lottie-web';
 
 export class UIController {
   constructor() {
@@ -25,6 +26,10 @@ export class UIController {
     this.gameStateElement = document.querySelector('.game-state');
     this.boosterIcon = document.querySelector('.game-logo');
 
+    // Lottie containers
+    this.lottieContainerTutorial = document.getElementById('lottie-tutorial');
+    this.lottieContainerBooster = document.getElementById('lottie-booster');
+
     // Buttons
     this.startBtn = document.querySelector('[game-btn-start]');
     this.restartBtn = document.querySelector('[open-modal-attr="restart-game"]');
@@ -34,6 +39,12 @@ export class UIController {
 
     // Managers
     this.confettiManager = null;
+
+    // Lottie instances
+    this.lottieAnimations = {
+      tutorial: null,
+      booster: null,
+    };
 
     console.log('🎨 UIController initialized (Webflow structure)');
   }
@@ -332,6 +343,92 @@ export class UIController {
     }
   }
 
+  // Показать tutorial hint анимацию ("collect 200 coins")
+  showTutorialHint() {
+    return new Promise((resolve) => {
+      if (!this.lottieContainerTutorial) {
+        console.warn('⚠️ Tutorial Lottie container not found');
+        resolve();
+        return;
+      }
+
+      // Показываем контейнер
+      this.lottieContainerTutorial.style.display = 'flex';
+
+      // Загружаем и проигрываем анимацию
+      this.lottieAnimations.tutorial = lottie.loadAnimation({
+        container: this.lottieContainerTutorial,
+        renderer: 'svg',
+        loop: false,
+        autoplay: true,
+        path: '/assets/animations/tutorial-hint.json',
+      });
+
+      // Когда анимация закончится - скрываем
+      this.lottieAnimations.tutorial.addEventListener('complete', () => {
+        console.log('✅ Tutorial animation completed');
+        this.hideTutorialHint();
+        resolve();
+      });
+
+      console.log('🎓 Tutorial hint animation started');
+    });
+  }
+
+  // Скрыть tutorial hint анимацию
+  hideTutorialHint() {
+    if (this.lottieContainerTutorial) {
+      this.lottieContainerTutorial.style.display = 'none';
+    }
+    if (this.lottieAnimations.tutorial) {
+      this.lottieAnimations.tutorial.destroy();
+      this.lottieAnimations.tutorial = null;
+    }
+  }
+
+  // Показать booster activation анимацию (вместо/вместе с модалом)
+  showBoosterActivation() {
+    return new Promise((resolve) => {
+      if (!this.lottieContainerBooster) {
+        console.warn('⚠️ Booster Lottie container not found');
+        resolve();
+        return;
+      }
+
+      // Показываем контейнер
+      this.lottieContainerBooster.style.display = 'flex';
+
+      // Загружаем и проигрываем анимацию
+      this.lottieAnimations.booster = lottie.loadAnimation({
+        container: this.lottieContainerBooster,
+        renderer: 'svg',
+        loop: false,
+        autoplay: true,
+        path: '/assets/animations/booster-activation.json',
+      });
+
+      // Когда анимация закончится - скрываем и резолвим
+      this.lottieAnimations.booster.addEventListener('complete', () => {
+        console.log('✅ Booster activation animation completed');
+        this.hideBoosterActivation();
+        resolve();
+      });
+
+      console.log('🚀 Booster activation animation started');
+    });
+  }
+
+  // Скрыть booster activation анимацию
+  hideBoosterActivation() {
+    if (this.lottieContainerBooster) {
+      this.lottieContainerBooster.style.display = 'none';
+    }
+    if (this.lottieAnimations.booster) {
+      this.lottieAnimations.booster.destroy();
+      this.lottieAnimations.booster = null;
+    }
+  }
+
   // Legacy метод для совместимости
   hideLoading() {
     console.log('✅ Loading complete');
@@ -339,10 +436,22 @@ export class UIController {
 
   // Очистка ресурсов
   destroy() {
+    // Очищаем Lottie анимации
+    if (this.lottieAnimations.tutorial) {
+      this.lottieAnimations.tutorial.destroy();
+      this.lottieAnimations.tutorial = null;
+    }
+    if (this.lottieAnimations.booster) {
+      this.lottieAnimations.booster.destroy();
+      this.lottieAnimations.booster = null;
+    }
+
+    // Очищаем конфетти
     if (this.confettiManager) {
       this.confettiManager.destroy();
       this.confettiManager = null;
     }
+
     console.log('🗑️ UIController destroyed');
   }
 }
