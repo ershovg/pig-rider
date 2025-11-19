@@ -19,7 +19,6 @@ export interface HasSprite {
 }
 
 export interface Entity {
-  activate(x: number, y: number, lane: number): void;
   update(deltaTime: number, gameSpeed: number): void;
   deactivate(): void;
   isActive(): boolean;
@@ -50,21 +49,9 @@ export interface Cullable extends Renderable {
 export interface Interpolatable {
   saveState(): void;
   interpolate(alpha: number): void;
+  syncSpriteToPhysics(): void;
+  isActive?(): boolean;
 }
 
-/**
- * Composition Types
- * Типы-композиции для часто используемых комбинаций интерфейсов
- */
-
-/**
- * Collectible entity с возможностью рендеринга
- * Используется для всех визуальных collectibles (Coin, Booster, Shield, Gem, etc.)
- */
 export type RenderableCollectible = Collectible & HasSprite;
-
-/**
- * Collidable entity с возможностью рендеринга
- * Используется для всех визуальных collidable objects (Obstacle, Player, etc.)
- */
 export type RenderableCollidable = Collidable & HasSprite;

@@ -18,3 +18,6 @@ export interface Size {
 export interface Rectangle extends Point2D, Size {}
 
 export type GameState = 'idle' | 'running' | 'paused' | 'win' | 'lose';
+
+export type SetWaitingForInputCallback = (isWaiting: boolean) => void;
+export type VoidCallback = () => void;

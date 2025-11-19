@@ -1,7 +1,18 @@
-import { CONFIG } from '../../../shared/config/constants.ts';
+import { CONFIG } from '../../../shared/config/constants';
+import type { SpawnSystem } from '../../../types/managers';
+import type { CullingManager } from './CullingManager';
+
+interface CullingCoordinatorStats {
+  lastFrameCulled: number;
+  totalCulled: number;
+}
 
 export class CullingCoordinator {
-  constructor(cullingManager, spawnSystem) {
+  private cullingManager: CullingManager;
+  private spawnSystem: SpawnSystem;
+  private stats: CullingCoordinatorStats;
+
+  constructor(cullingManager: CullingManager, spawnSystem: SpawnSystem) {
     this.cullingManager = cullingManager;
     this.spawnSystem = spawnSystem;
 
@@ -11,11 +22,9 @@ export class CullingCoordinator {
     };
   }
 
-  performCulling(frameCount) {
-    // Сбрасываем счётчик для текущего frame
+  performCulling(frameCount: number): void {
     this.stats.lastFrameCulled = 0;
 
-    // BaseSpawner делает основной culling, но это дополнительная страховка
     this.cullGameplayObjects();
 
     if (frameCount % CONFIG.CULLING.DECORATION_INTERVAL === 0) {
@@ -23,18 +32,14 @@ export class CullingCoordinator {
     }
   }
 
-  // Работает параллельно с BaseSpawner для дополнительной надежности
-  cullGameplayObjects() {
-    // Проверяем obstacles на всякий случай (резервный механизм)
+  cullGameplayObjects(): void {
     const obstacles = this.spawnSystem.getActiveObstacles();
     const obstaclePool = this.spawnSystem.obstacleSpawner?.pool;
 
     if (obstacles && obstaclePool) {
       for (let i = obstacles.length - 1; i >= 0; i--) {
         const obstacle = obstacles[i];
-        // Проверяем через shouldCull интерфейс
         if (obstacle.shouldCull && obstacle.shouldCull(this.cullingManager.cullThreshold)) {
-          // Проверяем, что объект еще активен (не был удален в BaseSpawner)
           if (obstacle.isActive()) {
             obstacle.deactivate();
             obstaclePool.release(obstacle);
@@ -44,7 +49,6 @@ export class CullingCoordinator {
       }
     }
 
-    // Аналогично для coins
     const coins = this.spawnSystem.getActiveCoins();
     const coinPool = this.spawnSystem.coinSpawner?.pool;
 
@@ -61,12 +65,10 @@ export class CullingCoordinator {
       }
     }
 
-    // Обновляем общую статистику
     this.stats.totalCulled += this.stats.lastFrameCulled;
   }
 
-  cullDecorations() {
-    // Clouds
+  cullDecorations(): void {
     const clouds = this.spawnSystem.getActiveClouds();
     const cloudPool = this.spawnSystem.cloudSpawner?.pool;
 
@@ -83,7 +85,6 @@ export class CullingCoordinator {
       }
     }
 
-    // Stars
     const stars = this.spawnSystem.getActiveStars();
     const starPool = this.spawnSystem.starSpawner?.pool;
 
@@ -100,14 +101,10 @@ export class CullingCoordinator {
       }
     }
 
-    // Обновляем общую статистику
     this.stats.totalCulled += this.stats.lastFrameCulled;
   }
 
-  /**
-   * Получить статистику culling для Performance Monitor
-   */
-  getStats() {
+  getStats(): CullingCoordinatorStats {
     return { ...this.stats };
   }
 }

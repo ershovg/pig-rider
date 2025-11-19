@@ -11,3 +11,6 @@ export * from './player';
 export * from './ui';
 export * from './collectibles';
 export * from './obstacles';
+export * from './progression';
+export * from './effects';
+export * from './core';

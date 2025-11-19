@@ -1,7 +1,36 @@
-import { CONFIG } from '../../../shared/config/constants.ts';
+import { CONFIG } from '../../../shared/config/constants';
+import type {
+  GameLifecycleManagerDependencies,
+  GameStateManager,
+  ProgressionManager,
+  BoosterManager,
+  DifficultyManager,
+  Player,
+  SpawnSystem,
+  GameLoop,
+  Renderer,
+  UIController,
+  SoundManager,
+  SetWaitingForInputCallback,
+  VoidCallback,
+  Point2D,
+  EffectCoordinator
+} from '../../../types';
 
 export class GameLifecycleManager {
-  constructor(dependencies) {
+  private stateManager: GameStateManager;
+  private progressionManager: ProgressionManager;
+  private boosterManager: BoosterManager;
+  private difficultyManager: DifficultyManager;
+  private player: Player;
+  private spawnSystem: SpawnSystem;
+  private gameLoop: GameLoop;
+  private renderer: Renderer;
+  private ui: UIController;
+  private soundManager: SoundManager;
+  private setWaitingForInput: SetWaitingForInputCallback;
+
+  constructor(dependencies: GameLifecycleManagerDependencies) {
     this.stateManager = dependencies.stateManager;
     this.progressionManager = dependencies.progressionManager;
     this.boosterManager = dependencies.boosterManager;
@@ -15,7 +44,7 @@ export class GameLifecycleManager {
     this.setWaitingForInput = dependencies.setWaitingForInput || (() => {});
   }
 
-  startGame() {
+  startGame(): void {
     this.stateManager.setState('playing');
     this.progressionManager.reset();
     this.boosterManager.reset();
@@ -28,7 +57,6 @@ export class GameLifecycleManager {
     this.ui.updateCoinCount(0, CONFIG.TARGET_COINS);
     this.ui.removeBoosterClass();
 
-    // Это запустит vertical layering систему
     if (this.soundManager) {
       this.soundManager.setMusicState('gameplay');
       console.log('🎵 Music state: gameplay');
@@ -38,7 +66,7 @@ export class GameLifecycleManager {
     this.gameLoop.start();
   }
 
-  endGame(isWin, score) {
+  endGame(isWin: boolean, score: number): void {
     this.stateManager.setState('ended');
     this.gameLoop.stop();
 
@@ -46,9 +74,7 @@ export class GameLifecycleManager {
       this.player.inputController.disable();
     }
 
-    // Останавливаем музыку (но не SFX)
     if (this.soundManager) {
-      // Останавливаем только музыкальные треки
       const mainMusic = this.soundManager.sounds.get('mainMusic');
       const bonusMusic = this.soundManager.sounds.get('bonusMusic');
       if (mainMusic) mainMusic.stop();
@@ -59,13 +85,11 @@ export class GameLifecycleManager {
     this.ui.hideRunningScreen();
 
     if (isWin) {
-      // 🏆 ПОБЕДА: проигрываем победный звук
       if (this.soundManager) {
         this.soundManager.play('win');
       }
       this.ui.showWinScreen(score);
     } else {
-      // 💀 ПОРАЖЕНИЕ: проигрываем звук поражения
       if (this.soundManager) {
         this.soundManager.play('lose');
       }
@@ -73,54 +97,47 @@ export class GameLifecycleManager {
     }
   }
 
-  async handleCollisionSequence(collisionPoint, effectCoordinator, onComplete) {
-    // 1️⃣ Проигрываем звук столкновения с препятствием
+  async handleCollisionSequence(
+    collisionPoint: Point2D,
+    effectCoordinator: EffectCoordinator,
+    onComplete: VoidCallback
+  ): Promise<void> {
     if (this.soundManager) {
       this.soundManager.play('collision');
     }
 
-    // 2️⃣ Показываем визуальный эффект взрыва
     effectCoordinator.emitCollisionEffect(collisionPoint.x, collisionPoint.y);
     this.gameLoop.stop();
 
-    // 3️⃣ Ждем завершения анимации взрыва (350ms)
     await this.delay(350);
 
-    // 4️⃣ Показываем lose screen + проигрываем звук поражения
     onComplete();
   }
 
-  async handleBoosterActivation(onConfirm) {
+  async handleBoosterActivation(onConfirm?: VoidCallback): Promise<void> {
     this.gameLoop.pause();
 
-    // 🔇 Context-Aware Pausing (Умная Пауза)
-    // Приглушаем музыку только при ПЕРВОМ бустере (для обучающего модала)
     let volumeRestore = null;
     const isFirstBooster = this.boosterManager.isFirstBooster();
 
     if (this.soundManager && isFirstBooster) {
       console.log('🎓 First booster! Pausing music for tutorial modal...');
-      volumeRestore = this.soundManager.pauseForModal(0.3); // До 30%
+      volumeRestore = this.soundManager.pauseForModal(0.3);
     } else {
       console.log('🚀 Subsequent booster, skipping modal and music pause');
     }
 
-    // 🚫 Блокируем автоматический resume (visibilitychange и т.д.)
     this.setWaitingForInput(true);
 
-    // Показываем модал с флагом isFirstTime
-    // Если не первый раз - автоматически принимается без показа UI
     const confirmed = await this.ui.showBoosterModal(isFirstBooster);
 
-    // ✅ Разблокируем автоматический resume
     this.setWaitingForInput(false);
 
     if (volumeRestore) {
-      volumeRestore.restore(300); // 300ms fade-in обратно
+      volumeRestore.restore(300);
     }
 
     if (confirmed) {
-      // Помечаем, что первый бустер использован
       if (isFirstBooster) {
         this.boosterManager.markFirstBoosterUsed();
       }
@@ -129,9 +146,6 @@ export class GameLifecycleManager {
       onConfirm?.();
     }
 
-    // 🔍 КРИТИЧЕСКИ ВАЖНО: Резюмим игру только если вкладка видима
-    // Если пользователь закрыл модалку в другой вкладке и вернулся,
-    // visibilitychange handler сам вызовет resume()
     if (!document.hidden) {
       this.gameLoop.resume();
       console.log('✅ Game resumed after booster modal (tab is visible)');
@@ -140,7 +154,7 @@ export class GameLifecycleManager {
     }
   }
 
-  delay(ms) {
+  delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

@@ -1,3 +1,5 @@
+import type { Entity } from './entities';
+
 export interface CullingBounds {
   left: number;
   right: number;
@@ -5,6 +7,6 @@ export interface CullingBounds {
   bottom: number;
 }
 
-export interface CullableEntity {
+export interface CullableEntity extends Entity {
   shouldCull(threshold: number): boolean;
 }

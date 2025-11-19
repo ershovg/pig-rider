@@ -126,6 +126,14 @@ export class Obstacle extends Collidable implements Interpolatable, CullableEnti
     this.sprite.y = this.previousY + (this.currentY - this.previousY) * alpha;
   }
 
+  syncSpriteToPhysics(): void {
+    if (!this.sprite) return;
+    this.sprite.x = this.currentX;
+    this.sprite.y = this.currentY;
+    this.previousX = this.currentX;
+    this.previousY = this.currentY;
+  }
+
   shouldCull(threshold: number): boolean {
     return this.active && this.currentX < threshold;
   }

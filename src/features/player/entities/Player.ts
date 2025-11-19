@@ -12,7 +12,7 @@ export class Player implements Interpolatable {
   private readonly normalSpritesheet: PIXI.Spritesheet;
   private readonly boostSpritesheet: PIXI.Spritesheet;
   private readonly sprite: PIXI.AnimatedSprite;
-  private readonly inputController: PlayerInputController;
+  readonly inputController: PlayerInputController;
   private readonly currentX: number;
   private currentY: number;
   private previousY: number;
@@ -180,6 +180,13 @@ export class Player implements Interpolatable {
     if (!this.sprite) return;
     this.sprite.x = this.currentX;
     this.sprite.y = this.previousY + (this.currentY - this.previousY) * alpha;
+  }
+
+  syncSpriteToPhysics(): void {
+    if (!this.sprite) return;
+    this.sprite.x = this.currentX;
+    this.sprite.y = this.currentY;
+    this.previousY = this.currentY;
   }
 
   isActive(): boolean {

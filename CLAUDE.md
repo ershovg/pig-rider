@@ -222,10 +222,6 @@ src/
 │   │   ├── interfaces/
 │   │   │   ├── Cullable.js
 │   │   │   └── Interpolatable.js
-│   │   └── animations/
-│   │       ├── gsap-buttons.js
-│   │       ├── gsap-clouds.js
-│   │       └── gsap-stars.js
 │   │
 │   ├── monitoring/                # Модуль: Performance мониторинг
 │   │   └── PerformanceMonitor.js
