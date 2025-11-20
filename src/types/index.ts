@@ -14,3 +14,4 @@ export * from './obstacles';
 export * from './progression';
 export * from './effects';
 export * from './core';
+export * from './sound';

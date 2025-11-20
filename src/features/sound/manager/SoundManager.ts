@@ -1,13 +1,18 @@
-/**
- * Главный оркестратор аудио-системы игры.
- * Делегирует управление музыкой в MusicStateManager.
- */
 import { Howl } from 'howler';
-import { MusicStateManager } from './MusicStateManager.js';
-import { DEFAULT_SOUND_CONFIG } from '../config/defaultSounds.js';
+import type { SoundRegistry, StateContext, PauseRestore } from '../../../types';
+import { MusicStateManager } from './MusicStateManager.ts';
+import { DEFAULT_SOUND_CONFIG } from '../config/defaultSounds.ts';
 
 export class SoundManager {
-  static createWithDefaults() {
+  sounds: SoundRegistry;
+  isMuted: boolean;
+  masterVolume: number;
+  musicVolume: number;
+  sfxVolume: number;
+  private audioUnlocked: boolean;
+  private musicStateManager: MusicStateManager | null;
+
+  static createWithDefaults(): SoundManager {
     const config = DEFAULT_SOUND_CONFIG;
 
     const manager = new SoundManager({
@@ -30,34 +35,24 @@ export class SoundManager {
     return manager;
   }
 
-  constructor(config = {}) {
-    // Реестр всех звуков (Howl instances)
+  constructor(config: { masterVolume?: number; musicVolume?: number; sfxVolume?: number } = {}) {
     this.sounds = new Map();
 
-    // Глобальные настройки
     this.isMuted = false;
     this.masterVolume = config.masterVolume || 1.0;
     this.musicVolume = config.musicVolume || 0.6;
     this.sfxVolume = config.sfxVolume || 0.7;
     this.audioUnlocked = false;
 
-    // Music State Manager (управляет состояниями музыки)
     this.musicStateManager = null;
 
-    // Восстанавливаем сохраненное состояние mute из localStorage
     this.loadMuteState();
-
-    // Setup audio unlock
     this.setupAudioUnlock();
 
     console.log('🔊 SoundManager initialized (modular architecture)');
   }
 
-  /**
-   * Инициализирует Music State Manager после загрузки звуков
-   * @param {object} config - Конфигурация (BPM, громкости, и т.д.)
-   */
-  initMusicStates(config = {}) {
+  initMusicStates(config: Record<string, any> = {}): void {
     this.musicStateManager = new MusicStateManager(this.sounds, {
       masterVolume: this.masterVolume,
       bpm: config.bpm || 130,
@@ -69,10 +64,7 @@ export class SoundManager {
     console.log('✅ Music state system initialized');
   }
 
-  /**
-   * Настраивает unlock аудио при первом взаимодействии
-   */
-  setupAudioUnlock() {
+  private setupAudioUnlock(): void {
     const unlockAudio = () => {
       if (this.audioUnlocked) return;
       this.audioUnlocked = true;
@@ -88,10 +80,7 @@ export class SoundManager {
     document.addEventListener('keydown', unlockAudio);
   }
 
-  /**
-   * Загружает сохраненное состояние mute из localStorage
-   */
-  loadMuteState() {
+  private loadMuteState(): void {
     try {
       const saved = localStorage.getItem('pigRider_soundMuted');
       if (saved !== null) {
@@ -103,10 +92,7 @@ export class SoundManager {
     }
   }
 
-  /**
-   * Сохраняет состояние mute в localStorage
-   */
-  saveMuteState() {
+  private saveMuteState(): void {
     try {
       localStorage.setItem('pigRider_soundMuted', this.isMuted.toString());
     } catch (error) {
@@ -114,10 +100,7 @@ export class SoundManager {
     }
   }
 
-  /**
-   * Загружает звук
-   */
-  loadSound(alias, src, options = {}) {
+  loadSound(alias: string, src: string, options: Record<string, any> = {}): Howl {
     const sound = new Howl({
       volume: options.volume || this.sfxVolume,
       preload: true,
@@ -126,7 +109,6 @@ export class SoundManager {
       src,
     });
 
-    // Применяем сохраненное состояние mute к новому звуку
     if (this.isMuted) {
       sound.mute(true);
     }
@@ -137,10 +119,7 @@ export class SoundManager {
     return sound;
   }
 
-  /**
-   * Загружает музыку
-   */
-  loadMusic(alias, src, options = {}) {
+  loadMusic(alias: string, src: string, options: Record<string, any> = {}): Howl {
     const music = new Howl({
       volume: options.volume || this.musicVolume,
       loop: true,
@@ -149,10 +128,9 @@ export class SoundManager {
       ...options,
       src,
       onload: () => console.log(`✅ Music loaded: ${alias}`),
-      onloaderror: (_id, error) => console.error(`❌ Error loading ${alias}:`, error),
+      onloaderror: (_id: any, error: any) => console.error(`❌ Error loading ${alias}:`, error),
     });
 
-    // Применяем сохраненное состояние mute к новой музыке
     if (this.isMuted) {
       music.mute(true);
     }
@@ -162,10 +140,7 @@ export class SoundManager {
     return music;
   }
 
-  /**
-   * Воспроизводит sound effect
-   */
-  play(alias, options = {}) {
+  play(alias: string, options: { volume?: number } = {}): number | null {
     if (this.isMuted) return null;
 
     const sound = this.sounds.get(alias);
@@ -181,11 +156,7 @@ export class SoundManager {
     return sound.play();
   }
 
-  /**
-   * Переключает музыкальное состояние
-   * Основной API для управления музыкой!
-   */
-  setMusicState(stateName, context = {}) {
+  setMusicState(stateName: string, context: StateContext = {}): Promise<void> | undefined {
     if (!this.musicStateManager) {
       console.error('❌ Music state manager not initialized! Call initMusicStates() first');
       return;
@@ -194,116 +165,81 @@ export class SoundManager {
     return this.musicStateManager.setState(stateName, context);
   }
 
-  /**
-   * Пауза музыки
-   */
-  pauseMusic() {
+  pauseMusic(): void {
     if (this.musicStateManager) {
       this.musicStateManager.pause();
     }
   }
 
-  /**
-   * Возобновление музыки
-   */
-  resumeMusic() {
+  resumeMusic(): void {
     if (this.musicStateManager) {
       this.musicStateManager.resume();
     }
   }
 
-  /**
-   * 🆕 Context-Aware Pausing (Умная Пауза)
-   * Плавно приглушает музыку для модалов/UI элементов
-   *
-   * @param {number} targetVolume - Целевая громкость (0.0-1.0)
-   * @param {number} fadeDuration - Длительность fade (ms)
-   * @returns {object} - Объект с методом restore()
-   */
-  pauseSmooth(targetVolume = 0.3, fadeDuration = 300) {
+  pauseSmooth(targetVolume: number = 0.3, fadeDuration: number = 300): PauseRestore {
     if (!this.musicStateManager) {
       console.warn('⚠️ Music state manager not initialized');
-      return { restore: () => { } };
+      return { restore: () => {} };
     }
 
     return this.musicStateManager.pauseSmooth(targetVolume, fadeDuration);
   }
 
-  /**
-   * 🆕 Alias для модалов
-   */
-  pauseForModal(targetVolume = 0.3) {
+  pauseForModal(targetVolume: number = 0.3): PauseRestore {
     return this.pauseSmooth(targetVolume, 300);
   }
 
-  /**
-   * Останавливает все звуки
-   */
-  stopAll() {
+  stopAll(): void {
     this.sounds.forEach(sound => sound.stop());
     console.log('🔇 All sounds stopped');
   }
 
-  /**
-   * Устанавливает master volume
-   */
-  setMasterVolume(volume) {
+  setMasterVolume(volume: number): void {
     this.masterVolume = Math.max(0, Math.min(1, volume));
     console.log(`🔊 Master volume: ${this.masterVolume}`);
   }
 
-  /**
-   * Mute/Unmute
-   */
-  mute() {
+  mute(): void {
     this.isMuted = true;
     this.sounds.forEach(sound => sound.mute(true));
     this.saveMuteState();
     console.log('🔇 Muted');
   }
 
-  unmute() {
+  unmute(): void {
     this.isMuted = false;
     this.sounds.forEach(sound => sound.mute(false));
     this.saveMuteState();
     console.log('🔊 Unmuted');
   }
 
-  toggleMute() {
+  toggleMute(): boolean {
     if (this.isMuted) {
       this.unmute();
     } else {
       this.mute();
     }
-    return this.isMuted; // Возвращаем новое состояние для UI
+    return this.isMuted;
   }
 
-  /**
-   * Настройка beat-sync
-   */
-  setBeatSync(enabled) {
+  setBeatSync(enabled: boolean): void {
     if (this.musicStateManager) {
       this.musicStateManager.setBeatSync(enabled);
     }
   }
 
-  setBPM(bpm) {
+  setBPM(bpm: number): void {
     if (this.musicStateManager) {
       this.musicStateManager.setBPM(bpm);
     }
   }
 
-  /**
-   * Получить текущее музыкальное состояние
-   */
-  getCurrentMusicState() {
+  getCurrentMusicState(): string {
     return this.musicStateManager?.getCurrentState() || 'none';
   }
 
-  /**
-   * Debug info
-   */
-  getDebugInfo() {
+  getDebugInfo(): Record<string, any> {
     return {
       isMuted: this.isMuted,
       masterVolume: this.masterVolume,
@@ -314,10 +250,7 @@ export class SoundManager {
     };
   }
 
-  /**
-   * Очистка ресурсов
-   */
-  destroy() {
+  destroy(): void {
     this.stopAll();
 
     this.sounds.forEach(sound => sound.unload());
@@ -328,17 +261,11 @@ export class SoundManager {
     console.log('🗑️ SoundManager destroyed');
   }
 
-  /**
-   * Сброс состояния
-   * КРИТИЧЕСКИ ВАЖНО: сбрасывает MusicStateManager для предотвращения конфликтов
-   */
-  reset() {
-    // Сначала сбрасываем music state manager (очищает currentState/previousState)
+  reset(): void {
     if (this.musicStateManager) {
       this.musicStateManager.reset();
     }
 
-    // Потом останавливаем все звуки (включая SFX)
     this.stopAll();
 
     console.log('🔄 SoundManager reset complete');

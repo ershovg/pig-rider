@@ -1,13 +1,12 @@
-/**
- * Defeat Music State
- *
- * Управляет музыкой при поражении игрока.
- * TODO: Реализовать позже (когда будет готов defeat track)
- */
-import { BaseMusicState } from './BaseMusicState.js';
+import type { SoundRegistry, StateContext, HowlInstance } from '../../../types';
+import type { DefeatStateConfig } from '../../../types';
+import { BaseMusicState } from './BaseMusicState.ts';
 
 export class DefeatState extends BaseMusicState {
-  constructor(sounds, config = {}) {
+  private defeatTrack: HowlInstance | null;
+  private masterVolume: number;
+
+  constructor(sounds: SoundRegistry, config: Partial<DefeatStateConfig> = {}) {
     super('defeat', sounds, {
       defeatAlias: config.defeatAlias || 'defeatMusic',
       defeatVolume: config.defeatVolume || 0.6,
@@ -19,10 +18,7 @@ export class DefeatState extends BaseMusicState {
     this.masterVolume = 1.0;
   }
 
-  /**
-   * Активирует defeat состояние
-   */
-  async enter(context = {}) {
+  async enter(context: StateContext = {}): Promise<void> {
     await super.enter(context);
 
     this.masterVolume = context.masterVolume || 1.0;
@@ -41,12 +37,9 @@ export class DefeatState extends BaseMusicState {
     console.log(`💀 [${this.name}] Defeat music playing!`);
   }
 
-  /**
-   * Деактивирует defeat состояние
-   */
-  async exit(context = {}) {
+  async exit(context: StateContext = {}): Promise<void> {
     if (this.defeatTrack && this.defeatTrack.playing()) {
-      this.defeatTrack.fade(this.defeatTrack.volume(), 0, this.config.fadeDuration);
+      this.defeatTrack.fade(this.defeatTrack.volume() as number, 0, this.config.fadeDuration);
 
       await new Promise(resolve => setTimeout(resolve, this.config.fadeDuration));
       this.defeatTrack.stop();

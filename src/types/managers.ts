@@ -67,13 +67,33 @@ export interface SoundAsset {
 }
 
 export interface VolumeRestore {
-  restore(fadeDuration: number): void;
+  restore(fadeDuration?: number): void;
 }
 
 export interface SoundManager {
-  play(alias: string, options?: Record<string, unknown>): void;
-  setMusicState(state: string, context?: Record<string, unknown>): void;
   sounds: Map<string, SoundAsset>;
-  pauseForModal(volume: number): VolumeRestore;
+  isMuted: boolean;
+  masterVolume: number;
+  musicVolume: number;
+  sfxVolume: number;
+
+  loadSound(alias: string, src: string, options?: Record<string, any>): any;
+  loadMusic(alias: string, src: string, options?: Record<string, any>): any;
+  play(alias: string, options?: Record<string, unknown>): void;
+
+  setMusicState(state: string, context?: Record<string, unknown>): void | Promise<void>;
+  pauseMusic(): void;
+  resumeMusic(): void;
+  pauseSmooth(targetVolume?: number, fadeDuration?: number): VolumeRestore;
+  pauseForModal(volume?: number): VolumeRestore;
+
+  stopAll(): void;
+  setMasterVolume(volume: number): void;
+  mute(): void;
+  unmute(): void;
+  toggleMute(): boolean;
+
   reset(): void;
+  destroy?(): void;
+  getDebugInfo?(): Record<string, any>;
 }

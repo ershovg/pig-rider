@@ -1,13 +1,12 @@
-/**
- * Collision Sound State
- *
- * Управляет звуком при столкновении (кратковременный эффект).
- * TODO: Реализовать позже
- */
-import { BaseMusicState } from './BaseMusicState.js';
+import type { SoundRegistry, StateContext, HowlInstance } from '../../../types';
+import type { CollisionStateConfig } from '../../../types';
+import { BaseMusicState } from './BaseMusicState.ts';
 
 export class CollisionState extends BaseMusicState {
-  constructor(sounds, config = {}) {
+  private collisionSound: HowlInstance | null;
+  private masterVolume: number;
+
+  constructor(sounds: SoundRegistry, config: Partial<CollisionStateConfig> = {}) {
     super('collision', sounds, {
       collisionAlias: config.collisionAlias || 'collisionSound',
       collisionVolume: config.collisionVolume || 0.8,
@@ -18,10 +17,7 @@ export class CollisionState extends BaseMusicState {
     this.masterVolume = 1.0;
   }
 
-  /**
-   * Активирует collision состояние (проигрывает sound effect)
-   */
-  async enter(context = {}) {
+  async enter(context: StateContext = {}): Promise<void> {
     await super.enter(context);
 
     this.masterVolume = context.masterVolume || 1.0;
@@ -39,11 +35,7 @@ export class CollisionState extends BaseMusicState {
     console.log(`💥 [${this.name}] Collision sound played!`);
   }
 
-  /**
-   * Деактивирует collision состояние (обычно мгновенно)
-   */
-  async exit(context = {}) {
-    // Collision - это короткий sound effect, обычно не требует fade-out
+  async exit(context: StateContext = {}): Promise<void> {
     await super.exit(context);
   }
 }

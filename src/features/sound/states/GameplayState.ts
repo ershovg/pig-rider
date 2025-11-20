@@ -1,13 +1,13 @@
-/**
- * Gameplay Music State
- *
- * Управляет музыкой во время обычной игры.
- * Использует vertical layering: base + intensity треки играют одновременно.
- */
-import { BaseMusicState } from './BaseMusicState.js';
+import type { SoundRegistry, StateContext, HowlInstance } from '../../../types';
+import type { GameplayStateConfig } from '../../../types';
+import { BaseMusicState } from './BaseMusicState.ts';
 
 export class GameplayState extends BaseMusicState {
-  constructor(sounds, config = {}) {
+  private baseTrack: HowlInstance | null;
+  private intensityTrack: HowlInstance | null;
+  private masterVolume: number;
+
+  constructor(sounds: SoundRegistry, config: Partial<GameplayStateConfig> = {}) {
     super('gameplay', sounds, {
       baseAlias: config.baseAlias || 'mainMusic',
       intensityAlias: config.intensityAlias || 'bonusMusic',
@@ -22,11 +22,7 @@ export class GameplayState extends BaseMusicState {
     this.masterVolume = 1.0;
   }
 
-  /**
-   * Активирует gameplay состояние
-   * Запускает оба трека (base слышен, intensity беззвучен)
-   */
-  async enter(context = {}) {
+  async enter(context: StateContext = {}): Promise<void> {
     await super.enter(context);
 
     this.masterVolume = context.masterVolume || 1.0;
@@ -43,17 +39,14 @@ export class GameplayState extends BaseMusicState {
     console.log(`   Base: ${this.config.baseAlias} (${this.config.baseVolume})`);
     console.log(`   Intensity: ${this.config.intensityAlias} (silent)`);
 
-    // Устанавливаем начальные громкости
     this.baseTrack.volume(this.config.baseVolume * this.masterVolume);
-    this.intensityTrack.volume(0); // Intensity беззвучен
+    this.intensityTrack.volume(0);
 
-    // Запускаем оба трека одновременно
     const baseId = this.baseTrack.play();
     const intensityId = this.intensityTrack.play();
 
-    // Синхронизация треков
     if (this.config.sync && baseId !== null && intensityId !== null) {
-      const baseSeek = this.baseTrack.seek();
+      const baseSeek = this.baseTrack.seek() as number;
       this.intensityTrack.seek(baseSeek, intensityId);
       console.log(`🔄 [${this.name}] Tracks synced at ${baseSeek.toFixed(2)}s`);
     }
@@ -61,23 +54,18 @@ export class GameplayState extends BaseMusicState {
     console.log(`✅ [${this.name}] Layered music started`);
   }
 
-  /**
-   * Деактивирует gameplay состояние
-   * Останавливает оба трека с fade-out
-   */
-  async exit(context = {}) {
+  async exit(context: StateContext = {}): Promise<void> {
     const fadeDuration = context.fadeDuration || 1000;
 
     console.log(`⏹️ [${this.name}] Stopping layered music (${fadeDuration}ms fade)`);
 
     if (this.baseTrack) {
-      this.baseTrack.fade(this.baseTrack.volume(), 0, fadeDuration);
+      this.baseTrack.fade(this.baseTrack.volume() as number, 0, fadeDuration);
     }
     if (this.intensityTrack) {
-      this.intensityTrack.fade(this.intensityTrack.volume(), 0, fadeDuration);
+      this.intensityTrack.fade(this.intensityTrack.volume() as number, 0, fadeDuration);
     }
 
-    // Останавливаем после fade-out
     await new Promise(resolve => setTimeout(resolve, fadeDuration));
 
     if (this.baseTrack) this.baseTrack.stop();
@@ -86,35 +74,23 @@ export class GameplayState extends BaseMusicState {
     await super.exit(context);
   }
 
-  /**
-   * Пауза layered music
-   */
-  pause() {
+  pause(): void {
     super.pause();
     if (this.baseTrack) this.baseTrack.pause();
     if (this.intensityTrack) this.intensityTrack.pause();
   }
 
-  /**
-   * Возобновление layered music
-   */
-  resume() {
+  resume(): void {
     super.resume();
     if (this.baseTrack) this.baseTrack.play();
     if (this.intensityTrack) this.intensityTrack.play();
   }
 
-  /**
-   * Получить текущую позицию base трека (для синхронизации)
-   */
-  getCurrentPosition() {
-    return this.baseTrack ? this.baseTrack.seek() : 0;
+  getCurrentPosition(): number {
+    return this.baseTrack ? (this.baseTrack.seek() as number) : 0;
   }
 
-  /**
-   * Debug info
-   */
-  getDebugInfo() {
+  getDebugInfo(): Record<string, any> {
     return {
       ...super.getDebugInfo(),
       baseVolume: this.baseTrack?.volume(),

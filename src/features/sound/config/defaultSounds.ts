@@ -1,6 +1,7 @@
+import type { SoundConfig } from '../../../types';
 import { ASSET_PATHS } from '../../../shared/config/constants.ts';
 
-export const DEFAULT_SOUND_CONFIG = {
+export const DEFAULT_SOUND_CONFIG: SoundConfig = {
   volumes: {
     master: 1.0,
     music: 0.6,

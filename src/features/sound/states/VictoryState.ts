@@ -1,13 +1,12 @@
-/**
- * Victory Music State
- *
- * Управляет музыкой при победе игрока.
- * TODO: Реализовать позже (когда будет готов victory track)
- */
-import { BaseMusicState } from './BaseMusicState.js';
+import type { SoundRegistry, StateContext, HowlInstance } from '../../../types';
+import type { VictoryStateConfig } from '../../../types';
+import { BaseMusicState } from './BaseMusicState.ts';
 
 export class VictoryState extends BaseMusicState {
-  constructor(sounds, config = {}) {
+  private victoryTrack: HowlInstance | null;
+  private masterVolume: number;
+
+  constructor(sounds: SoundRegistry, config: Partial<VictoryStateConfig> = {}) {
     super('victory', sounds, {
       victoryAlias: config.victoryAlias || 'victoryMusic',
       victoryVolume: config.victoryVolume || 0.7,
@@ -19,10 +18,7 @@ export class VictoryState extends BaseMusicState {
     this.masterVolume = 1.0;
   }
 
-  /**
-   * Активирует victory состояние
-   */
-  async enter(context = {}) {
+  async enter(context: StateContext = {}): Promise<void> {
     await super.enter(context);
 
     this.masterVolume = context.masterVolume || 1.0;
@@ -41,12 +37,9 @@ export class VictoryState extends BaseMusicState {
     console.log(`🎉 [${this.name}] Victory music playing!`);
   }
 
-  /**
-   * Деактивирует victory состояние
-   */
-  async exit(context = {}) {
+  async exit(context: StateContext = {}): Promise<void> {
     if (this.victoryTrack && this.victoryTrack.playing()) {
-      this.victoryTrack.fade(this.victoryTrack.volume(), 0, this.config.fadeDuration);
+      this.victoryTrack.fade(this.victoryTrack.volume() as number, 0, this.config.fadeDuration);
 
       await new Promise(resolve => setTimeout(resolve, this.config.fadeDuration));
       this.victoryTrack.stop();
