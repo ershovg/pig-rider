@@ -9,48 +9,65 @@
  */
 
 import { ConfettiManager } from '../confetti/manager/ConfettiManager.js';
-import lottie from 'lottie-web';
+import lottie, { AnimationItem } from 'lottie-web';
+import type { UIEventCallbacks } from '../../types/ui';
 
 export class UIController {
+  private startScreen: HTMLElement | null;
+  private runningScreen: HTMLElement | null;
+  private faildScreen: HTMLElement | null;
+  private winScreen: HTMLElement | null;
+  private boostScreen: HTMLElement | null;
+
+  private coinCounter: HTMLElement | null;
+  private canvas: HTMLCanvasElement | null;
+  private gameStateElement: HTMLElement | null;
+  private boosterIcon: HTMLElement | null;
+
+  private lottieContainerTutorial: HTMLElement | null;
+  private lottieContainerBooster: HTMLElement | null;
+
+  private startBtn: HTMLElement | null;
+  private mute: HTMLElement | null;
+  private muteIconOn: HTMLElement | null;
+  private muteIconOff: HTMLElement | null;
+
+  private confettiManager: ConfettiManager | null;
+
+  private lottieAnimations: {
+    tutorial: AnimationItem | null;
+    booster: AnimationItem | null;
+  };
+
   constructor() {
-    // Screens (Webflow structure)
     this.startScreen = document.querySelector('.game-ui.game-start');
     this.runningScreen = document.querySelector('.game-ui.game-running');
     this.faildScreen = document.querySelector('.game-ui.faild-screen');
     this.winScreen = document.querySelector('.game-ui.win-screen');
     this.boostScreen = document.querySelector('.game-ui.game-boost');
 
-    // UI elements
     this.coinCounter = document.querySelector('[game-counter]');
-    this.canvas = document.getElementById('game-canvas');
+    this.canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
     this.gameStateElement = document.querySelector('.game-state');
     this.boosterIcon = document.querySelector('.game-logo');
 
-    // Lottie containers
     this.lottieContainerTutorial = document.getElementById('lottie-tutorial');
     this.lottieContainerBooster = document.getElementById('lottie-booster');
 
-    // Buttons
     this.startBtn = document.querySelector('[game-btn-start]');
-    this.restartBtn = document.querySelector('[open-modal-attr="restart-game"]');
     this.mute = document.querySelector('.mute');
     this.muteIconOn = document.querySelector('.mute-icon.on');
     this.muteIconOff = document.querySelector('.mute-icon.off');
 
-    // Managers
     this.confettiManager = null;
 
-    // Lottie instances
     this.lottieAnimations = {
       tutorial: null,
       booster: null,
     };
-
-    console.log('🎨 UIController initialized (Webflow structure)');
   }
 
-  // Показать стартовый экран
-  showStartScreen() {
+  showStartScreen(): void {
     this.hideAll();
     if (this.startScreen) {
       this.startScreen.style.display = 'block';
@@ -60,15 +77,13 @@ export class UIController {
     }
   }
 
-  // Скрыть стартовый экран
-  hideStartScreen() {
+  hideStartScreen(): void {
     if (this.startScreen) {
       this.startScreen.style.display = 'none';
     }
   }
 
-  // Показать игровой HUD
-  showRunningScreen() {
+  showRunningScreen(): void {
     this.hideAll();
     if (this.runningScreen) {
       this.runningScreen.classList.remove('is--hide');
@@ -80,8 +95,7 @@ export class UIController {
     }
   }
 
-  // Скрыть игровой HUD
-  hideRunningScreen() {
+  hideRunningScreen(): void {
     if (this.runningScreen) {
       this.runningScreen.style.opacity = '0';
       this.runningScreen.style.pointerEvents = 'none';
@@ -89,56 +103,48 @@ export class UIController {
     }
   }
 
-  // Показать экран победы
-  showWinScreen(score) {
+  showWinScreen(_score: number): void {
     this.hideAll();
     if (this.winScreen) {
       void this.winScreen.offsetHeight;
       requestAnimationFrame(() => {
-        this.winScreen.classList.add('is--active');
+        this.winScreen!.classList.add('is--active');
         setTimeout(() => this.launchConfetti(), 50);
       });
     }
     if (this.canvas) {
       this.canvas.style.display = 'none';
     }
-    console.log(`🏆 WIN! Score: ${score}`);
   }
 
-  // Показать экран поражения
-  showLoseScreen(score) {
+  showLoseScreen(_score: number): void {
     this.hideAll();
     if (this.faildScreen) {
       void this.faildScreen.offsetHeight;
       requestAnimationFrame(() => {
-        this.faildScreen.classList.add('is--active');
+        this.faildScreen!.classList.add('is--active');
       });
     }
     if (this.canvas) {
       this.canvas.style.display = 'none';
     }
-    console.log(`💀 LOSE! Score: ${score}`);
   }
 
-  // Скрыть экран победы
-  hideWinScreen() {
+  hideWinScreen(): void {
     if (this.winScreen) {
       this.winScreen.classList.remove('is--active');
     }
   }
 
-  // Скрыть экран поражения
-  hideLoseScreen() {
+  hideLoseScreen(): void {
     if (this.faildScreen) {
       this.faildScreen.classList.remove('is--active');
     }
   }
 
-  // Показать модал бустера (возвращает Promise)
-  showBoosterModal(isFirstTime = true) {
+  showBoosterModal(isFirstTime: boolean = true): Promise<boolean> {
     return new Promise((resolve) => {
       if (!isFirstTime) {
-        console.log('🚀 Auto-accepting booster (not first time)');
         resolve(true);
         return;
       }
@@ -146,41 +152,37 @@ export class UIController {
       if (this.boostScreen) {
         void this.boostScreen.offsetHeight;
         requestAnimationFrame(() => {
-          this.boostScreen.classList.add('is--active');
+          this.boostScreen!.classList.add('is--active');
         });
 
         const acceptBtn = this.boostScreen.querySelector('.game-booster__accept');
 
         if (acceptBtn) {
-          // 🎯 Unified accept handler (вызывается из клика ИЛИ клавиатуры)
-          const handleAccept = (event) => {
+          // Unified accept handler (вызывается из клика ИЛИ клавиатуры)
+          const handleAccept = (event?: Event) => {
             if (event) {
-              event.preventDefault(); // Блокируем дефолтное поведение браузера
+              event.preventDefault();
               event.stopPropagation();
             }
 
             this.hideBoosterModal();
-            this._cleanupBoosterModalListeners(acceptBtn, handleAccept, handleKeyboard);
+            this._cleanupBoosterModalListeners(acceptBtn as HTMLElement, handleAccept, handleKeyboard);
             resolve(true);
           };
 
-          // ⌨️ Keyboard handler (Enter/Return/Space)
-          const handleKeyboard = (event) => {
-            // Enter (13), Return (13), Space (32)
+          // Keyboard handler (Enter/Return/Space)
+          const handleKeyboard = (event: KeyboardEvent) => {
             if (event.key === 'Enter' || event.key === ' ' || event.keyCode === 13 || event.keyCode === 32) {
-              console.log(`⌨️ Booster modal accepted via keyboard: ${event.key}`);
               handleAccept(event);
             }
           };
 
-          // Добавляем обработчики
           acceptBtn.addEventListener('click', handleAccept);
           document.addEventListener('keydown', handleKeyboard);
 
-          // 🎯 Auto-focus на кнопку (чтобы Enter работал из коробки)
+          // Auto-focus на кнопку (чтобы Enter работал из коробки)
           setTimeout(() => {
-            acceptBtn.focus();
-            console.log('🎯 Auto-focused on booster accept button');
+            (acceptBtn as HTMLElement).focus();
           }, 100);
         } else {
           console.warn('⚠️ Booster accept button (.game-booster__accept) not found');
@@ -193,26 +195,26 @@ export class UIController {
     });
   }
 
-  // 🧹 Cleanup обработчиков модального окна бустера
-  _cleanupBoosterModalListeners(acceptBtn, clickHandler, keyboardHandler) {
+  private _cleanupBoosterModalListeners(
+    acceptBtn: HTMLElement,
+    clickHandler: (event?: Event) => void,
+    keyboardHandler: (event: KeyboardEvent) => void
+  ): void {
     if (acceptBtn && clickHandler) {
       acceptBtn.removeEventListener('click', clickHandler);
     }
     if (keyboardHandler) {
       document.removeEventListener('keydown', keyboardHandler);
     }
-    console.log('🧹 Booster modal listeners cleaned up');
   }
 
-  // Скрыть модал бустера
-  hideBoosterModal() {
+  hideBoosterModal(): void {
     if (this.boostScreen) {
       this.boostScreen.classList.remove('is--active');
     }
   }
 
-  // Скрыть все экраны
-  hideAll() {
+  hideAll(): void {
     if (this.startScreen) this.startScreen.style.display = 'none';
     if (this.faildScreen) this.faildScreen.classList.remove('is--active');
     if (this.winScreen) this.winScreen.classList.remove('is--active');
@@ -225,15 +227,13 @@ export class UIController {
     }
   }
 
-  // Обновить счётчик монет
-  updateCoinCount(current, target = null) {
+  updateCoinCount(current: number, _target?: number): void {
     if (this.coinCounter) {
       this.coinCounter.textContent = current.toString();
     }
   }
 
-  // Обновить визуальное состояние кнопки mute
-  updateMuteButtonState(isMuted) {
+  updateMuteButtonState(isMuted: boolean): void {
     if (this.mute) {
       if (isMuted) {
         this.mute.classList.add('is--muted');
@@ -242,69 +242,56 @@ export class UIController {
       }
     }
 
-    // Переключаем видимость иконок через JS
     if (this.muteIconOn && this.muteIconOff) {
       if (isMuted) {
-        // Звук выключен → показываем иконку OFF
         this.muteIconOn.style.display = 'none';
         this.muteIconOff.style.display = 'block';
       } else {
-        // Звук включен → показываем иконку ON
         this.muteIconOn.style.display = 'block';
         this.muteIconOff.style.display = 'none';
       }
     }
   }
 
-  // Добавить CSS класс booster-active
-  addBoosterClass() {
+  addBoosterClass(): void {
     if (this.gameStateElement) {
       this.gameStateElement.classList.add('booster-active');
-      console.log('✨ Booster mode activated');
     }
   }
 
-  // Удалить CSS класс booster-active
-  removeBoosterClass() {
+  removeBoosterClass(): void {
     if (this.gameStateElement) {
       this.gameStateElement.classList.remove('booster-active');
-      console.log('⏹️ Booster mode deactivated');
     }
   }
 
-  // Показать иконку бустера
-  showBoosterIcon() {
+  showBoosterIcon(): void {
     if (this.boosterIcon) {
       this.boosterIcon.classList.add('is--active');
-      console.log('🌟 Booster icon activated');
     }
   }
 
-  // Скрыть иконку бустера
-  hideBoosterIcon() {
+  hideBoosterIcon(): void {
     if (this.boosterIcon) {
       this.boosterIcon.classList.remove('is--active');
-      console.log('💤 Booster icon deactivated');
     }
   }
 
-  // Настроить обработчики событий кнопок
-  setupEventListeners(callbacks) {
+  setupEventListeners(callbacks: UIEventCallbacks): void {
     if (callbacks.onPlayClick && this.startBtn) {
       this.startBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        callbacks.onPlayClick();
+        callbacks.onPlayClick!();
       });
     }
 
     if (callbacks.onRestartGame) {
       document.addEventListener('click', (e) => {
-        const target = e.target.closest('[open-modal-attr="restart-game"]');
+        const target = (e.target as HTMLElement).closest('[open-modal-attr="restart-game"]');
         if (target) {
-          console.log('🔄 Restart button clicked');
           e.preventDefault();
           e.stopPropagation();
-          callbacks.onRestartGame();
+          callbacks.onRestartGame!();
         }
       }, true);
     }
@@ -312,22 +299,17 @@ export class UIController {
     if (callbacks.onMuteToggle && this.mute) {
       this.mute.addEventListener('click', (e) => {
         e.preventDefault();
-        e.stopPropagation(); // ⚠️ Блокируем всплытие события к PlayerInputController
-        const isMuted = callbacks.onMuteToggle();
+        e.stopPropagation(); // Блокируем всплытие события к PlayerInputController
+        const isMuted = callbacks.onMuteToggle!();
         this.updateMuteButtonState(isMuted);
-        console.log(`🔊 Sound ${isMuted ? 'muted' : 'unmuted'}`);
       });
     }
   }
 
-  // Запустить анимацию конфетти
-  launchConfetti() {
+  launchConfetti(): void {
     try {
-      console.log('🎊 launchConfetti() called');
-
       if (!this.confettiManager) {
-        console.log('📦 Creating ConfettiManager...');
-        const confettiCanvas = document.getElementById('confetti-canvas');
+        const confettiCanvas = document.getElementById('confetti-canvas') as HTMLCanvasElement | null;
 
         if (!confettiCanvas) {
           console.warn('⚠️ Confetti canvas (#confetti-canvas) not found, using default');
@@ -336,15 +318,13 @@ export class UIController {
         this.confettiManager = new ConfettiManager(confettiCanvas);
       }
 
-      console.log('🚀 Calling launchVictoryEffect()...');
       this.confettiManager.launchVictoryEffect();
     } catch (error) {
       console.error('❌ Confetti error:', error);
     }
   }
 
-  // Показать tutorial hint анимацию ("collect 200 coins")
-  showTutorialHint() {
+  showTutorialHint(): Promise<void> {
     return new Promise((resolve) => {
       if (!this.lottieContainerTutorial) {
         console.warn('⚠️ Tutorial Lottie container not found');
@@ -352,10 +332,8 @@ export class UIController {
         return;
       }
 
-      // Показываем контейнер
       this.lottieContainerTutorial.style.display = 'flex';
 
-      // Загружаем и проигрываем анимацию
       this.lottieAnimations.tutorial = lottie.loadAnimation({
         container: this.lottieContainerTutorial,
         renderer: 'svg',
@@ -364,19 +342,14 @@ export class UIController {
         path: '/assets/animations/tutorial-hint.json',
       });
 
-      // Когда анимация закончится - скрываем
       this.lottieAnimations.tutorial.addEventListener('complete', () => {
-        console.log('✅ Tutorial animation completed');
         this.hideTutorialHint();
         resolve();
       });
-
-      console.log('🎓 Tutorial hint animation started');
     });
   }
 
-  // Скрыть tutorial hint анимацию
-  hideTutorialHint() {
+  hideTutorialHint(): void {
     if (this.lottieContainerTutorial) {
       this.lottieContainerTutorial.style.display = 'none';
     }
@@ -386,8 +359,7 @@ export class UIController {
     }
   }
 
-  // Показать booster activation анимацию (вместо/вместе с модалом)
-  showBoosterActivation() {
+  showBoosterActivation(): Promise<void> {
     return new Promise((resolve) => {
       if (!this.lottieContainerBooster) {
         console.warn('⚠️ Booster Lottie container not found');
@@ -395,10 +367,8 @@ export class UIController {
         return;
       }
 
-      // Показываем контейнер
       this.lottieContainerBooster.style.display = 'flex';
 
-      // Загружаем и проигрываем анимацию
       this.lottieAnimations.booster = lottie.loadAnimation({
         container: this.lottieContainerBooster,
         renderer: 'svg',
@@ -407,19 +377,14 @@ export class UIController {
         path: '/assets/animations/booster-activation.json',
       });
 
-      // Когда анимация закончится - скрываем и резолвим
       this.lottieAnimations.booster.addEventListener('complete', () => {
-        console.log('✅ Booster activation animation completed');
         this.hideBoosterActivation();
         resolve();
       });
-
-      console.log('🚀 Booster activation animation started');
     });
   }
 
-  // Скрыть booster activation анимацию
-  hideBoosterActivation() {
+  hideBoosterActivation(): void {
     if (this.lottieContainerBooster) {
       this.lottieContainerBooster.style.display = 'none';
     }
@@ -430,13 +395,11 @@ export class UIController {
   }
 
   // Legacy метод для совместимости
-  hideLoading() {
-    console.log('✅ Loading complete');
+  hideLoading(): void {
+    // Stub for backward compatibility
   }
 
-  // Очистка ресурсов
-  destroy() {
-    // Очищаем Lottie анимации
+  destroy(): void {
     if (this.lottieAnimations.tutorial) {
       this.lottieAnimations.tutorial.destroy();
       this.lottieAnimations.tutorial = null;
@@ -446,12 +409,9 @@ export class UIController {
       this.lottieAnimations.booster = null;
     }
 
-    // Очищаем конфетти
     if (this.confettiManager) {
       this.confettiManager.destroy();
       this.confettiManager = null;
     }
-
-    console.log('🗑️ UIController destroyed');
   }
 }
