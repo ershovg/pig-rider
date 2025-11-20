@@ -21,10 +21,6 @@ export interface ActivatableEntity {
   activate(lane: Lane, x: number): void;
 }
 
-/**
- * Контекст для spawner'ов
- * Передается в spawn() метод для передачи игрового состояния
- */
 export interface SpawnContext {
   // Booster state
   isBoosterMode?: boolean;
@@ -48,30 +44,61 @@ export interface SpawnContext {
   [key: string]: unknown;
 }
 
-/**
- * Базовая конфигурация для всех spawner'ов
- * @template T - тип entity в пуле
- */
 export interface BaseSpawnerConfig<T> {
   pool: ObjectPool<T>;
   stage: PIXI.Container;
 }
 
-/**
- * Конфигурация для collectible spawner'ов (coins, boosters, gems, etc.)
- * Расширяет базовую конфигурацию с coordination и interval modifier
- * @template T - тип entity в пуле
- */
 export interface CollectibleSpawnerConfig<T> extends BaseSpawnerConfig<T> {
   coordinationService?: SpawnCoordinationService;
-  getIntervalModifier?: ((gameSpeed: number) => number) | null;
+  getIntervalModifier?: ((context: SpawnContext) => number) | null;
 }
 
-/**
- * Конфигурация для obstacle spawner'ов
- * Расширяет collectible config с texture support
- * @template T - тип entity в пуле
- */
 export interface ObstacleSpawnerConfig<T> extends CollectibleSpawnerConfig<T> {
   textures?: PIXI.Texture[];
+}
+
+export interface ObstacleEntity {
+  lane: Lane;
+  getSprite(): { x: number };
+  isActive(): boolean;
+  reset?(): void;
+  deactivate?(): void;
+}
+
+export interface CoinEntity {
+  lane: Lane;
+  x: number;
+  isActive(): boolean;
+  reset?(): void;
+  deactivate?(): void;
+}
+
+export type EntityFactory<T> = () => T;
+
+export type EntityResetFn<T> = (entity: T) => void;
+
+export interface PoolStats {
+  active: number;
+  pooled: number;
+  total: number;
+}
+
+export interface PoolRegistrationConfig {
+  texture?: PIXI.Texture | PIXI.Spritesheet;
+  [key: string]: unknown;
+}
+
+export interface SpawnSystemTextures {
+  obstacles: PIXI.Texture[];
+  coinSpritesheet: PIXI.Spritesheet;
+  star: PIXI.Texture;
+  cloud: PIXI.Texture;
+  boosterSpritesheet: PIXI.Spritesheet;
+  coinCollectEffectSpritesheet: PIXI.Spritesheet;
+  collisionEffectSpritesheet: PIXI.Spritesheet;
+}
+
+export interface SpawnSystemUpdateContext extends SpawnContext {
+  isBoosterActive?: boolean;
 }

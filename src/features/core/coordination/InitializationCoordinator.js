@@ -7,7 +7,7 @@ import { SpawnSystem } from '../../spawning/SpawnSystem.js';
 import { CollisionSystem } from '../../collision/system/CollisionSystem.ts';
 import { DifficultyManager } from '../../progression/manager/DifficultyManager.js';
 import { UIController } from '../../ui/UIController.js';
-import { GameStateManager } from '../../state/GameStateManager.js';
+import { GameStateManager } from '../../state/GameStateManager';
 import { BoosterManager } from '../../booster/manager/BoosterManager.ts';
 import { ProgressionManager } from '../../progression/manager/ProgressionManager.js';
 import { CullingManager } from '../../rendering/culling/CullingManager.js';

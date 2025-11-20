@@ -1,33 +1,34 @@
-/**
- * Управление состоянием игры (loading/menu/playing/paused/ended)
- */
+import type { GameState } from '../../types';
+
 export class GameStateManager {
+  private state: GameState;
+
   constructor() {
     this.state = 'loading';
   }
 
-  setState(newState) {
+  setState(newState: GameState): void {
     this.state = newState;
     console.log(`🎮 Game state: ${newState}`);
   }
 
-  getState() {
+  getState(): GameState {
     return this.state;
   }
 
-  isPlaying() {
+  isPlaying(): boolean {
     return this.state === 'playing';
   }
 
-  isPaused() {
+  isPaused(): boolean {
     return this.state === 'paused';
   }
 
-  isEnded() {
+  isEnded(): boolean {
     return this.state === 'ended';
   }
 
-  isMenu() {
+  isMenu(): boolean {
     return this.state === 'menu';
   }
 }

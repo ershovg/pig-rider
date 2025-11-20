@@ -1,4 +1,11 @@
-import { ObjectPool } from '../../../shared/utils/ObjectPool.ts';
+import type * as PIXI from 'pixi.js';
+import { ObjectPool } from '../../../shared/utils/ObjectPool';
+import type {
+  EntityFactory,
+  EntityResetFn,
+  PoolStats,
+  PoolRegistrationConfig
+} from '../../../types/spawning';
 
 /**
  * EntityPoolManager - Централизованное управление всеми пулами объектов
@@ -17,7 +24,12 @@ import { ObjectPool } from '../../../shared/utils/ObjectPool.ts';
  * const obstacle = manager.acquire('obstacle');
  */
 export class EntityPoolManager {
-  constructor(stage, decorationLayer = null, effectsLayer = null) {
+  private stage: PIXI.Container;
+  private decorationLayer: PIXI.Container | null;
+  private effectsLayer: PIXI.Container | null;
+  private pools: Map<string, ObjectPool<unknown>>;
+
+  constructor(stage: PIXI.Container, decorationLayer: PIXI.Container | null = null, effectsLayer: PIXI.Container | null = null) {
     this.stage = stage;
     this.decorationLayer = decorationLayer; // 🔥 ИСПРАВЛЕНО: сохраняем decorationLayer
     this.effectsLayer = effectsLayer; // 🔥 ДОБАВЛЕНО: слой для эффектов (поверх всего)
@@ -27,12 +39,17 @@ export class EntityPoolManager {
   /**
    * Зарегистрировать новый пул объектов
    *
-   * @param {string} name - Уникальное имя пула (например, 'obstacle', 'coin')
-   * @param {Class} EntityClass - Класс объектов для создания
-   * @param {number} initialSize - Начальный размер пула
-   * @param {Object} entityConfig - Дополнительная конфигурация для объектов
+   * @param name - Уникальное имя пула (например, 'obstacle', 'coin')
+   * @param EntityClass - Класс объектов для создания
+   * @param initialSize - Начальный размер пула
+   * @param entityConfig - Дополнительная конфигурация для объектов
    */
-  registerPool(name, EntityClass, initialSize, entityConfig = {}) {
+  registerPool<T extends object>(
+    name: string,
+    EntityClass: new (texture?: PIXI.Texture | PIXI.Spritesheet, container?: PIXI.Container) => T,
+    initialSize: number,
+    entityConfig: PoolRegistrationConfig = {}
+  ): void {
     if (this.pools.has(name)) {
       console.warn(`Pool "${name}" already registered. Skipping.`);
       return;
@@ -45,7 +62,7 @@ export class EntityPoolManager {
     const isDecoration = (name === 'cloud' || name === 'star');
     const isEffect = (name === 'coinCollectEffect' || name === 'collisionEffect');
 
-    let targetContainer;
+    let targetContainer: PIXI.Container;
     if (isDecoration && this.decorationLayer) {
       targetContainer = this.decorationLayer;
     } else if (isEffect && this.effectsLayer) {
@@ -57,7 +74,7 @@ export class EntityPoolManager {
     // Factory функция для создания объектов
     // 🔥 ИЗМЕНЕНО: НЕ добавляем sprite в контейнер при создании
     // Вместо этого передаём контейнер в entity для управления lifecycle
-    const factory = () => {
+    const factory: EntityFactory<T> = () => {
       const entity = new EntityClass(entityConfig.texture, targetContainer);
 
       // ❌ УБРАЛИ: addChild теперь вызывается в activate() каждого entity
@@ -69,10 +86,10 @@ export class EntityPoolManager {
     };
 
     // Reset функция для возврата объектов в пул
-    const reset = (entity) => {
-      if (entity.reset) {
+    const reset: EntityResetFn<T> = (entity: T) => {
+      if ('reset' in entity && typeof entity.reset === 'function') {
         entity.reset();
-      } else if (entity.deactivate) {
+      } else if ('deactivate' in entity && typeof entity.deactivate === 'function') {
         entity.deactivate();
       }
     };
@@ -80,7 +97,7 @@ export class EntityPoolManager {
     // Создаем пул с фабрикой и reset функцией
     // 🔴 CRITICAL: Set maxSize to prevent memory leaks
     // Different multipliers for different entity types
-    let maxSize;
+    let maxSize: number;
     if (name === 'obstacle') {
       // Obstacles need more room due to spawn patterns
       maxSize = initialSize * 3;  // 60 for obstacles (was 30)
@@ -91,65 +108,65 @@ export class EntityPoolManager {
       // Default for other entities
       maxSize = Math.ceil(initialSize * 1.5);
     }
-    const pool = new ObjectPool(factory, reset, initialSize, maxSize);
+    const pool = new ObjectPool<T>(factory, reset, initialSize, maxSize);
 
-    this.pools.set(name, pool);
+    this.pools.set(name, pool as ObjectPool<unknown>);
 
     console.log(`[PoolManager] Registered pool "${name}" with ${initialSize} objects (max: ${maxSize})`);
   }
 
   /**
    * Получить пул по имени
-   * @param {string} name - Имя пула
-   * @returns {ObjectPool}
+   * @param name - Имя пула
+   * @returns ObjectPool
    */
-  getPool(name) {
+  getPool<T = unknown>(name: string): ObjectPool<T> {
     const pool = this.pools.get(name);
     if (!pool) {
       throw new Error(`Pool "${name}" not found. Did you forget to register it?`);
     }
-    return pool;
+    return pool as ObjectPool<T>;
   }
 
   /**
    * Взять объект из пула (shortcut)
-   * @param {string} poolName - Имя пула
-   * @returns {Object}
+   * @param poolName - Имя пула
+   * @returns Объект из пула
    */
-  acquire(poolName) {
-    return this.getPool(poolName).acquire();
+  acquire<T = unknown>(poolName: string): T | null {
+    return this.getPool<T>(poolName).acquire();
   }
 
   /**
    * Вернуть объект в пул (shortcut)
-   * @param {string} poolName - Имя пула
-   * @param {Object} obj - Объект для возврата
+   * @param poolName - Имя пула
+   * @param obj - Объект для возврата
    */
-  release(poolName, obj) {
-    this.getPool(poolName).release(obj);
+  release<T = unknown>(poolName: string, obj: T): void {
+    this.getPool<T>(poolName).release(obj);
   }
 
   /**
    * Вернуть все объекты в пул (shortcut)
-   * @param {string} poolName - Имя пула
+   * @param poolName - Имя пула
    */
-  releaseAll(poolName) {
+  releaseAll(poolName: string): void {
     this.getPool(poolName).releaseAll();
   }
 
   /**
    * Получить все активные объекты из пула
-   * @param {string} poolName - Имя пула
-   * @returns {Array}
+   * @param poolName - Имя пула
+   * @returns Массив активных объектов
    */
-  getActiveObjects(poolName) {
-    return this.getPool(poolName).getActive();
+  getActiveObjects<T = unknown>(poolName: string): T[] {
+    return this.getPool<T>(poolName).getActive();
   }
 
   /**
    * Сбросить все пулы (вернуть все объекты в пулы)
    */
-  resetAll() {
+  resetAll(): void {
     this.pools.forEach((pool, name) => {
       pool.releaseAll();
       console.log(`[PoolManager] Reset pool "${name}"`);
@@ -158,10 +175,10 @@ export class EntityPoolManager {
 
   /**
    * Получить статистику всех пулов
-   * @returns {Object} Объект с статистикой: { poolName: { active, pooled, total } }
+   * @returns Объект с статистикой: { poolName: { active, pooled, total } }
    */
-  getAllStats() {
-    const stats = {};
+  getAllStats(): Record<string, PoolStats> {
+    const stats: Record<string, PoolStats> = {};
 
     this.pools.forEach((pool, name) => {
       stats[name] = {
@@ -177,7 +194,7 @@ export class EntityPoolManager {
   /**
    * Вывести статистику в консоль (для отладки)
    */
-  logStats() {
+  logStats(): void {
     console.log('=== EntityPoolManager Stats ===');
     const stats = this.getAllStats();
 
@@ -193,20 +210,20 @@ export class EntityPoolManager {
 
   /**
    * Проверить, зарегистрирован ли пул
-   * @param {string} name - Имя пула
-   * @returns {boolean}
+   * @param name - Имя пула
+   * @returns true если пул существует
    */
-  hasPool(name) {
+  hasPool(name: string): boolean {
     return this.pools.has(name);
   }
 
   /**
    * Удалить пул (редко используется)
-   * @param {string} name - Имя пула
+   * @param name - Имя пула
    */
-  removePool(name) {
+  removePool(name: string): void {
     if (this.pools.has(name)) {
-      this.pools.get(name).releaseAll();
+      this.pools.get(name)!.releaseAll();
       this.pools.delete(name);
       console.log(`[PoolManager] Removed pool "${name}"`);
     }
@@ -214,9 +231,9 @@ export class EntityPoolManager {
 
   /**
    * Получить количество зарегистрированных пулов
-   * @returns {number}
+   * @returns Количество пулов
    */
-  getPoolCount() {
+  getPoolCount(): number {
     return this.pools.size;
   }
 }

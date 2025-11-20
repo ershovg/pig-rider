@@ -1,4 +1,4 @@
-import type { Lane } from './common';
+import type { Lane, GameState } from './common';
 import type { BoosterSnapshot } from './booster';
 import type { ProgressionStats, DifficultyStats } from './progression';
 import type { ObjectPool } from './spawning';
@@ -54,8 +54,8 @@ export interface BoosterManager {
 }
 
 export interface GameStateManager {
-  setState(newState: string): void;
-  getState(): string;
+  setState(newState: GameState): void;
+  getState(): GameState;
   isPlaying(): boolean;
   isPaused(): boolean;
   isEnded(): boolean;

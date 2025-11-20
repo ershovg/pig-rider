@@ -1,4 +1,6 @@
-import { CONFIG } from '../../../shared/config/constants.ts';
+import { CONFIG } from '../../../shared/config/constants';
+import type { ObjectPool, ObstacleEntity } from '../../../types/spawning';
+import type { Lane } from '../../../types/common';
 
 /**
  * LaneSafetyService
@@ -7,22 +9,24 @@ import { CONFIG } from '../../../shared/config/constants.ts';
  * Отслеживает препятствия в зоне спавна и предотвращает блокировку всех полос одновременно.
  */
 export class LaneSafetyService {
-  static BASE_SAFE_DISTANCE = 2500;
-  static SPEED_SCALE_FACTOR = 0.8;
-  static ALL_LANES = [0, 1, 2];
-  static DEBUG = false; // Переключатель для debug логов
+  private static readonly BASE_SAFE_DISTANCE = 2500;
+  private static readonly SPEED_SCALE_FACTOR = 0.8;
+  private static readonly ALL_LANES: readonly Lane[] = [0, 1, 2];
+  private static readonly DEBUG = false; // Переключатель для debug логов
 
-  constructor(obstaclePool) {
+  private obstaclePool: ObjectPool<ObstacleEntity>;
+
+  constructor(obstaclePool: ObjectPool<ObstacleEntity>) {
     this.obstaclePool = obstaclePool;
   }
 
   /**
    * Возвращает список заблокированных полос в текущей зоне спавна
    */
-  getBlockedLanes(gameSpeed = 1.0) {
+  getBlockedLanes(gameSpeed: number = 1.0): Lane[] {
     const safeDistance = this._calculateSafeDistance(gameSpeed);
     const spawnZoneEnd = CONFIG.CANVAS_WIDTH + safeDistance;
-    const blocked = new Set();
+    const blocked = new Set<Lane>();
 
     for (const obstacle of this.obstaclePool.getActive()) {
       if (!obstacle.isActive()) continue;
@@ -45,16 +49,16 @@ export class LaneSafetyService {
   /**
    * Возвращает список доступных (незаблокированных) полос
    */
-  getAvailableLanes(gameSpeed = 1.0) {
+  getAvailableLanes(gameSpeed: number = 1.0): Lane[] {
     const blocked = this.getBlockedLanes(gameSpeed);
-    return LaneSafetyService.ALL_LANES.filter(lane => !blocked.includes(lane));
+    return LaneSafetyService.ALL_LANES.filter(lane => !blocked.includes(lane)) as Lane[];
   }
 
   /**
    * Выбирает случайную доступную полосу
    * Failsafe: если все полосы заблокированы, возвращает случайную
    */
-  getRandomAvailableLane(gameSpeed = 1.0) {
+  getRandomAvailableLane(gameSpeed: number = 1.0): Lane {
     const available = this.getAvailableLanes(gameSpeed);
 
     if (available.length > 0) {
@@ -62,17 +66,17 @@ export class LaneSafetyService {
     }
 
     console.warn('[LaneSafetyService] All lanes blocked! Using failsafe.');
-    return Math.floor(Math.random() * 3);
+    return Math.floor(Math.random() * 3) as Lane;
   }
 
   // Private methods
 
-  _calculateSafeDistance(gameSpeed) {
+  private _calculateSafeDistance(gameSpeed: number): number {
     const speedMultiplier = Math.max(1.0, gameSpeed * LaneSafetyService.SPEED_SCALE_FACTOR);
     return LaneSafetyService.BASE_SAFE_DISTANCE * speedMultiplier;
   }
 
-  _logSpawnZoneState(spawnZoneEnd, blocked) {
+  private _logSpawnZoneState(spawnZoneEnd: number, blocked: Set<Lane>): void {
     const available = LaneSafetyService.ALL_LANES.filter(l => !blocked.has(l));
     console.log(
       `[LaneSafety] Zone: [${CONFIG.CANVAS_WIDTH}, ${spawnZoneEnd.toFixed(0)}], ` +

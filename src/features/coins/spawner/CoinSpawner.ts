@@ -4,16 +4,15 @@ import { MathUtils } from '../../../shared/utils/MathUtils';
 import {
   Lane,
   SpawnContext,
-  ActivatableEntity,
   CollectibleSpawnerConfig
 } from '../../../types';
 import { Coin } from '../entities/Coin';
 
-export class CoinSpawner extends BaseSpawner {
-  private coordinationService: CollectibleSpawnerConfig<ActivatableEntity>['coordinationService'];
+export class CoinSpawner extends BaseSpawner<Coin> {
+  private coordinationService: CollectibleSpawnerConfig<Coin>['coordinationService'];
   private lastCoinX: [number, number, number];
 
-  constructor(config: CollectibleSpawnerConfig<ActivatableEntity>) {
+  constructor(config: CollectibleSpawnerConfig<Coin>) {
     super({
       pool: config.pool,
       stage: config.stage,

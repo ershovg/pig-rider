@@ -7,8 +7,9 @@ import {
   SpawnContext,
   CollectibleSpawnerConfig
 } from '../../../types';
+import { Booster } from '../entities/Booster';
 
-export class BoosterSpawner extends BaseSpawner {
+export class BoosterSpawner extends BaseSpawner<Booster> {
   private coordinationService: CollectibleSpawnerConfig<ActivatableEntity>['coordinationService'];
   private lastBoosterX: [number, number, number];
 

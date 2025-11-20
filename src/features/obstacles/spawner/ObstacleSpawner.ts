@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import { BaseSpawner } from '../../spawning/spawners/BaseSpawner.js';
+import { BaseSpawner } from '../../spawning/spawners/BaseSpawner';
 import { CONFIG } from '../../../shared/config/constants';
 import { MathUtils } from '../../../shared/utils/MathUtils';
 import { ObstaclePatternLibrary } from '../patterns/ObstaclePatternLibrary';
@@ -7,7 +7,7 @@ import { Obstacle } from '../entities/Obstacle';
 import type { Lane, SpawnContext, ObstacleSpawnerConfig, SpawnCoordinationService } from '../../../types';
 import type { ObstaclePattern } from '../../../types/obstacles';
 
-export class ObstacleSpawner extends BaseSpawner {
+export class ObstacleSpawner extends BaseSpawner<Obstacle> {
   private readonly ALL_LANES: Lane[] = [0, 1, 2];
   private patternLibrary: ObstaclePatternLibrary;
   private coordinationService: SpawnCoordinationService | null;

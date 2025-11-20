@@ -2,8 +2,9 @@ import { BaseSpawner } from '../../spawning/spawners/BaseSpawner';
 import { CONFIG } from '../../../shared/config/constants';
 import { MathUtils } from '../../../shared/utils/MathUtils';
 import { Lane, BaseSpawnerConfig, ActivatableEntity } from '../../../types';
+import { Star } from '../entities/Star';
 
-export class StarSpawner extends BaseSpawner {
+export class StarSpawner extends BaseSpawner<Star> {
   private lastStarX: [number, number, number];
 
   constructor(config: BaseSpawnerConfig<ActivatableEntity>) {

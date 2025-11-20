@@ -1,7 +1,16 @@
-import { CONFIG } from '../../../shared/config/constants.ts';
+import type {
+  ObjectPool,
+  ObstacleEntity,
+  CoinEntity,
+  SpawnCoordinationService as ISpawnCoordinationService
+} from '../../../types/spawning';
+import type { Lane } from '../../../types/common';
 
-export class SpawnCoordinationService {
-  constructor(obstaclePool, coinPool = null) {
+export class SpawnCoordinationService implements ISpawnCoordinationService {
+  private obstaclePool: ObjectPool<ObstacleEntity>;
+  private coinPool: ObjectPool<CoinEntity> | null;
+
+  constructor(obstaclePool: ObjectPool<ObstacleEntity>, coinPool: ObjectPool<CoinEntity> | null = null) {
     this.obstaclePool = obstaclePool;
     this.coinPool = coinPool;
   }
@@ -9,7 +18,7 @@ export class SpawnCoordinationService {
   /**
    * Установить пул монет (вызывается из SpawnSystem после инициализации)
    */
-  setCoinPool(coinPool) {
+  setCoinPool(coinPool: ObjectPool<CoinEntity>): void {
     this.coinPool = coinPool;
   }
 
@@ -17,7 +26,7 @@ export class SpawnCoordinationService {
    * Проверить, можно ли заспавнить объект на данной полосе и позиции
    * Проверяет коллизии с препятствиями
    */
-  canSpawnAt(lane, x, safeRadius = 150) {
+  canSpawnAt(lane: Lane, x: number, safeRadius: number = 150): boolean {
     const activeObstacles = this.obstaclePool.getActive();
 
     for (const obstacle of activeObstacles) {
@@ -39,7 +48,7 @@ export class SpawnCoordinationService {
    * Проверить, можно ли заспавнить препятствие на данной полосе и позиции
    * Проверяет коллизии с монетами (важно после окончания бустера!)
    */
-  canSpawnObstacleAt(lane, x, safeRadius = 150) {
+  canSpawnObstacleAt(lane: Lane, x: number, safeRadius: number = 150): boolean {
     // Сначала проверяем другие препятствия
     if (!this.canSpawnAt(lane, x, safeRadius)) {
       return false;
@@ -65,9 +74,9 @@ export class SpawnCoordinationService {
     return true;
   }
 
-  getNearestObstacle(lane, x) {
+  getNearestObstacle(lane: Lane, x: number): ObstacleEntity | null {
     const activeObstacles = this.obstaclePool.getActive();
-    let nearest = null;
+    let nearest: ObstacleEntity | null = null;
     let minDistance = Infinity;
 
     for (const obstacle of activeObstacles) {

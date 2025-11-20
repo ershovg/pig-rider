@@ -1,3 +1,5 @@
+import type * as PIXI from 'pixi.js';
+
 export interface GameLoop {
   start(): void;
   stop(): void;
@@ -7,4 +9,8 @@ export interface GameLoop {
 
 export interface Renderer {
   start(): void;
+}
+
+export interface AssetLoader {
+  getAsset(alias: string): PIXI.Texture | PIXI.Spritesheet | null;
 }

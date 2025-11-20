@@ -4,7 +4,7 @@ import { MathUtils } from '../../../shared/utils/MathUtils';
 import { Lane, BaseSpawnerConfig, ActivatableEntity } from '../../../types';
 import { Cloud } from '../entities/Cloud';
 
-export class CloudSpawner extends BaseSpawner {
+export class CloudSpawner extends BaseSpawner<Cloud> {
   private MIN_CLOUD_DISTANCE: number;
   private lastCloudX: [number, number, number];
 
