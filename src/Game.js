@@ -3,10 +3,10 @@
  * Архитектура: SystemRegistry (DI) → Coordinators (Init/Update/Render) → Systems
  */
 
-import { SystemRegistry } from './features/core/registry/SystemRegistry.js';
-import { InitializationCoordinator } from './features/core/coordination/InitializationCoordinator.js';
-import { UpdateCoordinator } from './features/core/coordination/UpdateCoordinator.js';
-import { RenderCoordinator } from './features/core/coordination/RenderCoordinator.js';
+import { SystemRegistry } from './features/core/registry/SystemRegistry.ts';
+import { InitializationCoordinator } from './features/core/coordination/InitializationCoordinator.ts';
+import { UpdateCoordinator } from './features/core/coordination/UpdateCoordinator.ts';
+import { RenderCoordinator } from './features/core/coordination/RenderCoordinator.ts';
 
 export class Game {
   constructor() {

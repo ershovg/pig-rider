@@ -3,29 +3,33 @@ import { Renderer } from '../../../core/Renderer.ts';
 import { GameLoop } from '../../../core/GameLoop.ts';
 import { AssetLoader } from '../../../core/AssetLoader.ts';
 import { Player } from '../../player/entities/Player.ts';
-import { SpawnSystem } from '../../spawning/SpawnSystem.js';
+import { SpawnSystem } from '../../spawning/SpawnSystem.ts';
 import { CollisionSystem } from '../../collision/system/CollisionSystem.ts';
-import { DifficultyManager } from '../../progression/manager/DifficultyManager.js';
+import { DifficultyManager } from '../../progression/manager/DifficultyManager.ts';
 import { UIController } from '../../ui/UIController.ts';
-import { GameStateManager } from '../../state/GameStateManager';
+import { GameStateManager } from '../../state/GameStateManager.ts';
 import { BoosterManager } from '../../booster/manager/BoosterManager.ts';
-import { ProgressionManager } from '../../progression/manager/ProgressionManager.js';
-import { CullingManager } from '../../rendering/culling/CullingManager.js';
-import { InterpolationManager } from '../../rendering/interpolation/InterpolationManager.js';
+import { ProgressionManager } from '../../progression/manager/ProgressionManager.ts';
+import { CullingManager } from '../../rendering/culling/CullingManager.ts';
+import { InterpolationManager } from '../../rendering/interpolation/InterpolationManager.ts';
 import { CollisionHandler } from '../../collision/handler/CollisionHandler.ts';
 import { EffectCoordinator } from '../../effects/manager/EffectCoordinator.ts';
-import { GameLifecycleManager } from '../../progression/lifecycle/GameLifecycleManager.js';
-import { CullingCoordinator } from '../../rendering/culling/CullingCoordinator.js';
+import { GameLifecycleManager } from '../../progression/lifecycle/GameLifecycleManager.ts';
+import { CullingCoordinator } from '../../rendering/culling/CullingCoordinator.ts';
 import { PlayerPhysicsController } from '../../player/controllers/PlayerPhysicsController.ts';
-import { SoundManager } from '../../sound/manager/SoundManager.js';
-import { RestartManager } from '../../restart/manager/RestartManager.js';
+import { SoundManager } from '../../sound/manager/SoundManager.ts';
+import { RestartManager } from '../../restart/manager/RestartManager.ts';
+import type { SystemRegistry } from '../registry/SystemRegistry.ts';
+import type { UIEventCallbacks } from '../../../types/ui';
 
 export class InitializationCoordinator {
-  constructor(registry) {
+  private registry: SystemRegistry;
+
+  constructor(registry: SystemRegistry) {
     this.registry = registry;
   }
 
-  async init() {
+  async init(): Promise<void> {
     try {
       this.initUI();
       await this.initRenderer();
@@ -40,8 +44,8 @@ export class InitializationCoordinator {
     }
   }
 
-  async initGameplaySystems(updateCallback, renderCallback) {
-    await this.registry.assetLoader.ensureGameplayAssetsReady();
+  async initGameplaySystems(updateCallback: (deltaTime: number) => void, renderCallback: (alpha: number) => void): Promise<void> {
+    await this.registry.assetLoader!.ensureGameplayAssetsReady();
 
     this.initPlayer();
     this.initSpawnSystem();
@@ -56,43 +60,42 @@ export class InitializationCoordinator {
     console.log('✅ Gameplay systems initialized');
   }
 
-  initUI() {
+  initUI(): void {
     this.registry.ui = new UIController();
   }
 
-  async initRenderer() {
+  async initRenderer(): Promise<void> {
     this.registry.renderer = new Renderer('game-canvas');
     await this.registry.renderer.init();
   }
 
-  async initAssetLoader() {
+  async initAssetLoader(): Promise<void> {
     this.registry.assetLoader = new AssetLoader();
     await this.registry.assetLoader.init();
     this.registry.assetLoader.startBackgroundLoading();
     await this.registry.assetLoader.loadCriticalAssets();
   }
 
-  initSoundSystem() {
+  initSoundSystem(): void {
     this.registry.soundManager = SoundManager.createWithDefaults();
   }
 
-  initStartScreen() {
-    this.registry.ui.hideLoading();
+  initStartScreen(): void {
+    this.registry.ui!.hideLoading();
     this.registry.stateManager = new GameStateManager();
     this.registry.stateManager.setState('menu');
-    this.registry.ui.showStartScreen();
+    this.registry.ui!.showStartScreen();
 
-    // Синхронизируем визуальное состояние mute кнопки с сохраненным состоянием
     if (this.registry.soundManager) {
-      this.registry.ui.updateMuteButtonState(this.registry.soundManager.isMuted);
+      this.registry.ui!.updateMuteButtonState(this.registry.soundManager.isMuted);
     }
   }
 
-  initPlayer() {
+  initPlayer(): void {
     this.registry.playerPhysicsController = new PlayerPhysicsController(CONFIG.PLAYER.PHYSICS);
 
-    const playerSpritesheet = this.registry.assetLoader.getAsset('playerAnimated');
-    const playerBoostSpritesheet = this.registry.assetLoader.getAsset('playerAnimatedBoost');
+    const playerSpritesheet = this.registry.assetLoader!.getAsset('playerAnimated');
+    const playerBoostSpritesheet = this.registry.assetLoader!.getAsset('playerAnimatedBoost');
 
     this.registry.player = new Player(
       playerSpritesheet,
@@ -103,45 +106,45 @@ export class InitializationCoordinator {
     );
 
     const playerSprite = this.registry.player.getSprite();
-    playerSprite.zIndex = 10; // 🎨 Игровой слой (между decorationLayer:0 и effectsLayer:20)
-    this.registry.renderer.addToStage(playerSprite);
+    playerSprite.zIndex = 10;
+    this.registry.renderer!.addToStage(playerSprite);
   }
 
-  initSpawnSystem() {
+  initSpawnSystem(): void {
     this.registry.spawnSystem = new SpawnSystem(
-      this.registry.assetLoader,
-      this.registry.renderer.stage,
-      this.registry.renderer.decorationLayer,
-      this.registry.renderer.effectsLayer
+      this.registry.assetLoader!,
+      this.registry.renderer!.stage,
+      this.registry.renderer!.decorationLayer,
+      this.registry.renderer!.effectsLayer
     );
   }
 
-  initCollisionSystem() {
+  initCollisionSystem(): void {
     this.registry.collisionSystem = new CollisionSystem();
   }
 
-  initCoreManagers() {
+  initCoreManagers(): void {
     this.registry.difficultyManager = new DifficultyManager();
-    this.registry.progressionManager = new ProgressionManager(this.registry.ui);
+    this.registry.progressionManager = new ProgressionManager(this.registry.ui!);
     this.registry.boosterManager = new BoosterManager(
-      this.registry.spawnSystem,
+      this.registry.spawnSystem!,
       this.registry.difficultyManager,
-      this.registry.ui,
-      this.registry.player,
-      this.registry.soundManager,
-      this.registry.progressionManager  // Добавлен для плавных speed transitions
+      this.registry.ui!,
+      this.registry.player!,
+      this.registry.soundManager!,
+      this.registry.progressionManager
     );
   }
 
-  initHandlers() {
+  initHandlers(): void {
     this.registry.collisionHandler = new CollisionHandler(
-      this.registry.collisionSystem,
-      this.registry.soundManager
+      this.registry.collisionSystem!,
+      this.registry.soundManager!
     );
-    this.registry.effectCoordinator = new EffectCoordinator(this.registry.spawnSystem);
+    this.registry.effectCoordinator = new EffectCoordinator(this.registry.spawnSystem!);
   }
 
-  initRenderingOptimization() {
+  initRenderingOptimization(): void {
     this.registry.cullingManager = new CullingManager({
       cullThreshold: CONFIG.CULLING.THRESHOLD,
       leftMultiplier: CONFIG.CULLING.LEFT_MULTIPLIER,
@@ -154,31 +157,31 @@ export class InitializationCoordinator {
 
     this.registry.cullingCoordinator = new CullingCoordinator(
       this.registry.cullingManager,
-      this.registry.spawnSystem
+      this.registry.spawnSystem!
     );
   }
 
-  initGameLoop(updateCallback, renderCallback) {
+  initGameLoop(updateCallback: (deltaTime: number) => void, renderCallback: (alpha: number) => void): void {
     this.registry.gameLoop = new GameLoop(updateCallback, renderCallback);
   }
 
-  initLifecycleManagers() {
+  initLifecycleManagers(): void {
     const coreDependencies = {
-      stateManager: this.registry.stateManager,
-      progressionManager: this.registry.progressionManager,
-      boosterManager: this.registry.boosterManager,
-      difficultyManager: this.registry.difficultyManager,
-      player: this.registry.player,
-      spawnSystem: this.registry.spawnSystem,
-      gameLoop: this.registry.gameLoop,
-      ui: this.registry.ui,
-      soundManager: this.registry.soundManager,
+      stateManager: this.registry.stateManager!,
+      progressionManager: this.registry.progressionManager!,
+      boosterManager: this.registry.boosterManager!,
+      difficultyManager: this.registry.difficultyManager!,
+      player: this.registry.player!,
+      spawnSystem: this.registry.spawnSystem!,
+      gameLoop: this.registry.gameLoop!,
+      ui: this.registry.ui!,
+      soundManager: this.registry.soundManager!,
     };
 
     this.registry.lifecycleManager = new GameLifecycleManager({
       ...coreDependencies,
-      renderer: this.registry.renderer,
-      setWaitingForInput: (isWaiting) => {
+      renderer: this.registry.renderer!,
+      setWaitingForInput: (isWaiting: boolean) => {
         this.registry.isWaitingForUserInput = isWaiting;
       }
     });
@@ -189,16 +192,16 @@ export class InitializationCoordinator {
     });
   }
 
-  initPostSetup() {
-    const rendererWidth = this.registry.renderer.app?.screen?.width || CONFIG.CANVAS_WIDTH;
-    this.registry.cullingManager.setBoundaries(rendererWidth);
+  initPostSetup(): void {
+    const rendererWidth = this.registry.renderer!.app?.screen?.width || CONFIG.CANVAS_WIDTH;
+    this.registry.cullingManager!.setBoundaries(rendererWidth);
 
     if (typeof window !== 'undefined') {
-      window.soundManager = this.registry.soundManager;
+      (window as Window & { soundManager?: SoundManager }).soundManager = this.registry.soundManager!;
     }
   }
 
-  setupUIEventListeners(callbacks) {
-    this.registry.ui.setupEventListeners(callbacks);
+  setupUIEventListeners(callbacks: UIEventCallbacks): void {
+    this.registry.ui!.setupEventListeners(callbacks);
   }
 }
