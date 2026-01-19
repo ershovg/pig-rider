@@ -117,42 +117,49 @@ export class GameLifecycleManager {
   }
 
   async handleBoosterActivation(onConfirm?: VoidCallback): Promise<void> {
-    this.gameLoop.pause();
+    console.log('💥 Booster activation triggered!');
 
-    let volumeRestore = null;
     const isFirstBooster = this.boosterManager.isFirstBooster();
 
-    if (this.soundManager && isFirstBooster) {
-      console.log('🎓 First booster! Pausing music for tutorial modal...');
-      volumeRestore = this.soundManager.pauseForModal(0.3);
-    } else {
-      console.log('🚀 Subsequent booster, skipping modal and music pause');
-    }
+    console.log('🎬 Showing booster animation (non-blocking)...');
+    this.ui.showBoosterActivation();
 
-    this.setWaitingForInput(true);
+    if (isFirstBooster) {
+      this.gameLoop.pause();
 
-    const confirmed = await this.ui.showBoosterModal(isFirstBooster);
-
-    this.setWaitingForInput(false);
-
-    if (volumeRestore) {
-      volumeRestore.restore(300);
-    }
-
-    if (confirmed) {
-      if (isFirstBooster) {
-        this.boosterManager.markFirstBoosterUsed();
+      let volumeRestore = null;
+      if (this.soundManager) {
+        console.log('🎓 First booster! Pausing music for tutorial modal...');
+        volumeRestore = this.soundManager.pauseForModal(0.3);
       }
 
+      this.setWaitingForInput(true);
+
+      const confirmed = await this.ui.showBoosterModal(isFirstBooster);
+
+      this.setWaitingForInput(false);
+
+      if (volumeRestore) {
+        volumeRestore.restore(300);
+      }
+
+      if (confirmed) {
+        this.boosterManager.markFirstBoosterUsed();
+        await this.boosterManager.activate();
+        onConfirm?.();
+      }
+
+      if (!document.hidden) {
+        this.gameLoop.resume();
+        console.log('✅ Game resumed after booster modal (tab is visible)');
+      } else {
+        console.log('⏸️ Game stays paused (tab is hidden, will resume on visibility change)');
+      }
+    } else {
+      console.log('🚀 Subsequent booster, auto-activating without modal...');
+      this.boosterManager.markFirstBoosterUsed();
       await this.boosterManager.activate();
       onConfirm?.();
-    }
-
-    if (!document.hidden) {
-      this.gameLoop.resume();
-      console.log('✅ Game resumed after booster modal (tab is visible)');
-    } else {
-      console.log('⏸️ Game stays paused (tab is hidden, will resume on visibility change)');
     }
   }
 
