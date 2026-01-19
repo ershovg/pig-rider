@@ -153,11 +153,9 @@ src/
 │   │
 │   ├── coins/                     # Модуль: Монеты и сбор
 │   │   ├── entities/
-│   │   │   ├── Coin.js
-│   │   │   └── CoinSparkle.js
+│   │   │   └── Coin.js
 │   │   ├── spawner/
-│   │   │   ├── CoinSpawner.js
-│   │   │   └── SparkleSpawner.js
+│   │   │   └── CoinSpawner.js
 │   │   └── effects/
 │   │       └── CoinCollectEffect.js
 │   │
@@ -224,10 +222,6 @@ src/
 │   │   ├── interfaces/
 │   │   │   ├── Cullable.js
 │   │   │   └── Interpolatable.js
-│   │   └── animations/
-│   │       ├── gsap-buttons.js
-│   │       ├── gsap-clouds.js
-│   │       └── gsap-stars.js
 │   │
 │   ├── monitoring/                # Модуль: Performance мониторинг
 │   │   └── PerformanceMonitor.js
@@ -269,13 +263,13 @@ src/
 - `BaseSpawner` - абстрактный класс (Template Method Pattern)
 - `EntityPoolManager` - централизованное управление пулами (Registry Pattern)
 - `LaneSafetyService` - гарантирует, что хотя бы одна полоса всегда свободна
-- Специализированные spawner'ы: `ObstacleSpawner`, `CoinSpawner`, `CloudSpawner`, `StarSpawner`, `BoosterSpawner`, `SparkleSpawner`
+- Специализированные spawner'ы: `ObstacleSpawner`, `CoinSpawner`, `CloudSpawner`, `StarSpawner`, `BoosterSpawner`
 
 **API:**
 - `update(deltaTime, gameSpeed, context)` - обновляет все spawner'ы
 - `fillLaneWithCoins(lane)` - заполнить полосу монетами (booster mode)
 - `clearAllObstacles()` - очистить препятствия (при бустере)
-- `emitCoinSparkle(x, y)` - эффект сбора монеты
+- `emitCoinCollectEffect(x, y)` - эффект сбора монеты
 - `getActiveObstacles/Coins/Boosters()` - получить активные объекты
 
 **Как добавить новый тип объектов:**
@@ -448,6 +442,69 @@ Background:   [Load Critical]   → [Show UI]  (1s blocking)
 - ✅ Создал `features/confetti/manager/ConfettiManager.js` + импортировал в UIController
 - ❌ Добавил логику аудио в Game.js
 - ✅ Создал `features/sound/manager/SoundManager.js` + зарегистрировал в Game.js
+
+---
+
+### TypeScript Типизация
+
+**Стиль:** Минималистичный TypeScript без JSDoc комментариев, без префикса `I` для интерфейсов.
+
+**Правило размещения типов:**
+
+```
+✅ Тип используется в 1 месте → локально в файле
+✅ Тип используется в 2+ местах → types/
+```
+
+**Структура types/ (Flat files):**
+```
+types/
+├── index.ts          # Barrel (экспорт всего)
+├── entities/         # Entity интерфейсы (папка)
+├── events/           # EventBus события (папка)
+├── rendering/        # Rendering типы (папка)
+├── common.ts         # Lane, Point2D, GameState
+├── managers.ts       # Интерфейсы менеджеров
+├── spawning.ts       # ObjectPool, SpawnCoordinationService
+├── ui.ts             # UIController interface
+└── player.ts         # Player interface
+```
+
+**Примеры:**
+
+**❌ Плохо - интерфейсы в файле класса:**
+```typescript
+// BoosterManager.ts
+interface SpawnSystem { ... }  // Используется в других местах!
+interface UIController { ... }  // Используется в других местах!
+export class BoosterManager { ... }
+```
+
+**✅ Хорошо - переиспользуемые типы в types/:**
+```typescript
+// types/managers.ts
+export interface SpawnSystem { ... }
+export interface UIController { ... }
+
+// BoosterManager.ts
+import { SpawnSystem, UIController } from '../../../types/managers';
+export class BoosterManager { ... }
+```
+
+**✅ Хорошо - локальный Config (используется 1 раз):**
+```typescript
+// BoosterSpawner.ts
+interface BoosterSpawnerConfig {  // Только для этого файла
+  pool: ObjectPool<ActivatableEntity>;
+  stage: PIXI.Container;
+}
+export class BoosterSpawner { ... }
+```
+
+**Запрещено:**
+- ❌ `any` типы (используй generic или `unknown`)
+- ❌ JSDoc комментарии (код должен быть self-documenting)
+- ❌ Префикс `I` для интерфейсов (`IUser` → `User`)
 
 ---
 

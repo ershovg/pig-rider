@@ -1,0 +1,58 @@
+import { BaseSpawner } from '../../spawning/spawners/BaseSpawner';
+import { CONFIG } from '../../../shared/config/constants';
+import { MathUtils } from '../../../shared/utils/MathUtils';
+import {
+  Lane,
+  ActivatableEntity,
+  SpawnContext,
+  CollectibleSpawnerConfig
+} from '../../../types';
+import { Booster } from '../entities/Booster';
+
+export class BoosterSpawner extends BaseSpawner<Booster> {
+  private coordinationService: CollectibleSpawnerConfig<ActivatableEntity>['coordinationService'];
+  private lastBoosterX: [number, number, number];
+
+  constructor(config: CollectibleSpawnerConfig<ActivatableEntity>) {
+    super({
+      pool: config.pool,
+      stage: config.stage,
+      baseInterval: 8000,
+      getIntervalModifier: null
+    });
+
+    this.coordinationService = config.coordinationService;
+    this.lastBoosterX = [0, 0, 0];
+  }
+
+  spawn(_gameSpeed: number, context: SpawnContext = {}): void {
+    const { isBoosterMode = false, boosterCooldown = 0 } = context;
+
+    if (isBoosterMode || boosterCooldown > 0) {
+      return;
+    }
+
+    const lane = MathUtils.randomInt(0, CONFIG.LANES.TOTAL - 1) as Lane;
+    const distance = MathUtils.randomFloat(400, 800);
+    const spawnX = CONFIG.CANVAS_WIDTH + distance;
+
+    if (this.coordinationService && !this.coordinationService.canSpawnAt(lane, spawnX, 200)) {
+      return;
+    }
+
+    const booster = this.pool.acquire();
+    if (booster) {
+      booster.activate(lane, spawnX);
+      this.lastBoosterX[lane] = spawnX;
+    }
+  }
+
+  reset(): void {
+    super.reset();
+    this.lastBoosterX = [0, 0, 0];
+  }
+
+  hasActiveBoosters(): boolean {
+    return this.getActiveObjects().length > 0;
+  }
+}

@@ -37,6 +37,20 @@
       font-size: 0.9rem;
       margin-bottom: 20px;
     }
+
+    /* Lottie overlay стили */
+    .lottie-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 9999;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 
@@ -47,6 +61,10 @@
   <div id="game-root">
     <h1>🐷 Pig Rider Game</h1>
     <p class="dev-notice">Dev Mode - Game UI managed by UIController</p>
+
+    <!-- Lottie Animations -->
+    <div id="lottie-tutorial" class="lottie-overlay" style="display: none;"></div>
+    <div id="lottie-booster" class="lottie-overlay" style="display: none;"></div>
 
     <!-- PixiJS Canvas (обязательно) -->
     <canvas id="game-canvas"></canvas>

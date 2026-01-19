@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { CollisionSystem } from '../features/collision/system/CollisionSystem.js';
-import { MathUtils } from '../shared/utils/MathUtils.js';
+import { CollisionSystem } from '../features/collision/system/CollisionSystem.ts';
+import { MathUtils } from '../shared/utils/MathUtils.ts';
 
 /**
  * ГРУППА ТЕСТОВ для системы коллизий

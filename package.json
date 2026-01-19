@@ -22,11 +22,14 @@
     "canvas-confetti": "^1.9.3",
     "gsap": "^3.13.0",
     "howler": "^2.2.4",
+    "lottie-web": "^5.13.0",
     "pixi.js": "^8.13.2"
   },
   "devDependencies": {
+    "@types/node": "^24.10.0",
     "sharp": "^0.34.4",
     "terser": "^5.44.0",
+    "typescript": "^5.9.3",
     "vite": "^7.1.9",
     "vitest": "^3.2.4"
   }

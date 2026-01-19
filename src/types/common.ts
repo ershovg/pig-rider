@@ -1,0 +1,23 @@
+export type Lane = 0 | 1 | 2;
+
+export interface Point2D {
+  x: number;
+  y: number;
+}
+
+export interface Vector2D {
+  x: number;
+  y: number;
+}
+
+export interface Size {
+  width: number;
+  height: number;
+}
+
+export interface Rectangle extends Point2D, Size {}
+
+export type GameState = 'loading' | 'menu' | 'playing' | 'paused' | 'ended';
+
+export type SetWaitingForInputCallback = (isWaiting: boolean) => void;
+export type VoidCallback = () => void;
