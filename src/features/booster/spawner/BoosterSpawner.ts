@@ -17,7 +17,7 @@ export class BoosterSpawner extends BaseSpawner<Booster> {
     super({
       pool: config.pool,
       stage: config.stage,
-      baseInterval: 8000,
+      baseInterval: 6500,
       getIntervalModifier: null
     });
 
