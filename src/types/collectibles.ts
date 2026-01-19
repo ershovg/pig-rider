@@ -1,4 +1,9 @@
-export type CollectibleType = 'coin' | 'booster' | 'shield' | 'magnet' | 'doubler';
+export type CollectibleType =
+  | "coin"
+  | "booster"
+  | "shield"
+  | "magnet"
+  | "doubler";
 
 export interface CollectResult {
   type: CollectibleType;
