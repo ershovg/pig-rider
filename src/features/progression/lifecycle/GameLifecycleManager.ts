@@ -64,6 +64,8 @@ export class GameLifecycleManager {
 
     this.renderer.start();
     this.gameLoop.start();
+
+    this.ui.showTutorialHint();
   }
 
   endGame(isWin: boolean, score: number): void {
