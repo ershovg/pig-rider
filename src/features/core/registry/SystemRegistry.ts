@@ -88,14 +88,14 @@ export class SystemRegistry {
 
   register(name: string, instance: unknown): void {
     if (!(name in this)) {
-      console.warn(`⚠️ SystemRegistry: Unknown system name "${name}"`);
+      console.warn(`SystemRegistry: Unknown system name "${name}"`);
     }
     (this as Record<string, unknown>)[name] = instance;
   }
 
   get(name: string): unknown {
     if (!(name in this)) {
-      console.warn(`⚠️ SystemRegistry: System "${name}" not found`);
+      console.warn(`SystemRegistry: System "${name}" not found`);
     }
     return (this as Record<string, unknown>)[name];
   }

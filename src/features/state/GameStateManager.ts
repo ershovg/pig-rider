@@ -9,7 +9,6 @@ export class GameStateManager {
 
   setState(newState: GameState): void {
     this.state = newState;
-    console.log(`🎮 Game state: ${newState}`);
   }
 
   getState(): GameState {
