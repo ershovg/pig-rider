@@ -61,21 +61,18 @@ export class Renderer {
 
     this.setupResponsive();
 
-    console.log('🎨 Renderer initialized (ticker stopped, ParticleContainer ready)');
     return this.app;
   }
 
   start(): void {
     if (this.app) {
       this.app.ticker.start();
-      console.log('🎨 Renderer started');
     }
   }
 
   stop(): void {
     if (this.app) {
       this.app.ticker.stop();
-      console.log('🎨 Renderer stopped');
     }
   }
 
@@ -95,8 +92,6 @@ export class Renderer {
 
       this.app.canvas.style.width = `${CONFIG.CANVAS_WIDTH * scale}px`;
       this.app.canvas.style.height = `${CONFIG.CANVAS_HEIGHT * scale}px`;
-
-      console.log(`📐 Canvas scaled: ${CONFIG.CANVAS_WIDTH * scale}x${CONFIG.CANVAS_HEIGHT * scale}`);
     };
 
     window.addEventListener('resize', resize);

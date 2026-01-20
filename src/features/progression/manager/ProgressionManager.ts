@@ -18,8 +18,6 @@ export class ProgressionManager {
     this.targetSpeed = CONFIG.GAME_SPEED;
     this.isBoosterActive = false;
     this.boosterTransitionSpeed = 5.0;
-
-    console.log('📊 ProgressionManager initialized with gradual progression + native lerp');
   }
 
   update(deltaTime: number): void {
@@ -47,16 +45,12 @@ export class ProgressionManager {
       CONFIG.MAX_SPEED
     );
     this.boosterTransitionSpeed = 6.0;
-
-    console.log(`⚡ Booster activating: ${this.currentSpeed.toFixed(2)}x → ${this.targetSpeed.toFixed(2)}x (${this.baseSpeed.toFixed(2)} × ${boosterMultiplier})`);
   }
 
   deactivateBoosterSpeed(): void {
     this.isBoosterActive = false;
     this.targetSpeed = this.baseSpeed;
     this.boosterTransitionSpeed = 4.0;
-
-    console.log(`🛑 Booster deactivating: ${this.currentSpeed.toFixed(2)}x → ${this.targetSpeed.toFixed(2)}x`);
   }
 
   addScore(value: number): void {
@@ -93,7 +87,5 @@ export class ProgressionManager {
     this.targetSpeed = CONFIG.GAME_SPEED;
     this.isBoosterActive = false;
     this.boosterTransitionSpeed = 5.0;
-
-    console.log('🔄 ProgressionManager reset (speed: 1.0x, native lerp mode)');
   }
 }

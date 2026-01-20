@@ -15,11 +15,8 @@ let gameInstance = null;
  */
 async function initGame() {
   try {
-    console.log('🎮 Pig Rider Game - Initializing...');
-
     // Мержим кастомный конфиг из Webflow (если есть)
     if (window.GAME_CONFIG) {
-      console.log('📝 Custom config detected:', window.GAME_CONFIG);
       Object.assign(CONFIG, window.GAME_CONFIG);
     }
 
@@ -34,10 +31,8 @@ async function initGame() {
 
     // Экспортируем в window для доступа из Webflow
     window.PigRiderGame = gameInstance;
-
-    console.log('✅ Game initialized successfully');
   } catch (error) {
-    console.error('❌ Failed to initialize game:', error);
+    console.error('Failed to initialize game:', error);
 
     // Показываем ошибку пользователю
     const startScreen = document.querySelector('.game-ui.game-start');

@@ -31,7 +31,6 @@ export class SoundManager {
 
     manager.initMusicStates(config.musicStates);
 
-    console.log('✅ Sound system initialized with default configuration');
     return manager;
   }
 
@@ -48,8 +47,6 @@ export class SoundManager {
 
     this.loadMuteState();
     this.setupAudioUnlock();
-
-    console.log('🔊 SoundManager initialized (modular architecture)');
   }
 
   initMusicStates(config: Record<string, any> = {}): void {
@@ -60,15 +57,12 @@ export class SoundManager {
       beatSync: config.beatSync !== undefined ? config.beatSync : true,
       ...config,
     });
-
-    console.log('✅ Music state system initialized');
   }
 
   private setupAudioUnlock(): void {
     const unlockAudio = () => {
       if (this.audioUnlocked) return;
       this.audioUnlocked = true;
-      console.log('🔓 Audio context unlocked');
 
       document.removeEventListener('click', unlockAudio);
       document.removeEventListener('touchstart', unlockAudio);
@@ -85,10 +79,9 @@ export class SoundManager {
       const saved = localStorage.getItem('pigRider_soundMuted');
       if (saved !== null) {
         this.isMuted = saved === 'true';
-        console.log(`🔊 Restored mute state: ${this.isMuted ? 'muted' : 'unmuted'}`);
       }
     } catch (error) {
-      console.warn('⚠️ Failed to load mute state from localStorage:', error);
+      console.warn('Failed to load mute state from localStorage:', error);
     }
   }
 
@@ -96,7 +89,7 @@ export class SoundManager {
     try {
       localStorage.setItem('pigRider_soundMuted', this.isMuted.toString());
     } catch (error) {
-      console.warn('⚠️ Failed to save mute state to localStorage:', error);
+      console.warn('Failed to save mute state to localStorage:', error);
     }
   }
 
@@ -114,7 +107,6 @@ export class SoundManager {
     }
 
     this.sounds.set(alias, sound);
-    console.log(`🎵 Sound loaded: ${alias}`);
 
     return sound;
   }
@@ -127,8 +119,8 @@ export class SoundManager {
       html5: false,
       ...options,
       src,
-      onload: () => console.log(`✅ Music loaded: ${alias}`),
-      onloaderror: (_id: any, error: any) => console.error(`❌ Error loading ${alias}:`, error),
+      onload: () => undefined,
+      onloaderror: (_id: any, error: any) => console.error(`Error loading ${alias}:`, error),
     });
 
     if (this.isMuted) {
@@ -145,7 +137,7 @@ export class SoundManager {
 
     const sound = this.sounds.get(alias);
     if (!sound) {
-      console.warn(`⚠️ Sound not found: ${alias}`);
+      console.warn(`Sound not found: ${alias}`);
       return null;
     }
 
@@ -158,7 +150,7 @@ export class SoundManager {
 
   setMusicState(stateName: string, context: StateContext = {}): Promise<void> | undefined {
     if (!this.musicStateManager) {
-      console.error('❌ Music state manager not initialized! Call initMusicStates() first');
+      console.error('Music state manager not initialized! Call initMusicStates() first');
       return;
     }
 
@@ -179,7 +171,7 @@ export class SoundManager {
 
   pauseSmooth(targetVolume: number = 0.3, fadeDuration: number = 300): PauseRestore {
     if (!this.musicStateManager) {
-      console.warn('⚠️ Music state manager not initialized');
+      console.warn('Music state manager not initialized');
       return { restore: () => {} };
     }
 
@@ -192,26 +184,22 @@ export class SoundManager {
 
   stopAll(): void {
     this.sounds.forEach(sound => sound.stop());
-    console.log('🔇 All sounds stopped');
   }
 
   setMasterVolume(volume: number): void {
     this.masterVolume = Math.max(0, Math.min(1, volume));
-    console.log(`🔊 Master volume: ${this.masterVolume}`);
   }
 
   mute(): void {
     this.isMuted = true;
     this.sounds.forEach(sound => sound.mute(true));
     this.saveMuteState();
-    console.log('🔇 Muted');
   }
 
   unmute(): void {
     this.isMuted = false;
     this.sounds.forEach(sound => sound.mute(false));
     this.saveMuteState();
-    console.log('🔊 Unmuted');
   }
 
   toggleMute(): boolean {
@@ -257,8 +245,6 @@ export class SoundManager {
     this.sounds.clear();
 
     this.musicStateManager = null;
-
-    console.log('🗑️ SoundManager destroyed');
   }
 
   reset(): void {
@@ -267,7 +253,5 @@ export class SoundManager {
     }
 
     this.stopAll();
-
-    console.log('🔄 SoundManager reset complete');
   }
 }

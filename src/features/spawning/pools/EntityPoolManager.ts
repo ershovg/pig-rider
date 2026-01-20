@@ -51,7 +51,6 @@ export class EntityPoolManager {
     entityConfig: PoolRegistrationConfig = {}
   ): void {
     if (this.pools.has(name)) {
-      console.warn(`Pool "${name}" already registered. Skipping.`);
       return;
     }
 
@@ -111,8 +110,6 @@ export class EntityPoolManager {
     const pool = new ObjectPool<T>(factory, reset, initialSize, maxSize);
 
     this.pools.set(name, pool as ObjectPool<unknown>);
-
-    console.log(`[PoolManager] Registered pool "${name}" with ${initialSize} objects (max: ${maxSize})`);
   }
 
   /**
@@ -167,9 +164,8 @@ export class EntityPoolManager {
    * Сбросить все пулы (вернуть все объекты в пулы)
    */
   resetAll(): void {
-    this.pools.forEach((pool, name) => {
+    this.pools.forEach((pool) => {
       pool.releaseAll();
-      console.log(`[PoolManager] Reset pool "${name}"`);
     });
   }
 
@@ -195,7 +191,6 @@ export class EntityPoolManager {
    * Вывести статистику в консоль (для отладки)
    */
   logStats(): void {
-    console.log('=== EntityPoolManager Stats ===');
     const stats = this.getAllStats();
 
     Object.entries(stats).forEach(([name, stat]) => {
@@ -205,7 +200,6 @@ export class EntityPoolManager {
         `Total: ${stat.total.toString().padStart(3)}`
       );
     });
-    console.log('================================');
   }
 
   /**
@@ -225,7 +219,6 @@ export class EntityPoolManager {
     if (this.pools.has(name)) {
       this.pools.get(name)!.releaseAll();
       this.pools.delete(name);
-      console.log(`[PoolManager] Removed pool "${name}"`);
     }
   }
 

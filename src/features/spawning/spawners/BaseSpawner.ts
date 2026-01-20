@@ -87,9 +87,6 @@ export abstract class BaseSpawner<T extends Entity> {
       }
     }
 
-    if (culled > 0) {
-      console.log(`[${this.name}] Culled ${culled} objects (threshold: ${cullThreshold}px)`);
-    }
   }
 
   /**

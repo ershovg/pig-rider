@@ -59,7 +59,6 @@ export class GameLifecycleManager {
 
     if (this.soundManager) {
       this.soundManager.setMusicState('gameplay');
-      console.log('🎵 Music state: gameplay');
     }
 
     this.renderer.start();
@@ -81,7 +80,6 @@ export class GameLifecycleManager {
       const bonusMusic = this.soundManager.sounds.get('bonusMusic');
       if (mainMusic) mainMusic.stop();
       if (bonusMusic) bonusMusic.stop();
-      console.log('🎵 Background music stopped on game end');
     }
 
     this.ui.hideRunningScreen();
@@ -117,11 +115,8 @@ export class GameLifecycleManager {
   }
 
   async handleBoosterActivation(onConfirm?: VoidCallback): Promise<void> {
-    console.log('💥 Booster activation triggered!');
-
     const isFirstBooster = this.boosterManager.isFirstBooster();
 
-    console.log('🎬 Showing booster animation (non-blocking)...');
     this.ui.showBoosterActivation();
 
     if (isFirstBooster) {
@@ -129,7 +124,6 @@ export class GameLifecycleManager {
 
       let volumeRestore = null;
       if (this.soundManager) {
-        console.log('🎓 First booster! Pausing music for tutorial modal...');
         volumeRestore = this.soundManager.pauseForModal(0.3);
       }
 
@@ -151,12 +145,8 @@ export class GameLifecycleManager {
 
       if (!document.hidden) {
         this.gameLoop.resume();
-        console.log('✅ Game resumed after booster modal (tab is visible)');
-      } else {
-        console.log('⏸️ Game stays paused (tab is hidden, will resume on visibility change)');
       }
     } else {
-      console.log('🚀 Subsequent booster, auto-activating without modal...');
       this.boosterManager.markFirstBoosterUsed();
       await this.boosterManager.activate();
       onConfirm?.();

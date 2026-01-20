@@ -32,7 +32,7 @@ export class BoosterState extends BaseMusicState {
     this.intensityTrack = this.getTrack(this.config.intensityAlias);
 
     if (!this.intensityTrack) {
-      console.error(`❌ [${this.name}] Intensity track not found`);
+      console.error(`[${this.name}] Intensity track not found`);
       return;
     }
 
@@ -47,13 +47,7 @@ export class BoosterState extends BaseMusicState {
     const currentPosition = baseTrack.seek() as number;
     const delayToNextBeat = this.beatSyncEngine.getDelayToNextBeat(currentPosition);
 
-    console.log(`🎼 [${this.name}] Beat-synced transition:`);
-    console.log(`   Current position: ${currentPosition.toFixed(2)}s`);
-    console.log(`   Waiting ${delayToNextBeat.toFixed(0)}ms for next beat...`);
-
     await new Promise(resolve => setTimeout(resolve, delayToNextBeat));
-
-    console.log(`✅ [${this.name}] On beat! Starting gap crossfade...`);
 
     await this._performGapCrossfade(baseTrack);
   }
@@ -61,17 +55,12 @@ export class BoosterState extends BaseMusicState {
   private async _performGapCrossfade(baseTrack: HowlInstance | undefined): Promise<void> {
     const { fadeOutDuration, fadeInDuration, intensityVolume } = this.config;
 
-    console.log(`🚀 [${this.name}] GAP CROSSFADE starting...`);
-    console.log(`   Phase 1: Base fade-out (${fadeOutDuration}ms)`);
-    console.log(`   Phase 2: Intensity fade-in (${fadeInDuration}ms)`);
-
     if (baseTrack) {
       const currentBaseVol = baseTrack.volume() as number;
       baseTrack.fade(currentBaseVol, 0, fadeOutDuration);
     }
 
     this.intensityTrack!.seek(0);
-    console.log(`🔄 [${this.name}] Intensity reset to 0s`);
 
     const gapDelay = fadeOutDuration * 0.8;
 
@@ -80,17 +69,12 @@ export class BoosterState extends BaseMusicState {
     const targetVolume = intensityVolume * this.masterVolume;
     this.intensityTrack!.volume(0);
     this.intensityTrack!.fade(0, targetVolume, fadeInDuration);
-
-    console.log(`🎵 [${this.name}] Intensity fade-in started (0 → ${targetVolume})`);
-    console.log(`✅ [${this.name}] Gap crossfade complete`);
   }
 
   async exit(context: StateContext = {}): Promise<void> {
     const { fadeOutDuration } = this.config;
     const baseTrack = context.baseTrack;
     const fadeInDuration = context.fadeInDuration || 500;
-
-    console.log(`⏹️ [${this.name}] Exiting with gap crossfade...`);
 
     if (this.intensityTrack) {
       const currentVol = this.intensityTrack.volume() as number;
@@ -105,8 +89,6 @@ export class BoosterState extends BaseMusicState {
       const targetBaseVol = (context.baseVolume || 0.6) * this.masterVolume;
       baseTrack.volume(0);
       baseTrack.fade(0, targetBaseVol, fadeInDuration);
-
-      console.log(`🎵 [${this.name}] Base fade-in started (0 → ${targetBaseVol})`);
     }
 
     await super.exit(context);

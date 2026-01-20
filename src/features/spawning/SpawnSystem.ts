@@ -230,14 +230,10 @@ export class SpawnSystem {
    * Используется при рестарте игры для полной очистки экрана
    */
   clearAllEffects(): void {
-    console.log('🧹 SpawnSystem: Clearing all effects...');
-
     // Очистка coinCollectEffect (искорки при сборе монет)
     if (this.poolManager.hasPool('coinCollectEffect')) {
       const coinEffectPool = this.poolManager.getPool<CoinCollectEffect>('coinCollectEffect');
       const activeCoinEffects = coinEffectPool.getActive();
-
-      console.log(`  - Deactivating ${activeCoinEffects.length} coin collect effects`);
 
       for (let i = activeCoinEffects.length - 1; i >= 0; i--) {
         const effect = activeCoinEffects[i];
@@ -253,8 +249,6 @@ export class SpawnSystem {
       const collisionPool = this.poolManager.getPool<CollisionEffect>('collisionEffect');
       const activeCollisionEffects = collisionPool.getActive();
 
-      console.log(`  - Deactivating ${activeCollisionEffects.length} collision effects`);
-
       for (let i = activeCollisionEffects.length - 1; i >= 0; i--) {
         const effect = activeCollisionEffects[i];
         if (effect?.deactivate) {
@@ -263,8 +257,6 @@ export class SpawnSystem {
         collisionPool.release(effect); // Возвращаем в пул
       }
     }
-
-    console.log('  ✅ All effects cleared');
   }
 
   getStats(): Record<string, PoolStats> {

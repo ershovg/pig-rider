@@ -25,7 +25,7 @@ export class DefeatState extends BaseMusicState {
     this.defeatTrack = this.getTrack(this.config.defeatAlias);
 
     if (!this.defeatTrack) {
-      console.warn(`⚠️ [${this.name}] Defeat track not loaded yet`);
+      console.warn(`[${this.name}] Defeat track not loaded yet`);
       return;
     }
 
@@ -33,8 +33,6 @@ export class DefeatState extends BaseMusicState {
     this.defeatTrack.volume(0);
     this.defeatTrack.play();
     this.defeatTrack.fade(0, targetVolume, this.config.fadeDuration);
-
-    console.log(`💀 [${this.name}] Defeat music playing!`);
   }
 
   async exit(context: StateContext = {}): Promise<void> {

@@ -34,8 +34,7 @@ export class Player implements Interpolatable {
 
     const textures = spritesheet.animations['Hryusha_flying_v2'];
     if (!textures) {
-      console.error('❌ Animation "Hryusha_flying_v2" not found in spritesheet!');
-      console.log('Available animations:', Object.keys(spritesheet.animations));
+      console.error('Animation "Hryusha_flying_v2" not found in spritesheet!');
       throw new Error('Missing animation: Hryusha_flying_v2');
     }
 
@@ -57,8 +56,6 @@ export class Player implements Interpolatable {
     this.physicsController.reset(this.currentY);
 
     this.inputController = new PlayerInputController(this);
-
-    console.log('🐷 Animated Player created with', textures.length, 'frames (physics-based)');
   }
 
   moveUp(): void {
@@ -79,7 +76,7 @@ export class Player implements Interpolatable {
 
   moveToLane(laneIndex: Lane): void {
     if (laneIndex < CONFIG.LANES.TOP || laneIndex > CONFIG.LANES.BOTTOM) {
-      console.warn(`⚠️ Invalid lane index: ${laneIndex}`);
+      console.warn(`Invalid lane index: ${laneIndex}`);
       return;
     }
 
@@ -149,7 +146,7 @@ export class Player implements Interpolatable {
 
     const textures = spritesheet.animations[animationName];
     if (!textures) {
-      console.error(`❌ Animation "${animationName}" not found!`);
+      console.error(`Animation "${animationName}" not found!`);
       return;
     }
 
@@ -160,8 +157,6 @@ export class Player implements Interpolatable {
     if (wasPlaying) {
       this.sprite.play();
     }
-
-    console.log(`🐷 Switched to ${isBoosted ? 'BOOST' : 'NORMAL'} animation (${textures.length} frames)`);
   }
 
   destroy(): void {

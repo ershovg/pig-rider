@@ -185,11 +185,11 @@ export class UIController {
             (acceptBtn as HTMLElement).focus();
           }, 100);
         } else {
-          console.warn('⚠️ Booster accept button (.game-booster__accept) not found');
+          console.warn('Booster accept button (.game-booster__accept) not found');
           resolve(true);
         }
       } else {
-        console.warn('⚠️ Booster screen (.game-ui.game-boost) not found');
+        console.warn('Booster screen (.game-ui.game-boost) not found');
         resolve(true);
       }
     });
@@ -312,7 +312,7 @@ export class UIController {
         const confettiCanvas = document.getElementById('confetti-canvas') as HTMLCanvasElement | null;
 
         if (!confettiCanvas) {
-          console.warn('⚠️ Confetti canvas (#confetti-canvas) not found, using default');
+          console.warn('Confetti canvas (#confetti-canvas) not found, using default');
         }
 
         this.confettiManager = new ConfettiManager(confettiCanvas);
@@ -320,27 +320,24 @@ export class UIController {
 
       this.confettiManager.launchVictoryEffect();
     } catch (error) {
-      console.error('❌ Confetti error:', error);
+      console.error('Confetti error:', error);
     }
   }
 
   showTutorialHint(): Promise<void> {
     return new Promise((resolve) => {
       if (!this.lottieContainerTutorial) {
-        console.warn('⚠️ Tutorial Lottie container not found');
+        console.warn('Tutorial Lottie container not found');
         resolve();
         return;
       }
 
-      console.log('🎬 Loading tutorial hint animation...');
       this.lottieContainerTutorial.style.display = 'flex';
 
       const baseUrl = typeof window !== 'undefined' && (window as any).GAME_ASSETS_URL
         ? (window as any).GAME_ASSETS_URL
         : '';
       const animationPath = baseUrl ? `${baseUrl}/assets/animations/tutorial-hint.json` : '/assets/animations/tutorial-hint.json';
-
-      console.log('📍 Tutorial animation path:', animationPath);
 
       try {
         this.lottieAnimations.tutorial = lottie.loadAnimation({
@@ -357,12 +354,12 @@ export class UIController {
         });
 
         this.lottieAnimations.tutorial.addEventListener('data_failed', () => {
-          console.error('❌ Failed to load tutorial hint animation');
+          console.error('Failed to load tutorial hint animation');
           this.hideTutorialHint();
           resolve();
         });
       } catch (error) {
-        console.error('❌ Error loading tutorial hint:', error);
+        console.error('Error loading tutorial hint:', error);
         this.hideTutorialHint();
         resolve();
       }
@@ -382,20 +379,17 @@ export class UIController {
   showBoosterActivation(): Promise<void> {
     return new Promise((resolve) => {
       if (!this.lottieContainerBooster) {
-        console.warn('⚠️ Booster Lottie container not found');
+        console.warn('Booster Lottie container not found');
         resolve();
         return;
       }
 
-      console.log('🎬 Loading booster activation animation...');
       this.lottieContainerBooster.style.display = 'flex';
 
       const baseUrl = typeof window !== 'undefined' && (window as any).GAME_ASSETS_URL
         ? (window as any).GAME_ASSETS_URL
         : '';
       const animationPath = baseUrl ? `${baseUrl}/assets/animations/booster-activation.json` : '/assets/animations/booster-activation.json';
-
-      console.log('📍 Booster animation path:', animationPath);
 
       try {
         this.lottieAnimations.booster = lottie.loadAnimation({
@@ -412,12 +406,12 @@ export class UIController {
         });
 
         this.lottieAnimations.booster.addEventListener('data_failed', () => {
-          console.error('❌ Failed to load booster activation animation');
+          console.error('Failed to load booster activation animation');
           this.hideBoosterActivation();
           resolve();
         });
       } catch (error) {
-        console.error('❌ Error loading booster activation:', error);
+        console.error('Error loading booster activation:', error);
         this.hideBoosterActivation();
         resolve();
       }
