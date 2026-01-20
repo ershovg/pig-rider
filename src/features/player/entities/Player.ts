@@ -122,6 +122,8 @@ export class Player implements Interpolatable {
     this.sprite.rotation = 0;
     this.sprite.visible = true;
 
+    this.switchAnimation(false);
+
     this.physicsController.reset(this.currentY);
     this.inputController.enable();
 

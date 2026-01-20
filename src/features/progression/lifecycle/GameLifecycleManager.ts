@@ -83,6 +83,8 @@ export class GameLifecycleManager {
     }
 
     this.ui.hideRunningScreen();
+    this.ui.removeBoosterClass();
+    this.ui.hideBoosterIcon();
 
     if (isWin) {
       if (this.soundManager) {
