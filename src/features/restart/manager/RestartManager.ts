@@ -17,8 +17,6 @@ interface UpdateCoordinator {
 }
 
 interface Game {
-  stopPoolLogging(): void;
-  startPoolLogging(): void;
   updateCoordinator?: UpdateCoordinator;
   renderer?: Renderer;
 }
@@ -81,10 +79,6 @@ export class RestartManager {
     if (this.soundManager) {
       this.soundManager.reset();
     }
-
-    if (this.game) {
-      this.game.stopPoolLogging();
-    }
   }
 
   private _cleanupUI(): void {
@@ -128,9 +122,5 @@ export class RestartManager {
     }
 
     this.gameLoop.start();
-
-    if (this.game) {
-      this.game.startPoolLogging();
-    }
   }
 }
