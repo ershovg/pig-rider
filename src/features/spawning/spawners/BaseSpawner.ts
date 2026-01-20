@@ -8,10 +8,6 @@ interface BaseSpawnerConstructorConfig<T extends Entity> extends BaseSpawnerConf
   name?: string | null;
 }
 
-/**
- * Базовый класс spawner'ов (Template Method Pattern)
- * @template T - тип entity в пуле (должен расширять Entity)
- */
 export abstract class BaseSpawner<T extends Entity> {
   protected pool: ObjectPool<T>;
   protected stage: PIXI.Container;
@@ -89,10 +85,6 @@ export abstract class BaseSpawner<T extends Entity> {
 
   }
 
-  /**
-   * Метод spawn должен быть реализован в подклассах
-   * Template Method Pattern - каждый spawner определяет свою логику спавна
-   */
   protected abstract spawn(gameSpeed: number, context: SpawnContext): void;
 
   enable(): void {

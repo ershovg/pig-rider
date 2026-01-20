@@ -4,9 +4,6 @@ import { Renderable } from '../../effects/base/Renderable';
 import { Lane } from '../../../types';
 import { CullableEntity } from '../../../types/rendering';
 
-/**
- * Декоративное облако с эффектом параллакса
- */
 export class Cloud extends Renderable implements CullableEntity {
   private container: PIXI.Container | null;
   private sprite: PIXI.Sprite;

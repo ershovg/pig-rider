@@ -23,12 +23,6 @@ import type {
 } from '../../types/spawning';
 import type { Lane } from '../../types/common';
 
-/**
- * Система спавна объектов (оркестратор spawner'ов)
- *
- * Паттерн: Facade + Orchestrator
- * Координирует все spawner'ы, пулы и эффекты
- */
 export class SpawnSystem {
   private stage: PIXI.Container;
   private decorationLayer: PIXI.Container | null;
@@ -197,9 +191,6 @@ export class SpawnSystem {
     return this.starSpawner.getActiveObjects();
   }
 
-  /**
-   * Эмитировать эффект сбора монеты в указанной позиции
-   */
   emitCoinCollectEffect(x: number, y: number): void {
     const effect = this.poolManager.acquire<CoinCollectEffect>('coinCollectEffect');
     if (effect) {
@@ -207,9 +198,6 @@ export class SpawnSystem {
     }
   }
 
-  /**
-   * Эмитировать эффект взрыва при столкновении с препятствием
-   */
   emitCollisionEffect(x: number, y: number): void {
     const effect = this.poolManager.acquire<CollisionEffect>('collisionEffect');
     if (effect) {
@@ -225,10 +213,6 @@ export class SpawnSystem {
     this.boosterSpawner.reset();
   }
 
-  /**
-   * Принудительно очищает все активные эффекты (coin collect, collision)
-   * Используется при рестарте игры для полной очистки экрана
-   */
   clearAllEffects(): void {
     // Очистка coinCollectEffect (искорки при сборе монет)
     if (this.poolManager.hasPool('coinCollectEffect')) {

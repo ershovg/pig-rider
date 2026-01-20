@@ -1,18 +1,9 @@
-/**
- * Webflow Entry Point
- * Этот файл собирается в game.bundle.js для использования в Webflow
- */
-
 import { Game } from './Game.js';
 import { CONFIG } from './shared/config/constants.ts';
 
 // Глобальная переменная для доступа к игре
 let gameInstance = null;
 
-/**
- * Инициализация игры
- * Можно переопределить конфиг через window.GAME_CONFIG в Webflow
- */
 async function initGame() {
   try {
     // Мержим кастомный конфиг из Webflow (если есть)

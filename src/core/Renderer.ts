@@ -32,10 +32,10 @@ export class Renderer {
 
     this.stage = this.app.stage;
 
-    // 🎨 Создаем слои с использованием zIndex для гарантированного порядка:
-    // 1. decorationLayer (zIndex: 0) - фоновые декорации (облака, звезды)
-    // 2. gameLayer (zIndex: 10, stage напрямую) - игровые объекты (игрок, препятствия, монеты)
-    // 3. effectsLayer (zIndex: 20) - визуальные эффекты поверх всего
+    // Render layers organized by zIndex:
+    // 1. decorationLayer (zIndex: 0) - background decorations (clouds, stars)
+    // 2. gameLayer (zIndex: 10, stage directly) - game objects (player, obstacles, coins)
+    // 3. effectsLayer (zIndex: 20) - visual effects on top
     this.decorationLayer = new PIXI.Container();
     this.effectsLayer = new PIXI.Container();
 

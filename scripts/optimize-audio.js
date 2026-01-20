@@ -1,10 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * Audio Optimization Script
- * Конвертирует аудио в MP3 + OGG для кроссбраузерности
- */
-
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { readdir, stat } from 'fs/promises';
@@ -21,9 +16,6 @@ const INPUT_DIR = join(__dirname, '../public/assets/sounds');
 
 const FFMPEG_PATH = process.env.HOME + '/.local/bin/ffmpeg';
 
-/**
- * Рекурсивно получает все файлы в директории
- */
 async function getAllFiles(dir) {
   const files = [];
   const entries = await readdir(dir, { withFileTypes: true });
@@ -40,9 +32,6 @@ async function getAllFiles(dir) {
   return files;
 }
 
-/**
- * Конвертирует аудио в MP3
- */
 async function convertToMP3(inputPath, outputPath) {
   try {
     const startTime = Date.now();
@@ -56,19 +45,16 @@ async function convertToMP3(inputPath, outputPath) {
     const compression = ((1 - outputSize / inputSize) * 100).toFixed(1);
     const duration = Date.now() - startTime;
 
-    console.log(`✅ ${basename(inputPath)}`);
+    console.log(`${basename(inputPath)}`);
     console.log(`   ${(inputSize / 1024).toFixed(1)} KB → ${(outputSize / 1024).toFixed(1)} KB (-${compression}%) [${duration}ms]`);
 
     return { inputSize, outputSize, compression };
   } catch (error) {
-    console.error(`❌ Failed to convert ${basename(inputPath)}:`, error.message);
+    console.error(`Failed to convert ${basename(inputPath)}:`, error.message);
     return null;
   }
 }
 
-/**
- * Конвертирует аудио в OGG
- */
 async function convertToOGG(inputPath, outputPath) {
   try {
     const startTime = Date.now();
@@ -79,16 +65,16 @@ async function convertToOGG(inputPath, outputPath) {
     const outputSize = outputStats.size;
     const duration = Date.now() - startTime;
 
-    console.log(`   + OGG: ${(outputSize / 1024).toFixed(1)} KB [${duration}ms]`);
+    console.log(`   OGG: ${(outputSize / 1024).toFixed(1)} KB [${duration}ms]`);
   } catch (error) {
-    console.error(`   ⚠️  OGG conversion failed: ${error.message}`);
+    console.error(`   OGG conversion failed: ${error.message}`);
   }
 }
 
 async function processDirectory() {
-  console.log('🎵 Audio Optimization Script');
-  console.log('📁 Input directory:', INPUT_DIR);
-  console.log('📦 Output formats: MP3 (quality 2) + OGG (quality 4)\n');
+  console.log('Audio optimization');
+  console.log('Input directory:', INPUT_DIR);
+  console.log('Output formats: MP3 (quality 2) + OGG (quality 4)');
 
   const allFiles = await getAllFiles(INPUT_DIR);
   const audioFiles = allFiles.filter(file => {
@@ -97,11 +83,11 @@ async function processDirectory() {
   });
 
   if (audioFiles.length === 0) {
-    console.log('⚠️  No audio files found (WAV, M4A, AAC, FLAC, MP3)');
+    console.log('No audio files found (WAV, M4A, AAC, FLAC, MP3)');
     return;
   }
 
-  console.log(`🔄 Found ${audioFiles.length} audio files to convert\n`);
+  console.log(`Found ${audioFiles.length} audio files to convert`);
 
   let totalInputSize = 0;
   let totalOutputSize = 0;
@@ -124,18 +110,14 @@ async function processDirectory() {
       successCount++;
     }
 
-    console.log();
   }
 
   const totalCompression = ((1 - totalOutputSize / totalInputSize) * 100).toFixed(1);
 
-  console.log('═══════════════════════════════════════════════');
-  console.log('📊 SUMMARY');
-  console.log('═══════════════════════════════════════════════');
-  console.log(`✅ Converted: ${successCount}/${audioFiles.length} files`);
-  console.log(`📦 Total size: ${(totalInputSize / 1024).toFixed(1)} KB → ${(totalOutputSize / 1024).toFixed(1)} KB`);
-  console.log(`💾 Saved: ${((totalInputSize - totalOutputSize) / 1024).toFixed(1)} KB (-${totalCompression}%)`);
-  console.log('═══════════════════════════════════════════════');
+  console.log('Summary:');
+  console.log(`Converted: ${successCount}/${audioFiles.length} files`);
+  console.log(`Total size: ${(totalInputSize / 1024).toFixed(1)} KB → ${(totalOutputSize / 1024).toFixed(1)} KB`);
+  console.log(`Saved: ${((totalInputSize - totalOutputSize) / 1024).toFixed(1)} KB (-${totalCompression}%)`);
 }
 
 processDirectory().catch(console.error);

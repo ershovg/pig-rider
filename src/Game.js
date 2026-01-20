@@ -1,8 +1,3 @@
-/**
- * Game - Главный facade. Композиция координаторов без бизнес-логики.
- * Архитектура: SystemRegistry (DI) → Coordinators (Init/Update/Render) → Systems
- */
-
 import { SystemRegistry } from './features/core/registry/SystemRegistry.ts';
 import { InitializationCoordinator } from './features/core/coordination/InitializationCoordinator.ts';
 import { UpdateCoordinator } from './features/core/coordination/UpdateCoordinator.ts';

@@ -25,7 +25,7 @@ export class Booster extends Collectible {
     const frames = spritesheet.animations['Cup'];
     this.sprite = new PIXI.AnimatedSprite(frames);
     this.sprite.anchor.set(0.5);
-    this.sprite.zIndex = 10; // 🎨 Игровой слой (между decorationLayer:0 и effectsLayer:20)
+    this.sprite.zIndex = 10;
 
     this.sprite.animationSpeed = 0.3;
     this.sprite.loop = true;
