@@ -5,12 +5,6 @@ node_modules/
 draft/
 dist/
 
-# Claude Code config and development instructions (local only)
-.claude/
-CLAUDE.md
-claude-plan.md
-claude-session.md
-
 # GitHub configs (но разрешаем issue templates и workflows)
 .github/*
 !.github/ISSUE_TEMPLATE/
