@@ -2,8 +2,12 @@ import type { Game } from './Game.js';
 import { CONFIG } from './shared/config/constants';
 import { GameEvents, type GamePublicEvent } from './features/core/events/GameEvents';
 
+export type MountOptions = {
+  canvasLabel?: string;
+};
+
 export type PigRiderGame = {
-  mount(el: HTMLElement): Promise<void>;
+  mount(el: HTMLElement, options?: MountOptions): Promise<void>;
   destroy(): void;
   on(listener: (event: GamePublicEvent) => void): () => void;
   start(): void;
@@ -21,10 +25,16 @@ declare global {
 }
 
 let game: Game | null = null;
+let mounting: Promise<void> | null = null;
 
-async function mount(el: HTMLElement): Promise<void> {
-  if (game !== null) return;
+/*
+  Поколение растёт на каждом mount и destroy. Инициализация асинхронная, а React
+  в StrictMode прогоняет эффект дважды — без этой отметки поздний init дорисовал бы
+  второй канвас в уже размонтированный слот.
+*/
+let generation = 0;
 
+async function createGame(el: HTMLElement, options: MountOptions, gen: number): Promise<void> {
   if (typeof PIXI === 'undefined') {
     throw new Error('PixiJS not loaded before the game bundle');
   }
@@ -32,17 +42,51 @@ async function mount(el: HTMLElement): Promise<void> {
 
   const canvas = document.createElement('canvas');
   canvas.id = 'game-canvas';
+  if (options.canvasLabel !== undefined) {
+    canvas.setAttribute('role', 'img');
+    canvas.setAttribute('aria-label', options.canvasLabel);
+  }
   el.appendChild(canvas);
 
   const { Game: GameClass } = await import('./Game.js');
-  game = new GameClass();
-  await game.init();
+  const instance = new GameClass();
+  await instance.init();
+
+  if (gen !== generation) {
+    instance.destroy();
+    canvas.remove();
+    return;
+  }
+
+  game = instance;
   GameEvents.publish('ready', {});
 }
 
+function mount(el: HTMLElement, options: MountOptions = {}): Promise<void> {
+  if (mounting !== null) return mounting;
+
+  const gen = ++generation;
+  mounting = createGame(el, options, gen).catch((error: unknown) => {
+    if (gen === generation) mounting = null;
+    throw error;
+  });
+
+  return mounting;
+}
+
 function destroy(): void {
-  game?.destroy();
-  game = null;
+  const gen = ++generation;
+  const pending = mounting;
+  mounting = null;
+
+  void Promise.resolve(pending)
+    .catch(() => {})
+    .then(() => {
+      if (gen !== generation) return;
+      game?.destroy();
+      game = null;
+      document.getElementById('game-canvas')?.remove();
+    });
 }
 
 window.PigRiderGame = {
@@ -57,5 +101,5 @@ window.PigRiderGame = {
 document.addEventListener('visibilitychange', () => {
   if (game === null) return;
   if (document.hidden) game.pause();
-  else if (!game.registry.isWaitingForUserInput) game.resume();
+  else game.resume();
 });

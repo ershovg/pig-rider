@@ -9,7 +9,6 @@ import type {
 import type { Player } from './player';
 import type { UIController } from './ui';
 import type { GameLoop, Renderer } from './core';
-import type { SetWaitingForInputCallback } from './common';
 
 export interface GameLifecycleManagerDependencies {
   stateManager: GameStateManager;
@@ -22,7 +21,6 @@ export interface GameLifecycleManagerDependencies {
   renderer: Renderer;
   ui: UIController;
   soundManager: SoundManager;
-  setWaitingForInput?: SetWaitingForInputCallback;
 }
 
 export interface ProgressionStats {

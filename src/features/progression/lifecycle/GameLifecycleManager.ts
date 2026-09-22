@@ -11,7 +11,6 @@ import type {
   Renderer,
   UIController,
   SoundManager,
-  SetWaitingForInputCallback,
   VoidCallback,
   Point2D,
   EffectCoordinator
@@ -29,7 +28,6 @@ export class GameLifecycleManager {
   private renderer: Renderer;
   private ui: UIController;
   private soundManager: SoundManager;
-  private setWaitingForInput: SetWaitingForInputCallback;
 
   constructor(dependencies: GameLifecycleManagerDependencies) {
     this.stateManager = dependencies.stateManager;
@@ -42,7 +40,6 @@ export class GameLifecycleManager {
     this.renderer = dependencies.renderer;
     this.ui = dependencies.ui;
     this.soundManager = dependencies.soundManager;
-    this.setWaitingForInput = dependencies.setWaitingForInput || (() => {});
   }
 
   startGame(): void {
@@ -94,6 +91,7 @@ export class GameLifecycleManager {
         this.soundManager.play('win');
       }
       this.ui.showWinScreen(score);
+      this.ui.launchConfetti();
     } else {
       if (this.soundManager) {
         this.soundManager.play('lose');
@@ -119,53 +117,12 @@ export class GameLifecycleManager {
     onComplete();
   }
 
+  /* Бустер бесшовный: игру не останавливаем, обратная связь — анимация поверх неё. */
   async handleBoosterActivation(onConfirm?: VoidCallback): Promise<void> {
-    GameEvents.publish('booster', { phase: 'collected' });
-
-    console.log('💥 Booster activation triggered!');
-
-    const isFirstBooster = this.boosterManager.isFirstBooster();
-
-    console.log('🎬 Showing booster animation (non-blocking)...');
     this.ui.showBoosterActivation();
-
-    if (isFirstBooster) {
-      this.gameLoop.pause();
-
-      let volumeRestore = null;
-      if (this.soundManager) {
-        console.log('🎓 First booster! Pausing music for tutorial modal...');
-        volumeRestore = this.soundManager.pauseForModal(0.3);
-      }
-
-      this.setWaitingForInput(true);
-
-      const confirmed = await this.ui.showBoosterModal(isFirstBooster);
-
-      this.setWaitingForInput(false);
-
-      if (volumeRestore) {
-        volumeRestore.restore(300);
-      }
-
-      if (confirmed) {
-        this.boosterManager.markFirstBoosterUsed();
-        await this.boosterManager.activate();
-        onConfirm?.();
-      }
-
-      if (!document.hidden) {
-        this.gameLoop.resume();
-        console.log('✅ Game resumed after booster modal (tab is visible)');
-      } else {
-        console.log('⏸️ Game stays paused (tab is hidden, will resume on visibility change)');
-      }
-    } else {
-      console.log('🚀 Subsequent booster, auto-activating without modal...');
-      this.boosterManager.markFirstBoosterUsed();
-      await this.boosterManager.activate();
-      onConfirm?.();
-    }
+    this.boosterManager.markFirstBoosterUsed();
+    await this.boosterManager.activate();
+    onConfirm?.();
   }
 
   delay(ms: number): Promise<void> {

@@ -1,13 +1,15 @@
 import { EventBus } from '../../../shared/utils/EventBus';
 
 export type GameScreen = 'start' | 'running' | 'win' | 'lose';
-export type BoosterPhase = 'collected' | 'active' | 'ended';
+export type BoosterPhase = 'active' | 'ended';
+export type GameAnimation = 'tutorial' | 'booster';
 
 export type GamePublicEvent =
   | { type: 'ready' }
   | { type: 'state'; screen: GameScreen }
   | { type: 'score'; coins: number }
   | { type: 'booster'; phase: BoosterPhase }
+  | { type: 'anim'; name: GameAnimation }
   | { type: 'mute'; muted: boolean };
 
 type Payload<T extends GamePublicEvent['type']> = Omit<
