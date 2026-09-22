@@ -38,7 +38,7 @@ export default defineConfig(({ command, mode }) => {
       },
       sourcemap: true,
       lib: {
-        entry: resolve(__dirname, 'src/webflow.js'),
+        entry: resolve(__dirname, 'src/embed.ts'),
         name: 'PigRiderGame',
         formats: ['iife'], // IIFE для прямого подключения в браузере
         fileName: () => 'game.bundle.js'
