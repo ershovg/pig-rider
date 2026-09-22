@@ -2,6 +2,7 @@ import { Howl } from 'howler';
 import type { SoundRegistry, StateContext, PauseRestore } from '../../../types';
 import { MusicStateManager } from './MusicStateManager.ts';
 import { DEFAULT_SOUND_CONFIG } from '../config/defaultSounds.ts';
+import { GameEvents } from '../../core/events/GameEvents';
 
 export class SoundManager {
   sounds: SoundRegistry;
@@ -220,6 +221,7 @@ export class SoundManager {
     } else {
       this.mute();
     }
+    GameEvents.publish('mute', { muted: this.isMuted });
     return this.isMuted;
   }
 

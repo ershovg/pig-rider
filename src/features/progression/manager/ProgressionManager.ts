@@ -1,5 +1,6 @@
 import { CONFIG } from '../../../shared/config/constants';
 import type { UIController, ProgressionStats } from '../../../types';
+import { GameEvents } from '../../core/events/GameEvents';
 
 export class ProgressionManager {
   private ui: UIController;
@@ -61,6 +62,7 @@ export class ProgressionManager {
 
   addScore(value: number): void {
     this.score += value;
+    GameEvents.publish('score', { coins: this.score });
     this.ui.updateCoinCount(this.score, CONFIG.TARGET_COINS);
   }
 

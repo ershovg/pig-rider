@@ -16,6 +16,7 @@ import type {
   Point2D,
   EffectCoordinator
 } from '../../../types';
+import { GameEvents } from '../../core/events/GameEvents';
 
 export class GameLifecycleManager {
   private stateManager: GameStateManager;
@@ -46,6 +47,7 @@ export class GameLifecycleManager {
 
   startGame(): void {
     this.stateManager.setState('playing');
+    GameEvents.publish('state', { screen: 'running' });
     this.progressionManager.reset();
     this.boosterManager.reset();
     this.difficultyManager.reset();
@@ -70,6 +72,7 @@ export class GameLifecycleManager {
 
   endGame(isWin: boolean, score: number): void {
     this.stateManager.setState('ended');
+    GameEvents.publish('state', { screen: isWin ? 'win' : 'lose' });
     this.gameLoop.stop();
 
     if (this.player?.inputController) {
@@ -117,6 +120,8 @@ export class GameLifecycleManager {
   }
 
   async handleBoosterActivation(onConfirm?: VoidCallback): Promise<void> {
+    GameEvents.publish('booster', { phase: 'collected' });
+
     console.log('💥 Booster activation triggered!');
 
     const isFirstBooster = this.boosterManager.isFirstBooster();
