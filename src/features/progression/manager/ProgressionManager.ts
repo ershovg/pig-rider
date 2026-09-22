@@ -96,6 +96,8 @@ export class ProgressionManager {
     this.isBoosterActive = false;
     this.boosterTransitionSpeed = 5.0;
 
+    GameEvents.publish('score', { coins: 0 });
+
     console.log('🔄 ProgressionManager reset (speed: 1.0x, native lerp mode)');
   }
 }

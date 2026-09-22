@@ -16,7 +16,17 @@ export class PlayerInputController {
   private readonly SWIPE_THRESHOLD = 30;
   private readonly LANE_BOUNDARIES = [0.33, 0.66];
   private readonly CANVAS_ID = 'game-canvas';
-  private readonly UI_SELECTORS = ['.mute', '[game-btn-start]', '[open-modal-attr]'];
+  /* Клик по интерфейсу не должен уезжать в смену полосы. Раньше здесь были классы
+     разметки Webflow — в другом хосте их нет, и клик по кнопке читался как «вниз».
+     Опираемся на семантику: интерактивное — это кнопки и ссылки, чьи бы они ни были. */
+  private readonly UI_SELECTORS = [
+    'button',
+    'a',
+    '[role="button"]',
+    'input',
+    'label',
+    '[data-game-ui]'
+  ];
 
   private readonly player: Player;
   private readonly eventTarget: EventTarget;

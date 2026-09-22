@@ -44,7 +44,6 @@ export class GameLifecycleManager {
 
   startGame(): void {
     this.stateManager.setState('playing');
-    GameEvents.publish('state', { screen: 'running' });
     this.progressionManager.reset();
     this.boosterManager.reset();
     this.difficultyManager.reset();

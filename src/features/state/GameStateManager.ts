@@ -1,4 +1,5 @@
 import type { GameState } from '../../types';
+import { GameEvents } from '../core/events/GameEvents';
 
 export class GameStateManager {
   private state: GameState;
@@ -7,9 +8,16 @@ export class GameStateManager {
     this.state = 'loading';
   }
 
+  /* Публикуем отсюда, а не из стартующего кода: входов в забег два — обычный старт
+     и RestartManager, и они сходятся только здесь. Win/lose публикует endGame,
+     потому что исход известен только ему. */
   setState(newState: GameState): void {
     this.state = newState;
     console.log(`🎮 Game state: ${newState}`);
+
+    if (newState === 'playing') {
+      GameEvents.publish('state', { screen: 'running' });
+    }
   }
 
   getState(): GameState {

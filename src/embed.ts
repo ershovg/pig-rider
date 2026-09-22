@@ -94,7 +94,10 @@ window.PigRiderGame = {
   destroy,
   on: (listener: (event: GamePublicEvent) => void) => GameEvents.subscribe(listener),
   start: () => game?.startGame(),
-  restart: () => game?.restartGame(),
+  /* Полный рестарт: RestartManager сбрасывает звук, эффекты, пулы и флаги.
+     Game.restartGame() — частичный путь, он оставлял эффекты прошлого забега
+     и не перезапускал музыку. */
+  restart: () => game?.handleRestart(),
   toggleMute: () => game?.registry.soundManager.toggleMute(),
 };
 
