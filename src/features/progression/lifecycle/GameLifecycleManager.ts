@@ -11,11 +11,11 @@ import type {
   Renderer,
   UIController,
   SoundManager,
-  SetWaitingForInputCallback,
   VoidCallback,
   Point2D,
   EffectCoordinator
 } from '../../../types';
+import { GameEvents } from '../../core/events/GameEvents';
 
 export class GameLifecycleManager {
   private stateManager: GameStateManager;
@@ -28,7 +28,6 @@ export class GameLifecycleManager {
   private renderer: Renderer;
   private ui: UIController;
   private soundManager: SoundManager;
-  private setWaitingForInput: SetWaitingForInputCallback;
 
   constructor(dependencies: GameLifecycleManagerDependencies) {
     this.stateManager = dependencies.stateManager;
@@ -41,7 +40,6 @@ export class GameLifecycleManager {
     this.renderer = dependencies.renderer;
     this.ui = dependencies.ui;
     this.soundManager = dependencies.soundManager;
-    this.setWaitingForInput = dependencies.setWaitingForInput || (() => {});
   }
 
   startGame(): void {
@@ -69,6 +67,7 @@ export class GameLifecycleManager {
 
   endGame(isWin: boolean, score: number): void {
     this.stateManager.setState('ended');
+    GameEvents.publish('state', { screen: isWin ? 'win' : 'lose' });
     this.gameLoop.stop();
 
     if (this.player?.inputController) {
@@ -91,6 +90,7 @@ export class GameLifecycleManager {
         this.soundManager.play('win');
       }
       this.ui.showWinScreen(score);
+      this.ui.launchConfetti();
     } else {
       if (this.soundManager) {
         this.soundManager.play('lose');
@@ -116,43 +116,12 @@ export class GameLifecycleManager {
     onComplete();
   }
 
+  /* Бустер бесшовный: игру не останавливаем, обратная связь — анимация поверх неё. */
   async handleBoosterActivation(onConfirm?: VoidCallback): Promise<void> {
-    const isFirstBooster = this.boosterManager.isFirstBooster();
-
     this.ui.showBoosterActivation();
-
-    if (isFirstBooster) {
-      this.gameLoop.pause();
-
-      let volumeRestore = null;
-      if (this.soundManager) {
-        volumeRestore = this.soundManager.pauseForModal(0.3);
-      }
-
-      this.setWaitingForInput(true);
-
-      const confirmed = await this.ui.showBoosterModal(isFirstBooster);
-
-      this.setWaitingForInput(false);
-
-      if (volumeRestore) {
-        volumeRestore.restore(300);
-      }
-
-      if (confirmed) {
-        this.boosterManager.markFirstBoosterUsed();
-        await this.boosterManager.activate();
-        onConfirm?.();
-      }
-
-      if (!document.hidden) {
-        this.gameLoop.resume();
-      }
-    } else {
-      this.boosterManager.markFirstBoosterUsed();
-      await this.boosterManager.activate();
-      onConfirm?.();
-    }
+    this.boosterManager.markFirstBoosterUsed();
+    await this.boosterManager.activate();
+    onConfirm?.();
   }
 
   delay(ms: number): Promise<void> {

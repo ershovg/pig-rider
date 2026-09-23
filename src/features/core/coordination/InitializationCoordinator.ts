@@ -180,10 +180,7 @@ export class InitializationCoordinator {
 
     this.registry.lifecycleManager = new GameLifecycleManager({
       ...coreDependencies,
-      renderer: this.registry.renderer!,
-      setWaitingForInput: (isWaiting: boolean) => {
-        this.registry.isWaitingForUserInput = isWaiting;
-      }
+      renderer: this.registry.renderer!
     });
 
     this.registry.restartManager = new RestartManager({

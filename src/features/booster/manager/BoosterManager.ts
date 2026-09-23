@@ -10,6 +10,7 @@ import {
   UIController,
   Player
 } from '../../../types';
+import { GameEvents } from '../../core/events/GameEvents';
 
 export class BoosterManager {
   private spawnSystem: SpawnSystem;
@@ -116,6 +117,8 @@ export class BoosterManager {
       console.log('Music state: booster (gap crossfade + beat-sync)');
     }
 
+    GameEvents.publish('booster', { phase: 'active' });
+
     console.log(`Booster activated! Lane: ${this.currentLane}`);
   }
 
@@ -147,6 +150,8 @@ export class BoosterManager {
       this.soundManager.setMusicState('gameplay');
       console.log('Music state: gameplay (gap crossfade back)');
     }
+
+    GameEvents.publish('booster', { phase: 'ended' });
 
     console.log(`Booster deactivated. Cooldown: ${CONFIG.BOOSTER_COOLDOWN_DURATION}s`);
   }

@@ -48,7 +48,6 @@ export class SystemRegistry {
   ui: UIController | null;
 
   isColliding: boolean;
-  isWaitingForUserInput: boolean;
   frameCount: number;
   poolLogInterval: number | null;
 
@@ -81,7 +80,6 @@ export class SystemRegistry {
     this.ui = null;
 
     this.isColliding = false;
-    this.isWaitingForUserInput = false;
     this.frameCount = 0;
     this.poolLogInterval = null;
   }

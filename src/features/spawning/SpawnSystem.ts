@@ -211,6 +211,7 @@ export class SpawnSystem {
     this.cloudSpawner.reset();
     this.starSpawner.reset();
     this.boosterSpawner.reset();
+    this.clearAllEffects();
   }
 
   clearAllEffects(): void {

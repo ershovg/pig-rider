@@ -1,15 +1,5 @@
 export type GameEventMap = {
-  'game:start': void;
-  'game:pause': void;
-  'game:resume': void;
-  'game:win': { score: number; time: number };
-  'game:lose': { score: number };
-  'coin:collected': { x: number; y: number; value: number };
-  'booster:activated': { duration: number };
-  'booster:deactivated': void;
-  'booster:lane-switched': { lane: number };
-  'collision:obstacle': { playerLane: number };
-  'difficulty:changed': { level: number; speed: number };
+  'game:public': import('../../features/core/events/GameEvents').GamePublicEvent;
 };
 
 class EventBusClass<EventMap extends Record<string, any>> {

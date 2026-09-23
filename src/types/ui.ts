@@ -17,7 +17,6 @@ export interface UIController {
   showLoseScreen(score: number): void;
   hideWinScreen(): void;
   hideLoseScreen(): void;
-  showBoosterModal(isFirstTime?: boolean): Promise<boolean>;
   hideBoosterModal(): void;
   hideAll(): void;
   updateCoinCount(current: number, target?: number): void;

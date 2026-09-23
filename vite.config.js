@@ -38,18 +38,17 @@ export default defineConfig(({ command, mode }) => {
       },
       sourcemap: true,
       lib: {
-        entry: resolve(__dirname, 'src/webflow.js'),
+        entry: resolve(__dirname, 'src/embed.ts'),
         name: 'PigRiderGame',
         formats: ['iife'], // IIFE для прямого подключения в браузере
         fileName: () => 'game.bundle.js'
       },
       rollupOptions: {
-        // Пушим PixiJS отдельно, загружается через CDN
-        external: ['pixi.js', 'gsap'],
+        // PixiJS грузится с CDN хостом; gsap вшиваем — глобала для него на странице нет
+        external: ['pixi.js'],
         output: {
           globals: {
-            'pixi.js': 'PIXI',
-            'gsap': 'gsap'
+            'pixi.js': 'PIXI'
           }
         }
       }
