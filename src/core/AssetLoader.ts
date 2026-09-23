@@ -48,36 +48,28 @@ export class AssetLoader {
 
     await PIXI.Assets.init({ manifest });
     this.manifestInitialized = true;
-    console.log('📦 Asset manifest initialized');
   }
 
   async loadCriticalAssets(): Promise<Record<string, any>> {
-    console.log('🚀 Loading critical assets...');
-
-    const criticalAssets = await PIXI.Assets.loadBundle('critical', (progress: number) => {
-      console.log(`Critical: ${Math.round(progress * 100)}%`);
-    });
+    const criticalAssets = await PIXI.Assets.loadBundle('critical');
 
     Object.assign(this.assets, criticalAssets);
     this.assets.obstacle = this.assets.obstacleBase;
 
-    console.log('✅ Critical assets ready');
+    console.log('Critical assets loaded');
     return criticalAssets;
   }
 
   startBackgroundLoading(): void {
-    console.log('🎮 Starting background loading for gameplay assets...');
     PIXI.Assets.backgroundLoadBundle(['gameplay']);
   }
 
   async ensureGameplayAssetsReady(): Promise<Record<string, any>> {
-    console.log('⏳ Ensuring gameplay assets are ready...');
-
     const gameplayAssets = await PIXI.Assets.loadBundle('gameplay');
     Object.assign(this.assets, gameplayAssets);
 
     this.loaded = true;
-    console.log('✅ All assets loaded');
+    console.log('All assets loaded');
     return gameplayAssets;
   }
 
@@ -92,7 +84,7 @@ export class AssetLoader {
 
       return this.assets;
     } catch (error) {
-      console.error('❌ Error loading assets:', error);
+      console.error('Error loading assets:', error);
       throw error;
     }
   }

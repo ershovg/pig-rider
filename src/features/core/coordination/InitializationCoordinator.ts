@@ -37,9 +37,9 @@ export class InitializationCoordinator {
       this.initSoundSystem();
       this.initStartScreen();
 
-      console.log('✅ Game initialization completed');
+      console.log('Game initialization completed');
     } catch (error) {
-      console.error('❌ Game initialization failed:', error);
+      console.error('Game initialization failed:', error);
       throw error;
     }
   }
@@ -57,7 +57,7 @@ export class InitializationCoordinator {
     this.initLifecycleManagers();
     this.initPostSetup();
 
-    console.log('✅ Gameplay systems initialized');
+    console.log('Gameplay systems initialized');
   }
 
   initUI(): void {

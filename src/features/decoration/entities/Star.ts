@@ -5,9 +5,6 @@ import { Renderable } from '../../effects/base/Renderable';
 import { Lane } from '../../../types';
 import { CullableEntity } from '../../../types/rendering';
 
-/**
- * Декоративная звезда с мерцанием
- */
 export class Star extends Renderable implements CullableEntity {
   private container: PIXI.Container | null;
   private sprite: PIXI.Sprite;

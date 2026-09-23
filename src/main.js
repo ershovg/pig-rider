@@ -5,17 +5,13 @@ let game = null;
 
 async function init() {
   try {
-    console.log('🎮 Pig Rider - Initializing...');
-
     game = new Game();
     await game.init();
 
     // Expose game instance globally for debugging
     window.PigRiderGame = game;
-
-    console.log('✅ Game ready! Press SPACE to start');
   } catch (error) {
-    console.error('❌ Failed to initialize game:', error);
+    console.error('Failed to initialize game:', error);
 
     // Show error message to user
     const loadingEl = document.getElementById('loading');

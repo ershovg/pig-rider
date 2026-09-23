@@ -11,18 +11,14 @@ export class BaseMusicState implements MusicState {
     this.sounds = sounds;
     this.config = config;
     this.isActive = false;
-
-    console.log(`🎵 [${this.name}] State created`);
   }
 
   async enter(context: StateContext = {}): Promise<void> {
     this.isActive = true;
-    console.log(`▶️ [${this.name}] State entered`, context);
   }
 
   async exit(context: StateContext = {}): Promise<void> {
     this.isActive = false;
-    console.log(`⏹️ [${this.name}] State exited`, context);
   }
 
   update(deltaTime: number): void {
@@ -30,17 +26,17 @@ export class BaseMusicState implements MusicState {
   }
 
   pause(): void {
-    console.log(`⏸️ [${this.name}] Paused`);
+    // Переопределяется в дочерних классах при необходимости
   }
 
   resume(): void {
-    console.log(`▶️ [${this.name}] Resumed`);
+    // Переопределяется в дочерних классах при необходимости
   }
 
   getTrack(alias: string): HowlInstance | null {
     const track = this.sounds.get(alias);
     if (!track) {
-      console.warn(`⚠️ [${this.name}] Track not found: ${alias}`);
+      console.warn(`[${this.name}] Track not found: ${alias}`);
     }
     return track || null;
   }

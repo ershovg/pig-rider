@@ -31,13 +31,9 @@ export class GameplayState extends BaseMusicState {
     this.intensityTrack = this.getTrack(this.config.intensityAlias);
 
     if (!this.baseTrack || !this.intensityTrack) {
-      console.error(`❌ [${this.name}] Tracks not found`);
+      console.error(`[${this.name}] Tracks not found`);
       return;
     }
-
-    console.log(`🎵 [${this.name}] Starting vertical layering...`);
-    console.log(`   Base: ${this.config.baseAlias} (${this.config.baseVolume})`);
-    console.log(`   Intensity: ${this.config.intensityAlias} (silent)`);
 
     this.baseTrack.volume(this.config.baseVolume * this.masterVolume);
     this.intensityTrack.volume(0);
@@ -48,16 +44,11 @@ export class GameplayState extends BaseMusicState {
     if (this.config.sync && baseId !== null && intensityId !== null) {
       const baseSeek = this.baseTrack.seek() as number;
       this.intensityTrack.seek(baseSeek, intensityId);
-      console.log(`🔄 [${this.name}] Tracks synced at ${baseSeek.toFixed(2)}s`);
     }
-
-    console.log(`✅ [${this.name}] Layered music started`);
   }
 
   async exit(context: StateContext = {}): Promise<void> {
     const fadeDuration = context.fadeDuration || 1000;
-
-    console.log(`⏹️ [${this.name}] Stopping layered music (${fadeDuration}ms fade)`);
 
     if (this.baseTrack) {
       this.baseTrack.fade(this.baseTrack.volume() as number, 0, fadeDuration);

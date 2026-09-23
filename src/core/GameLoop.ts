@@ -42,7 +42,6 @@ export class GameLoop {
     this.accumulator = 0;
 
     this.rafId = requestAnimationFrame((time) => this.loop(time));
-    console.log('🎮 Game loop started');
   }
 
   stop(): void {
@@ -51,7 +50,6 @@ export class GameLoop {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
-    console.log('⏸️ Game loop stopped');
   }
 
   private loop(currentTime: number): void {
@@ -81,7 +79,6 @@ export class GameLoop {
     }
 
     if (physicsUpdates >= maxPhysicsUpdates && this.accumulator > this.fixedDeltaTime) {
-      console.warn(`[GameLoop] Clamped ${Math.floor(this.accumulator / this.fixedDeltaTime)} pending physics updates to prevent spiral`);
       this.accumulator = this.fixedDeltaTime * 0.9;
     }
 

@@ -13,7 +13,6 @@ export class GameStateManager {
      потому что исход известен только ему. */
   setState(newState: GameState): void {
     this.state = newState;
-    console.log(`🎮 Game state: ${newState}`);
 
     if (newState === 'playing') {
       GameEvents.publish('state', { screen: 'running' });

@@ -24,15 +24,13 @@ export class CollisionState extends BaseMusicState {
     this.collisionSound = this.getTrack(this.config.collisionAlias);
 
     if (!this.collisionSound) {
-      console.warn(`⚠️ [${this.name}] Collision sound not loaded yet`);
+      console.warn(`[${this.name}] Collision sound not loaded yet`);
       return;
     }
 
     const targetVolume = this.config.collisionVolume * this.masterVolume;
     this.collisionSound.volume(targetVolume);
     this.collisionSound.play();
-
-    console.log(`💥 [${this.name}] Collision sound played!`);
   }
 
   async exit(context: StateContext = {}): Promise<void> {

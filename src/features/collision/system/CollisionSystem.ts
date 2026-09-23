@@ -16,8 +16,6 @@ export class CollisionSystem {
   constructor() {
     this.gridCellSize = CONFIG.COLLISION.GRID_CELL_SIZE;
     this.spatialGrid = new Map();
-
-    console.log('💥 Collision system initialized');
   }
 
   clearGrid(): void {

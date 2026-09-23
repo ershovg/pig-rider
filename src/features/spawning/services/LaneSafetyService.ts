@@ -2,12 +2,6 @@ import { CONFIG } from '../../../shared/config/constants';
 import type { ObjectPool, ObstacleEntity } from '../../../types/spawning';
 import type { Lane } from '../../../types/common';
 
-/**
- * LaneSafetyService
- *
- * Гарантирует, что игрок всегда имеет хотя бы одну свободную полосу для прохода.
- * Отслеживает препятствия в зоне спавна и предотвращает блокировку всех полос одновременно.
- */
 export class LaneSafetyService {
   private static readonly BASE_SAFE_DISTANCE = 2500;
   private static readonly SPEED_SCALE_FACTOR = 0.8;
@@ -20,9 +14,6 @@ export class LaneSafetyService {
     this.obstaclePool = obstaclePool;
   }
 
-  /**
-   * Возвращает список заблокированных полос в текущей зоне спавна
-   */
   getBlockedLanes(gameSpeed: number = 1.0): Lane[] {
     const safeDistance = this._calculateSafeDistance(gameSpeed);
     const spawnZoneEnd = CONFIG.CANVAS_WIDTH + safeDistance;
@@ -46,18 +37,11 @@ export class LaneSafetyService {
     return Array.from(blocked);
   }
 
-  /**
-   * Возвращает список доступных (незаблокированных) полос
-   */
   getAvailableLanes(gameSpeed: number = 1.0): Lane[] {
     const blocked = this.getBlockedLanes(gameSpeed);
     return LaneSafetyService.ALL_LANES.filter(lane => !blocked.includes(lane)) as Lane[];
   }
 
-  /**
-   * Выбирает случайную доступную полосу
-   * Failsafe: если все полосы заблокированы, возвращает случайную
-   */
   getRandomAvailableLane(gameSpeed: number = 1.0): Lane {
     const available = this.getAvailableLanes(gameSpeed);
 

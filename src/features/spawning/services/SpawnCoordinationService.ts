@@ -15,17 +15,10 @@ export class SpawnCoordinationService implements ISpawnCoordinationService {
     this.coinPool = coinPool;
   }
 
-  /**
-   * Установить пул монет (вызывается из SpawnSystem после инициализации)
-   */
   setCoinPool(coinPool: ObjectPool<CoinEntity>): void {
     this.coinPool = coinPool;
   }
 
-  /**
-   * Проверить, можно ли заспавнить объект на данной полосе и позиции
-   * Проверяет коллизии с препятствиями
-   */
   canSpawnAt(lane: Lane, x: number, safeRadius: number = 150): boolean {
     const activeObstacles = this.obstaclePool.getActive();
 
@@ -44,10 +37,6 @@ export class SpawnCoordinationService implements ISpawnCoordinationService {
     return true;
   }
 
-  /**
-   * Проверить, можно ли заспавнить препятствие на данной полосе и позиции
-   * Проверяет коллизии с монетами (важно после окончания бустера!)
-   */
   canSpawnObstacleAt(lane: Lane, x: number, safeRadius: number = 150): boolean {
     // Сначала проверяем другие препятствия
     if (!this.canSpawnAt(lane, x, safeRadius)) {

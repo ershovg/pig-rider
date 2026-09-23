@@ -23,12 +23,6 @@ import type {
 } from '../../types/spawning';
 import type { Lane } from '../../types/common';
 
-/**
- * Система спавна объектов (оркестратор spawner'ов)
- *
- * Паттерн: Facade + Orchestrator
- * Координирует все spawner'ы, пулы и эффекты
- */
 export class SpawnSystem {
   private stage: PIXI.Container;
   private decorationLayer: PIXI.Container | null;
@@ -197,9 +191,6 @@ export class SpawnSystem {
     return this.starSpawner.getActiveObjects();
   }
 
-  /**
-   * Эмитировать эффект сбора монеты в указанной позиции
-   */
   emitCoinCollectEffect(x: number, y: number): void {
     const effect = this.poolManager.acquire<CoinCollectEffect>('coinCollectEffect');
     if (effect) {
@@ -207,9 +198,6 @@ export class SpawnSystem {
     }
   }
 
-  /**
-   * Эмитировать эффект взрыва при столкновении с препятствием
-   */
   emitCollisionEffect(x: number, y: number): void {
     const effect = this.poolManager.acquire<CollisionEffect>('collisionEffect');
     if (effect) {
@@ -226,19 +214,11 @@ export class SpawnSystem {
     this.clearAllEffects();
   }
 
-  /**
-   * Принудительно очищает все активные эффекты (coin collect, collision)
-   * Используется при рестарте игры для полной очистки экрана
-   */
   clearAllEffects(): void {
-    console.log('🧹 SpawnSystem: Clearing all effects...');
-
     // Очистка coinCollectEffect (искорки при сборе монет)
     if (this.poolManager.hasPool('coinCollectEffect')) {
       const coinEffectPool = this.poolManager.getPool<CoinCollectEffect>('coinCollectEffect');
       const activeCoinEffects = coinEffectPool.getActive();
-
-      console.log(`  - Deactivating ${activeCoinEffects.length} coin collect effects`);
 
       for (let i = activeCoinEffects.length - 1; i >= 0; i--) {
         const effect = activeCoinEffects[i];
@@ -254,8 +234,6 @@ export class SpawnSystem {
       const collisionPool = this.poolManager.getPool<CollisionEffect>('collisionEffect');
       const activeCollisionEffects = collisionPool.getActive();
 
-      console.log(`  - Deactivating ${activeCollisionEffects.length} collision effects`);
-
       for (let i = activeCollisionEffects.length - 1; i >= 0; i--) {
         const effect = activeCollisionEffects[i];
         if (effect?.deactivate) {
@@ -264,8 +242,6 @@ export class SpawnSystem {
         collisionPool.release(effect); // Возвращаем в пул
       }
     }
-
-    console.log('  ✅ All effects cleared');
   }
 
   getStats(): Record<string, PoolStats> {

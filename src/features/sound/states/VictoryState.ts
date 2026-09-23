@@ -25,7 +25,7 @@ export class VictoryState extends BaseMusicState {
     this.victoryTrack = this.getTrack(this.config.victoryAlias);
 
     if (!this.victoryTrack) {
-      console.warn(`⚠️ [${this.name}] Victory track not loaded yet`);
+      console.warn(`[${this.name}] Victory track not loaded yet`);
       return;
     }
 
@@ -33,8 +33,6 @@ export class VictoryState extends BaseMusicState {
     this.victoryTrack.volume(0);
     this.victoryTrack.play();
     this.victoryTrack.fade(0, targetVolume, this.config.fadeDuration);
-
-    console.log(`🎉 [${this.name}] Victory music playing!`);
   }
 
   async exit(context: StateContext = {}): Promise<void> {

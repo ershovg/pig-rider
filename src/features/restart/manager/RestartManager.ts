@@ -17,8 +17,6 @@ interface UpdateCoordinator {
 }
 
 interface Game {
-  stopPoolLogging(): void;
-  startPoolLogging(): void;
   updateCoordinator?: UpdateCoordinator;
   renderer?: Renderer;
 }
@@ -59,8 +57,6 @@ export class RestartManager {
     this.ui = dependencies.ui;
     this.soundManager = dependencies.soundManager;
     this.game = dependencies.game;
-
-    console.log('✅ RestartManager initialized');
   }
 
   setGame(game: Game): void {
@@ -68,20 +64,14 @@ export class RestartManager {
   }
 
   restart(): void {
-    console.log('🔄 RestartManager: Starting full game restart...');
-
     this._stopSystems();
     this._cleanupUI();
     this._resetManagers();
     this._resetGameFlags();
     this._startGameplay();
-
-    console.log('✅ RestartManager: Game restarted successfully');
   }
 
   private _stopSystems(): void {
-    console.log('  ⏹️  Stopping systems...');
-
     if (this.gameLoop) {
       this.gameLoop.stop();
     }
@@ -89,15 +79,9 @@ export class RestartManager {
     if (this.soundManager) {
       this.soundManager.reset();
     }
-
-    if (this.game) {
-      this.game.stopPoolLogging();
-    }
   }
 
   private _cleanupUI(): void {
-    console.log('  🧹 Cleaning up UI...');
-
     this.ui.hideWinScreen();
     this.ui.hideLoseScreen();
     this.ui.hideBoosterModal();
@@ -106,13 +90,10 @@ export class RestartManager {
   }
 
   private _resetManagers(): void {
-    console.log('  🔄 Resetting managers...');
-
     this.progressionManager.reset();
     this.boosterManager.reset();
 
     this.boosterManager.isFirstBoosterEver = true;
-    console.log('  🎓 First booster flag reset - tutorial will show again');
 
     this.difficultyManager.reset();
     this.player.reset();
@@ -121,8 +102,6 @@ export class RestartManager {
   }
 
   private _resetGameFlags(): void {
-    console.log('  🏳️  Resetting game flags...');
-
     if (this.game && this.game.updateCoordinator) {
       this.game.updateCoordinator.resetCollisionFlag();
       this.game.updateCoordinator.resetFrameCount();
@@ -130,15 +109,12 @@ export class RestartManager {
   }
 
   private _startGameplay(): void {
-    console.log('  ▶️  Starting gameplay...');
-
     this.stateManager.setState('playing');
     this.ui.showRunningScreen();
     this.ui.updateCoinCount(0, CONFIG.TARGET_COINS);
 
     if (this.soundManager) {
       this.soundManager.setMusicState('gameplay');
-      console.log('  🎵 Music state: gameplay');
     }
 
     if (this.game?.renderer) {
@@ -146,9 +122,5 @@ export class RestartManager {
     }
 
     this.gameLoop.start();
-
-    if (this.game) {
-      this.game.startPoolLogging();
-    }
   }
 }

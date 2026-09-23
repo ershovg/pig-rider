@@ -30,8 +30,6 @@ export class MusicStateManager {
     this.previousState = null;
 
     this._initializeStates();
-
-    console.log('🎵 MusicStateManager initialized');
   }
 
   private _initializeStates(): void {
@@ -65,19 +63,15 @@ export class MusicStateManager {
       collisionAlias: 'collisionSound',
       collisionVolume: this.config.collisionVolume || 0.8,
     }));
-
-    console.log(`✅ Initialized ${this.states.size} music states`);
   }
 
   async setState(stateName: string, context: StateContext = {}): Promise<void> {
     const newState = this.states.get(stateName);
 
     if (!newState) {
-      console.error(`❌ State not found: ${stateName}`);
+      console.error(`State not found: ${stateName}`);
       return;
     }
-
-    console.log(`🔄 Transitioning: ${this.currentState?.name || 'none'} → ${stateName}`);
 
     const fullContext: StateContext = {
       ...context,
@@ -98,8 +92,6 @@ export class MusicStateManager {
 
     this.previousState = this.currentState;
     this.currentState = newState;
-
-    console.log(`✅ State changed to: ${stateName}`);
   }
 
   private async _transitionGameplayToBooster(context: StateContext): Promise<void> {
@@ -148,11 +140,9 @@ export class MusicStateManager {
 
   pauseSmooth(targetVolume: number = 0.3, fadeDuration: number = 300): PauseRestore {
     if (!this.currentState) {
-      console.warn('⚠️ No active music state to pause');
+      console.warn('No active music state to pause');
       return { restore: () => {} };
     }
-
-    console.log(`⏸️ Context-aware pause: fading to ${targetVolume * 100}% (${fadeDuration}ms)`);
 
     const savedVolumes = new Map<string, number>();
 
@@ -163,22 +153,16 @@ export class MusicStateManager {
 
         const targetVol = currentVol * targetVolume;
         sound.fade(currentVol, targetVol, fadeDuration);
-
-        console.log(`   ${alias}: ${currentVol.toFixed(2)} → ${targetVol.toFixed(2)}`);
       }
     });
 
     return {
       restore: (restoreDuration: number = 300) => {
-        console.log(`▶️ Restoring volumes (${restoreDuration}ms)`);
-
         savedVolumes.forEach((originalVol, alias) => {
           const sound = this.sounds.get(alias);
           if (sound && sound.playing()) {
             const currentVol = sound.volume() as number;
             sound.fade(currentVol, originalVol, restoreDuration);
-
-            console.log(`   ${alias}: ${currentVol.toFixed(2)} → ${originalVol.toFixed(2)}`);
           }
         });
       }
@@ -197,7 +181,6 @@ export class MusicStateManager {
     const boosterState = this.states.get('booster');
     if (boosterState) {
       boosterState.config.beatSync = enabled;
-      console.log(`🎼 Beat-sync ${enabled ? 'enabled' : 'disabled'}`);
     }
   }
 
@@ -206,11 +189,8 @@ export class MusicStateManager {
   }
 
   reset(): void {
-    console.log('🔄 MusicStateManager: Resetting state...');
-
     if (this.currentState) {
       this.currentState.isActive = false;
-      console.log(`   Cleared state: ${this.currentState.name}`);
     }
 
     this.currentState = null;
@@ -219,11 +199,8 @@ export class MusicStateManager {
     this.sounds.forEach((sound, alias) => {
       if (sound.playing()) {
         sound.stop();
-        console.log(`   Stopped: ${alias}`);
       }
     });
-
-    console.log('✅ MusicStateManager: Reset complete');
   }
 
   getDebugInfo(): Record<string, any> {

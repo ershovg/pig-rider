@@ -1,10 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * Image Optimization Script
- * Конвертирует PNG → AVIF для максимального сжатия
- */
-
 import sharp from 'sharp';
 import { readdir, stat } from 'fs/promises';
 import { join, extname, basename } from 'path';
@@ -22,9 +17,6 @@ const AVIF_OPTIONS = {
   effort: 9,
 };
 
-/**
- * Конвертирует изображение в AVIF
- */
 async function convertToAVIF(inputPath, outputPath) {
   try {
     const startTime = Date.now();
@@ -40,33 +32,30 @@ async function convertToAVIF(inputPath, outputPath) {
     const compression = ((1 - outputSize / inputSize) * 100).toFixed(1);
     const duration = Date.now() - startTime;
 
-    console.log(`✅ ${basename(inputPath)}`);
+    console.log(`${basename(inputPath)}`);
     console.log(`   ${(inputSize / 1024).toFixed(1)} KB → ${(outputSize / 1024).toFixed(1)} KB (-${compression}%) [${duration}ms]`);
 
     return { inputSize, outputSize, compression };
   } catch (error) {
-    console.error(`❌ Failed to convert ${basename(inputPath)}:`, error.message);
+    console.error(`Failed to convert ${basename(inputPath)}:`, error.message);
     return null;
   }
 }
 
-/**
- * Обрабатывает все PNG файлы в директории
- */
 async function processDirectory() {
-  console.log('🎨 Image Optimization Script');
-  console.log('📁 Input directory:', INPUT_DIR);
-  console.log('📦 Output format: AVIF (quality 80, effort 9)\n');
+  console.log('Image optimization');
+  console.log('Input directory:', INPUT_DIR);
+  console.log('Output format: AVIF (quality 80, effort 9)');
 
   const files = await readdir(INPUT_DIR);
   const pngFiles = files.filter(file => extname(file).toLowerCase() === '.png');
 
   if (pngFiles.length === 0) {
-    console.log('⚠️  No PNG files found');
+    console.log('No PNG files found');
     return;
   }
 
-  console.log(`🔄 Found ${pngFiles.length} PNG files to convert\n`);
+  console.log(`Found ${pngFiles.length} PNG files to convert`);
 
   let totalInputSize = 0;
   let totalOutputSize = 0;
@@ -84,18 +73,14 @@ async function processDirectory() {
       successCount++;
     }
 
-    console.log();
   }
 
   const totalCompression = ((1 - totalOutputSize / totalInputSize) * 100).toFixed(1);
 
-  console.log('═══════════════════════════════════════════════');
-  console.log('📊 SUMMARY');
-  console.log('═══════════════════════════════════════════════');
-  console.log(`✅ Converted: ${successCount}/${pngFiles.length} files`);
-  console.log(`📦 Total size: ${(totalInputSize / 1024).toFixed(1)} KB → ${(totalOutputSize / 1024).toFixed(1)} KB`);
-  console.log(`💾 Saved: ${((totalInputSize - totalOutputSize) / 1024).toFixed(1)} KB (-${totalCompression}%)`);
-  console.log('═══════════════════════════════════════════════');
+  console.log('Summary:');
+  console.log(`Converted: ${successCount}/${pngFiles.length} files`);
+  console.log(`Total size: ${(totalInputSize / 1024).toFixed(1)} KB → ${(totalOutputSize / 1024).toFixed(1)} KB`);
+  console.log(`Saved: ${((totalInputSize - totalOutputSize) / 1024).toFixed(1)} KB (-${totalCompression}%)`);
 }
 
 processDirectory().catch(console.error);

@@ -27,7 +27,7 @@ export class Coin extends Collectible {
     const animationName = Object.keys(animations)[0];
     this.sprite = new PIXI.AnimatedSprite(spritesheet.animations[animationName]);
     this.sprite.anchor.set(0.5);
-    this.sprite.zIndex = 10; // 🎨 Игровой слой (между decorationLayer:0 и effectsLayer:20)
+    this.sprite.zIndex = 10;
 
     const targetSize = CONFIG.COIN.SIZE;
     const firstFrameTexture = this.sprite.textures[0];

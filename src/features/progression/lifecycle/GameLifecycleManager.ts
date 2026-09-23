@@ -57,7 +57,6 @@ export class GameLifecycleManager {
 
     if (this.soundManager) {
       this.soundManager.setMusicState('gameplay');
-      console.log('🎵 Music state: gameplay');
     }
 
     this.renderer.start();
@@ -80,10 +79,11 @@ export class GameLifecycleManager {
       const bonusMusic = this.soundManager.sounds.get('bonusMusic');
       if (mainMusic) mainMusic.stop();
       if (bonusMusic) bonusMusic.stop();
-      console.log('🎵 Background music stopped on game end');
     }
 
     this.ui.hideRunningScreen();
+    this.ui.removeBoosterClass();
+    this.ui.hideBoosterIcon();
 
     if (isWin) {
       if (this.soundManager) {

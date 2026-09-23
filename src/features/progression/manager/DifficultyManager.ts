@@ -22,8 +22,6 @@ export class DifficultyManager {
     this.currentBoosterSpawnInterval = this.baseBoosterSpawnInterval;
     this.coinFrequencyMultiplier = 1.0;
     this.obstacleFrequencyMultiplier = 1.0;
-
-    console.log('📊 DifficultyManager initialized');
   }
 
   updateScore(score: number): void {
@@ -64,7 +62,6 @@ export class DifficultyManager {
 
   restoreSnapshot(snapshot: BoosterSnapshot): void {
     if (!snapshot) {
-      console.warn('⚠️ Cannot restore: snapshot is null');
       return;
     }
 
@@ -74,13 +71,10 @@ export class DifficultyManager {
     this.currentBoosterSpawnInterval = snapshot.boosterSpawnInterval as number;
     this.coinFrequencyMultiplier = snapshot.coinFrequencyMultiplier as number;
     this.obstacleFrequencyMultiplier = snapshot.obstacleFrequencyMultiplier as number;
-
-    console.log('📸 Difficulty state restored from snapshot');
   }
 
   applyBoosterEffect(): void {
     this.currentCoinSpawnInterval = CONFIG.BOOSTER_COIN_SPAWN_INTERVAL;
-    console.log('✨ Booster effect applied to difficulty');
   }
 
   reset(): void {
@@ -90,8 +84,6 @@ export class DifficultyManager {
     this.currentCoinSpawnInterval = this.baseCoinSpawnInterval;
     this.currentObstacleSpawnInterval = this.baseObstacleSpawnInterval;
     this.currentBoosterSpawnInterval = this.baseBoosterSpawnInterval;
-
-    console.log('🔄 DifficultyManager reset');
   }
 
   getStats(): DifficultyStats {
